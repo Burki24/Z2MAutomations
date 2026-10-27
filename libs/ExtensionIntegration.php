@@ -355,7 +355,7 @@ trait ExtensionIntegration
         return $this->Translate(match ($state['operation']['status']) {
             'installed'       => 'Extension installed and receiver confirmed.',
             'validated'       => 'YAML validated. Review the preview before storing.',
-            'stored'          => 'YAML stored. Automations are not executed.',
+            'stored'          => 'YAML stored. Activation is a separate step.',
             'status_received' => 'Receiver status confirmed.',
             default           => ucfirst($state['operation']['status'])
         });

@@ -2,6 +2,12 @@
 
 ## Neu
 
+- Eigene Ausführungsengine für gespeicherte YAML mit Geräte-/Zeittriggern,
+  Bedingungen, Mindestdauer und geordneten verzögerten Set-Aktionen ergänzt.
+- Ausführung wird getrennt per MQTT aktiviert und gestoppt. Aktivierung prüft
+  Sitzung, Revision, Prüfsumme und eine frische Einmalkennung. Neustart oder
+  geänderte Speicherung starten keine Regeln automatisch.
+
 - MQTT-Empfangsfilter auf vollständige JSON-Umschläge angepasst; der Filter
   für deaktivierte oder ungültige Konfigurationen benötigt keine Lookarounds.
 

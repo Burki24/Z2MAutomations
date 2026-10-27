@@ -16,11 +16,14 @@ und zeigt das Ergebnis nach der passenden Antwort an.
 
 Die eigene Z2M-Erweiterung lässt sich aus dem Modul über MQTT installieren.
 Das Modul prüft YAML über den Empfänger und überträgt sie nach Vorschau und
-Bestätigung in dessen persistenten Speicher. Es führt noch keine Automationen aus.
+Bestätigung in dessen persistenten Speicher. Die Erweiterung kann eine gespeicherte
+Revision nach ausdrücklicher Aktivierung ausführen. Die Aktivierungs- und
+Stoppbefehle der Erweiterung sind implementiert; ihre Formularintegration folgt
+als eigener Schritt. [Ausführung und Grenzen](docs/RUNTIME.md).
 Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
 eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.
 
-Ein grafischer Regeleditor und die Ausführung der Automationen folgen später.
+Ein grafischer Regeleditor folgt später.
 
 ## Voraussetzungen
 

@@ -6,8 +6,12 @@ const target = new URL('../libs/z2m/z2m-automations.mjs', import.meta.url);
 const marker = "import AUTOMATIONS_SCHEMA from '../automations.schema.json' with {type: 'json'};";
 const code = await readFile(source, 'utf8');
 if (code.split(marker).length !== 2) throw new Error('Expected exactly one schema import.');
-const generated = '// Generated from src/extension.mjs and automations.schema.json. Do not edit.\n'
-    + code.replace(marker, 'const AUTOMATIONS_SCHEMA = ' + JSON.stringify(JSON.parse(await readFile(schema, 'utf8'))) + ';');
+const runtimeMarker = "import {AutomationRuntime, RuntimeError} from './runtime.mjs';";
+if (code.split(runtimeMarker).length !== 2) throw new Error('Expected exactly one runtime import.');
+const runtime = await readFile(new URL('../libs/z2m/src/runtime.mjs', import.meta.url), 'utf8');
+const generated = '// Generated from src/extension.mjs, src/runtime.mjs and automations.schema.json. Do not edit.\n'
+    + code.replace(marker, 'const AUTOMATIONS_SCHEMA = ' + JSON.stringify(JSON.parse(await readFile(schema, 'utf8'))) + ';')
+        .replace(runtimeMarker, runtime);
 if (process.argv.includes('--check')) {
     if (await readFile(target, 'utf8') !== generated) throw new Error('Extension artifact is stale. Run npm run build:extension.');
     console.log('Extension artifact matches source and schema.');

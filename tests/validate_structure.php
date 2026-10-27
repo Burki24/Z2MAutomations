@@ -18,7 +18,7 @@ foreach (['AGENTS.md', 'PROJECT_CONTEXT.md', 'README.md', 'CHANGELOG.md', 'LICEN
 $library = $readJson($root . '/library.json');
 $schema = $readJson($root . '/libs/z2m/automations.schema.json');
 $check($schema['properties']['schema_version']['const'] === 1, 'Versioned automation schema');
-foreach (['libs/z2m/src/extension.mjs', 'libs/z2m/z2m-automations.mjs', 'libs/z2m/examples/automations.yaml', 'tests/extension.test.mjs', 'tests/build-extension.mjs', 'package.json', 'package-lock.json'] as $file) {
+foreach (['libs/z2m/src/extension.mjs', 'libs/z2m/src/runtime.mjs', 'libs/z2m/z2m-automations.mjs', 'libs/z2m/examples/automations.yaml', 'tests/extension.test.mjs', 'tests/runtime.test.mjs', 'tests/build-extension.mjs', 'package.json', 'package-lock.json'] as $file) {
     $check(is_file($root . '/' . $file), 'Missing extension file: ' . $file);
 }
 $check($library['name'] === 'Z2MAutomations' && $library['compatibility']['version'] === '9.0', 'Library identity and platform');

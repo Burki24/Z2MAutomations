@@ -6,6 +6,7 @@ import {TextDecoder} from 'node:util';
 import Ajv from 'ajv';
 import {parseEvents, constructFromEvents, JSON_SCHEMA, mapTag, EVENT_ID} from 'js-yaml';
 import AUTOMATIONS_SCHEMA from '../automations.schema.json' with {type: 'json'};
+import {AutomationRuntime, RuntimeError} from './runtime.mjs';
 
 export const LIMITS = Object.freeze({yamlBytes: 131072, requestBytes: 1048576, queuedRequests: 16});
 const PREFIX = 'symcon/automations';
@@ -21,7 +22,11 @@ const ERRORS = Object.freeze({
     storage_unavailable: 'Storage requires attention before configurations can be saved.',
     storage_error: 'Configuration could not be persisted.',
     busy: 'Too many requests are pending.',
-    not_ready: 'Extension is not accepting requests.'
+    not_ready: 'Extension is not accepting requests.',
+    runtime_unavailable: 'Required Z2M runtime interfaces are unavailable.',
+    unknown_entity: 'A configured device or group is unavailable.',
+    checksum_mismatch: 'Activation checksum does not match the stored configuration.',
+    activation_expired: 'Request a fresh activation token before activating the stored revision.'
 });
 
 class ConfigurationError extends Error {
@@ -202,6 +207,8 @@ export default class Z2MAutomationsExtension {
         this.eventBus = eventBus;
         this.settings = settings;
         this.logger = logger;
+        this.runtime = new AutomationRuntime({zigbee: _zigbee, mqtt, logger, clock: options.clock,
+            available: typeof eventBus.onPublishEntityState === 'function'});
         // A real deployed file is in data/external_extensions, including Z2M temporary import copies.
         const directory = options.directory ?? fileURLToPath(new URL('../z2m-automations/', import.meta.url));
         this.store = new ConfigurationStore(directory, options.io ?? fs);
@@ -209,43 +216,65 @@ export default class Z2MAutomationsExtension {
         this.pending = 0;
         this.accepting = false;
         this.session = '';
+        this.activationToken = null;
+        this.monotonicNow = options.clock?.now ?? (() => performance.now());
     }
 
     status() {
         return {protocol_version: 1, schema_version: 1, extension_version: '0.1.0',
-            session: this.session, state: this.accepting ? 'ready' : 'stopped', ...this.store.metadata()};
+            session: this.session, state: this.accepting ? 'ready' : 'stopped', ...this.store.metadata(), ...this.runtime.metadata()};
     }
 
     async publish(topic, data, retain = false) {
         try {
             await this.mqtt.publish(PREFIX + '/' + topic, JSON.stringify(data), {clientOptions: {retain, qos: 0}, skipLog: true});
         } catch {
-            this.logger.error('Z2MAutomations: MQTT response could not be published.');
+            this.runtime.log('FEHLER', 'MQTT-Antwort konnte nicht veröffentlicht werden.');
         }
     }
 
     async start() {
-        if (this.accepting) return;
-        this.baseTopic = this.settings.get().mqtt.base_topic;
-        this.session = randomUUID();
-        await this.store.load();
-        this.accepting = true;
-        this.eventBus.onMQTTMessage(this, message => this.receive(message));
-        await this.publish('status', this.status(), true);
+        this.runtime.log('START', 'Erweiterung starten.');
+        try {
+            if (this.accepting) return;
+            this.baseTopic = this.settings.get().mqtt.base_topic;
+            this.session = randomUUID();
+            this.activationToken = null;
+            await this.store.load();
+            this.accepting = true;
+            this.eventBus.onMQTTMessage(this, message => this.receive(message));
+            this.eventBus.onPublishEntityState?.(this, event => {
+                try { this.runtime.receive(event); }
+                catch { this.runtime.log('FEHLER', 'Geräteereignis verworfen; interne Verarbeitung fehlgeschlagen.'); }
+            });
+            await this.publish('status', this.status(), true);
+        } finally { this.runtime.log('ENDE', 'Startaufruf beendet.', {Bereit: this.accepting}); }
     }
 
     async stop() {
-        this.accepting = false;
-        this.eventBus.removeListeners(this);
-        await this.queue;
-        await this.publish('status', this.status(), true);
+        this.runtime.log('START', 'Erweiterung stoppen.');
+        try {
+            this.accepting = false;
+            this.activationToken = null;
+            this.eventBus.removeListeners(this);
+            this.runtime.deactivate();
+            await this.queue;
+            await this.runtime.stop();
+            await this.publish('status', this.status(), true);
+        } finally { this.runtime.log('ENDE', 'Stoppaufruf beendet.', {Bereit: this.accepting}); }
     }
 
     async receive(event) {
         const prefix = this.baseTopic + '/' + PREFIX + '/request/';
         if (typeof event?.topic !== 'string' || !event.topic.startsWith(prefix)) return;
         const operation = event.topic.slice(prefix.length);
-        if (!['validate', 'store', 'get', 'status'].includes(operation)) return;
+        if (!['validate', 'store', 'get', 'status', 'activate', 'deactivate'].includes(operation)) return;
+        this.runtime.log('START', 'Erweiterungsauftrag empfangen.', {Auftrag: operation});
+        try { await this.handleRequest(operation, event); }
+        finally { this.runtime.log('ENDE', 'Erweiterungsauftrag beendet; Ergebnis siehe Antwort.', {Auftrag: operation}); }
+    }
+
+    async handleRequest(operation, event) {
         let request;
         try {
             if (typeof event.message !== 'string' || Buffer.byteLength(event.message, 'utf8') > LIMITS.requestBytes) fail('invalid_request');
@@ -253,9 +282,12 @@ export default class Z2MAutomationsExtension {
             if (!isObject(request) || request.protocol_version !== 1 || typeof request.transaction !== 'string'
                 || !VALID_TRANSACTION.test(request.transaction)) fail('invalid_request');
             const keys = ['protocol_version', 'transaction', ...(['validate', 'store'].includes(operation) ? ['yaml'] : []),
-                ...(operation === 'store' ? ['session', 'expected_revision'] : [])];
+                ...(operation === 'store' ? ['session', 'expected_revision'] : []),
+                ...(operation === 'activate' ? ['session', 'expected_revision', 'checksum', 'activation_token'] : []),
+                ...(operation === 'deactivate' ? ['session'] : [])];
             if (Object.keys(request).length !== keys.length || keys.some(key => !Object.hasOwn(request, key))) fail('invalid_request');
         } catch {
+            this.runtime.log('FEHLER', 'Ungültigen Erweiterungsauftrag abgewiesen.', {Auftrag: operation, Grund: 'invalid_request'});
             const transaction = typeof request?.transaction === 'string' && VALID_TRANSACTION.test(request.transaction) ? request.transaction : undefined;
             await this.publish('response/' + operation, {protocol_version: 1, transaction, status: 'error', error: {code: 'invalid_request', message: ERRORS.invalid_request}});
             return;
@@ -270,8 +302,12 @@ export default class Z2MAutomationsExtension {
             try {
                 if (!this.accepting) fail('not_ready');
                 let data;
-                if (operation === 'status') data = this.status();
-                if (operation === 'get') data = {...this.store.metadata(), yaml: this.store.current?.yaml ?? null};
+                if (operation === 'status') {
+                    this.activationToken = {value: randomUUID(), expires: this.monotonicNow() + 30000};
+                    // Only a correlated status response carries this one-use challenge, never retained status.
+                    data = {...this.status(), activation_token: this.activationToken.value};
+                }
+                if (operation === 'get') data = {...this.store.metadata(), executing: this.runtime.metadata().executing, yaml: this.store.current?.yaml ?? null};
                 if (operation === 'validate') {
                     const candidate = validateYaml(request.yaml);
                     data = {valid: true, revision: candidate.document.revision, checksum: candidate.checksum,
@@ -281,11 +317,35 @@ export default class Z2MAutomationsExtension {
                     if (request.session !== this.session || event.retain === true) fail('session_mismatch');
                     if (!isRevision(request.expected_revision)) fail('invalid_request');
                     data = await this.store.save(validateYaml(request.yaml), request.expected_revision);
+                    this.activationToken = null;
+                    if (!data.unchanged) this.runtime.deactivate();
+                    data.executing = this.runtime.metadata().executing;
+                }
+                if (['activate', 'deactivate'].includes(operation)) {
+                    if (request.session !== this.session || event.retain === true) fail('session_mismatch');
+                    if (operation === 'activate') {
+                        if (!isRevision(request.expected_revision) || typeof request.checksum !== 'string' || !/^[a-f0-9]{64}$/.test(request.checksum)) fail('invalid_request');
+                        const token = this.activationToken;
+                        this.activationToken = null;
+                        if (!token || request.activation_token !== token.value || token.expires <= this.monotonicNow()) fail('activation_expired');
+                        if (this.store.state !== 'ok' || !this.store.current) fail('storage_unavailable');
+                        await this.store.verifyDisk();
+                        if (!this.accepting) fail('not_ready');
+                        if (request.expected_revision !== this.store.current.document.revision) fail('revision_conflict');
+                        if (request.checksum !== this.store.current.checksum) fail('checksum_mismatch');
+                        this.runtime.activate(this.store.current);
+                    } else {
+                        this.activationToken = null;
+                        this.runtime.deactivate();
+                    }
+                    data = this.status();
                 }
                 await this.respond(operation, request.transaction, data);
-                if (operation === 'store') await this.publish('status', this.status(), true);
+                if (['store', 'activate', 'deactivate'].includes(operation)) await this.publish('status', this.status(), true);
             } catch (error) {
-                const code = error instanceof ConfigurationError ? error.code : 'storage_error';
+                if (this.store.state === 'error') this.runtime.deactivate();
+                const code = error instanceof ConfigurationError || error instanceof RuntimeError ? error.code : 'storage_error';
+                this.runtime.log('FEHLER', 'Erweiterungsauftrag abgewiesen.', {Auftrag: operation, Grund: code});
                 await this.respond(operation, request.transaction, null, code);
             } finally {
                 this.pending--;

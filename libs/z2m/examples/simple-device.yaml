@@ -1,0 +1,22 @@
+# Synthetic example: replace both device IDs and use the next stored revision.
+# Set enabled to true only for an explicitly approved test, then activate separately.
+schema_version: 1
+revision: 1
+automations:
+  - id: synthetic_button_light
+    name: Synthetic button turns light on
+    enabled: false
+    triggers:
+      - type: device
+        device: "0x0000000000000001"
+        property: action
+        operator: eq
+        value: single
+    conditions: []
+    actions:
+      - type: set
+        target:
+          type: device
+          id: "0x0000000000000002"
+        values:
+          state: "ON"

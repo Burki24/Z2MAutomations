@@ -34,7 +34,7 @@ final class ExtensionContract
         if (!$data instanceof stdClass || !self::Revision($data->stored_revision ?? null)
             || !is_int($data->automation_count ?? null) || $data->automation_count < 0 || $data->automation_count > 100
             || !in_array($data->storage ?? null, ['empty', 'ok', 'recovered_read_only', 'error'], true)
-            || ($data->executing ?? null) !== false || !property_exists($data, 'checksum')) {
+            || !is_bool($data->executing ?? null) || !property_exists($data, 'checksum')) {
             return null;
         }
         if ($data->stored_revision === 0 ? ($data->checksum !== null || $data->automation_count !== 0) : !self::Checksum($data->checksum)) {
@@ -45,7 +45,7 @@ final class ExtensionContract
             return null;
         }
         return ['storedRevision' => $data->stored_revision, 'checksum' => $data->checksum,
-            'automationCount'    => $data->automation_count, 'storage' => $data->storage];
+            'automationCount'    => $data->automation_count, 'storage' => $data->storage, 'executing' => $data->executing];
     }
 
     public static function Status(mixed $data): ?array

@@ -23,7 +23,7 @@
         },
         {
             "type": "Label",
-            "caption": "Installation requires external JavaScript already enabled in Z2M. Stored YAML is not executed."
+            "caption": "Installation requires external JavaScript already enabled in Z2M. Storing YAML does not activate automations."
         }
     ],
     "actions": [
@@ -72,7 +72,7 @@
             "type": "Label"
         },
         {
-            "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Automations will not be executed.",
+            "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Activation is a separate step.",
             "caption": "Store validated YAML in Z2M",
             "type": "Button",
             "onClick": "Z2MA_StoreYaml($id, $YamlInput);",

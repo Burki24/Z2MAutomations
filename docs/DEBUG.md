@@ -1,5 +1,10 @@
 # Debug und MQTT-Diagnose
 
+Die JavaScript-Engine protokolliert Aktivierung, Stopp und Aktionsfolgen über den
+nativen Z2M-Logger mit sicheren deutschen Meldungen. Die PHP-Helper gelten für
+das Symcon-Modul, nicht als JavaScript-Laufzeitabhängigkeit. Einzelheiten und
+die geprüften Geheimnisschutz-/Loggerfehlerfälle stehen in [RUNTIME.md](RUNTIME.md).
+
 Im Symcon-Debugfenster die Instanz Z2MAutomations auswählen und anschließend
 „Zigbee2MQTT-Verbindung prüfen“ ausführen. START/ENDE kennzeichnen öffentliche
 Aufrufe, SENDEN die Übergabe an das Gateway, EMPFANG eingehende Modulnachrichten,

@@ -26,7 +26,10 @@ sie persistent und führt sie unabhängig von Symcon aus.
   implementiert. Vor Store erneute Prüfung von Sitzung und Revision; kein
   blindes Überschreiben, keine automatischen Wiederholungen oder Revisionsänderungen.
 - Zusätzliche lesbare Statusvariablen für Empfängerbereitschaft, Speicherrevision,
-  Aktionsstatus und Fehler. Noch keine Ausführung oder Aktivierung.
+  Aktionsstatus und Fehler. Eigene Ausführungsengine mit ausdrücklicher
+  MQTT-Aktivierung einer gespeicherten Revision implementiert; siehe docs/RUNTIME.md.
+  Der Symcon-Status akzeptiert auch eine aktive Engine. Aktivierungs-/Stoppbuttons
+  im Formular sind noch ein eigener Integrationsschritt.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
   Host-Abhängigkeiten js-yaml 5.4.2 und Ajv 8.20.0 lokal mit Lockfile geprüft;
   Referenzvertrag Z2M 2.14.2. Keine reale Z2M-Abnahme.
@@ -48,7 +51,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
 2. Erweiterung nach ausdrücklichem Praxisauftrag in Z2M prüfen und kompatible
    Versionen anhand realer Nachweise festlegen.
 3. Grafischen Regeleditor auf Basis des bestehenden YAML-Vertrags entwickeln.
-4. Ausführungsengine und getrennte Aktivierungsbestätigung entwickeln.
+4. Aktivierungs-/Stoppbedienung in Symcon integrieren und Engine ausdrücklich praktisch prüfen.
 
 ## Dokumentation
 
@@ -62,4 +65,5 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - [ADR 0004](docs/adr/0004-correlated-module-workflows.md)
 - [Entwicklung und Prüfungen](docs/DEVELOPMENT.md)
 
-Keine Installation in Symcon oder Z2M und keine Praxisabnahme erfolgt.
+Installation und YAML-Übertragung wurden in der Testinstallation praktisch
+bestätigt. Die neue Engine wurde noch nicht live installiert oder geschaltet.

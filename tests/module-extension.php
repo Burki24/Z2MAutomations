@@ -151,6 +151,11 @@ $remote = ['protocol_version' => 1, 'schema_version' => 1, 'extension_version' =
     'session'                 => '11111111-1111-4111-8111-111111111111', 'state' => 'ready', 'stored_revision' => 2,
     'checksum'                => hash('sha256', str_replace('revision: 3', 'revision: 2', $source)),
     'automation_count'        => 0, 'storage' => 'ok', 'executing' => false];
+$runningRemote = (object) ($remote + ['runtime_version' => 1, 'active_revision' => 2]);
+$runningRemote->executing = true;
+$check(Z2MAutomations\ExtensionContract::Status($runningRemote)['executing'] === true, 'Running receiver status remains compatible with Symcon normalization');
+$runningRemote->executing = 'true';
+$check(Z2MAutomations\ExtensionContract::Status($runningRemote) === null, 'Execution state must be a real boolean');
 $replyStatus = static function (array $status) use ($answer): void
 {
     $answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $status]);

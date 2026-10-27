@@ -9,7 +9,7 @@ foreach (['validate_structure.php', 'module.php', 'mqtt.php', 'module-extension.
     }
 }
 
-foreach ([['node', __DIR__ . '/build-extension.mjs', '--check'], ['node', '--test', __DIR__ . '/extension.test.mjs']] as $command) {
+foreach ([['node', __DIR__ . '/build-extension.mjs', '--check'], ['node', '--test', __DIR__ . '/extension.test.mjs', __DIR__ . '/runtime.test.mjs']] as $command) {
     $process = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
     if (!is_resource($process) || proc_close($process) !== 0) {
         exit(1);

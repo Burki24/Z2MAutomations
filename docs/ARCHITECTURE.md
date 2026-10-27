@@ -36,8 +36,9 @@ health_check ist implementiert. Die Z2M-Seite empfängt und speichert inzwischen
 versionierte YAML über eigene Topics; siehe [Erweiterungsprotokoll](EXTENSION_PROTOCOL.md)
 und [YAML-Vertrag](YAML_SCHEMA.md). Die Symcon-Seite installiert das feste Artefakt
 auf ausdrückliche Bedienung, prüft den Empfänger und überträgt nach Vorschau und
-Bestätigung validierte YAML. Ausführungsengine und Aktivierung sind noch nicht
-implementiert; siehe [ADR 0004](adr/0004-correlated-module-workflows.md).
+Bestätigung validierte YAML. Die eigene Engine verarbeitet eine ausdrücklich
+aktivierte Speicherrevision; siehe [ADR 0005](adr/0005-explicit-execution.md).
+Aktivierungs-/Stoppbuttons im Symcon-Formular folgen als eigene Integration.
 
 ## Persistenz und Fehlerfälle
 
@@ -45,7 +46,9 @@ Die Erweiterung hält die letzte gültige YAML im eigenen persistenten Unterordn
 und lädt sie beim Neustart. Revisionskontrolle, Prüfsumme, Größenlimits,
 idempotente Wiederholung und Sicherung der Vorversion sind implementiert.
 Offline-Tests decken echte Dateischreibvorgänge, Schreibfehler und Wiederanlauf ab.
-Aktivierung und Rücknahme ausführbarer Regeln gehören zur künftigen Engine.
+Die neue Engine startet inaktiv, verwirft bei Stopp Verzögerungen und wird durch
+eine geänderte erfolgreich gespeicherte Revision deaktiviert. Kein automatischer
+Wiederanlauf von Regeln nach einem Z2M- oder Erweiterungsneustart.
 
 Code-Updates und Regeländerungen sind getrennte Vorgänge. Der offizielle Upload
 schreibt JavaScript vor dem Laden und garantiert keinen automatischen Rollback.

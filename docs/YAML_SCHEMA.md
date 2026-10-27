@@ -5,10 +5,11 @@ Die kanonische maschinenlesbare Definition steht in
 Sie wird unverändert in das eigene Einzeldatei-Artefakt eingebettet.
 Die Erweiterung validiert die gespeicherten Daten erneut beim Start.
 
-Diese Version definiert Daten für künftige Automationen. Empfang und Speicherung
-aktivieren keine Ausführung, auch wenn eine Regel enabled: true enthält.
-Vorhandene Geräte, Exposes und deren zulässige Schaltwerte werden in dieser
-Ausbaustufe nicht gegen die laufende Bridge geprüft.
+Empfang und Speicherung aktivieren keine Ausführung, auch wenn eine Regel
+enabled: true enthält. Die eigene Engine führt ausdrücklich aktivierte Revisionen
+aus; [Laufzeitvertrag](RUNTIME.md). Quellen und Ziele müssen beim Aktivieren
+vorhanden sein. Zulässige Schaltwerte setzt der native Z2M-Converter um;
+eine vollständige Prüfung aller Exposes erfolgt nicht.
 
 ## Dokument
 
@@ -34,15 +35,15 @@ Referenzprojekts Luligu/zigbee2mqtt-automations.
 | --- | --- |
 | id | Eindeutiger stabiler Schlüssel, 1–64 Zeichen; beginnt mit a–z, danach a–z, 0–9, _ oder - |
 | name | Anzeigename, 1–120 Zeichen; Namen dürfen sich wiederholen |
-| enabled | Explizites Boolean für den später gewünschten Zustand |
+| enabled | Regel wird nach ausdrücklicher Aktivierung der Revision berücksichtigt |
 | triggers | 1–8 Auslöser |
 | conditions | 0–16 Bedingungen; die leere Liste ist ausdrücklich anzugeben |
 | actions | 1–16 Aktionen |
 
 Maximal 100 Automationen pro Dokument. IDs dürfen nicht mehrfach vorkommen.
-Der künftige Regelvertrag sieht alternative Auslöser, gemeinsam zu erfüllende
-Bedingungen und geordnete Aktionen vor. Es gibt noch keine Laufzeitimplementierung
-und keine Zusage über deren späteres Zeit-/Neustartverhalten.
+Die Engine unterstützt alternative Auslöser, gemeinsam zu erfüllende Bedingungen
+und geordnete Aktionen. Zeit-, Verzögerungs-, Neustart- und Fehlerverhalten
+sind in [RUNTIME.md](RUNTIME.md) festgelegt.
 
 ## Auslöser
 
@@ -50,7 +51,7 @@ und keine Zusage über deren späteres Zeit-/Neustartverhalten.
   kleingeschriebene IEEE-Adresse als String nach 0x plus 16 Hex-Ziffern.
   operator ist eq, ne, gt, gte, lt oder lte. value ist String, Zahl, Boolean oder
   null; bei Größenvergleichen ist eine Zahl erforderlich.
-  Optional for_seconds: Ganzzahl 0–86400 für eine spätere Mindestdauer.
+  Optional for_seconds: Ganzzahl 0–86400 für eine durchgehende Mindestdauer.
 - type: time mit at im Format HH:MM:SS und expliziter timezone.
 
 IEEE-Adressen sollten in YAML in Anführungszeichen stehen, damit sie Strings

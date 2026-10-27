@@ -6,7 +6,8 @@ Diese Ausbaustufe implementiert die eigene Z2M-Seite: Empfang, Validierung,
 persistente Speicherung, Wiederanlauf und Rückmeldung. Der Symcon-Transport
 integriert Installation, aktive Statusabfragen, validate und store;
 siehe [Modulanleitung](../Z2MAutomations/README.md). Eine tatsächlich ausgeführte
-Installation oder Praxisprüfung auf einer realen Z2M-Instanz steht noch aus.
+Installation und YAML-Übertragung wurden praktisch geprüft. Die neue
+Ausführungsengine ergänzt getrennte Aktivierungsbefehle; ihr Praxistest steht aus.
 
 Für eine spätere Installation wird ausschließlich
 [z2m-automations.mjs](../libs/z2m/z2m-automations.mjs) mit der offiziellen
@@ -24,6 +25,8 @@ Der Präfix symcon/automations ist unser eigener Vertrag.
 | symcon/automations/request/validate | YAML ohne Schreibzugriff prüfen |
 | symcon/automations/request/store | YAML persistent speichern, ohne Ausführung |
 | symcon/automations/request/get | Geladene gültige YAML und Metadaten zurückgeben |
+| symcon/automations/request/activate | Gespeicherte Revision ausdrücklich aktivieren; [Vertrag](RUNTIME.md) |
+| symcon/automations/request/deactivate | Ausführung und ausstehende Verzögerungen stoppen |
 | symcon/automations/response/OPERATION | Antwort auf die jeweilige Anfrage |
 | symcon/automations/status | Zustand bei Start, erfolgreicher Speicherung und Stop; retained |
 
@@ -35,7 +38,8 @@ neuen Präfix nicht ab.
 Jede Anfrage ist ein JSON-Objekt mit protocol_version: 1 und transaction als
 String mit 1–64 ASCII-Zeichen aus A–Z, a–z, 0–9, _ und -.
 Unbekannte Felder werden abgewiesen. validate benötigt zusätzlich yaml.
-status und get haben keine weiteren Felder.
+status und get haben keine weiteren Felder. Die zusätzlichen Felder für
+activate/deactivate stehen in [RUNTIME.md](RUNTIME.md).
 
 Beispiel für store; SESSION stammt aus der aktuellen Statusmeldung:
 
@@ -72,9 +76,11 @@ erneutem Anwenden einer bereits gespeicherten Fassung. Die Erweiterung kann den
 Retain-Zustand im nativen Bus nicht allgemein erkennen.
 
 Erfolg: protocol_version, transaction, status: ok und data. Bei store enthält
-data stored_revision, checksum, automation_count, storage, executing: false und
+data stored_revision, checksum, automation_count, storage, executing und
 unchanged. Die Prüfsumme ist SHA-256 über die exakten UTF-8-YAML-Bytes einschließlich
-Kommentaren und Zeilenenden. Eine Bestätigung bedeutet gespeichert, nicht aktiv.
+Kommentaren und Zeilenenden. Eine Bestätigung bedeutet gespeichert; sie aktiviert
+nichts. Eine geänderte erfolgreiche Speicherung stoppt die Engine. Eine bytegleiche
+Speicherung erhält die bereits aktive Revision und meldet dann executing: true.
 
 Fehler: status: error und error mit code und fester message. Gültige
 Transaktions-IDs werden auch bei ungültigem Inhalt gespiegelt. Eine ungültige
@@ -130,9 +136,9 @@ Schreibzugriffe werden abgewiesen; die Sicherung ist mit get lesbar. Eine
 Wiederherstellung benötigt eine bewusste Prüfung der Dateien und Revisionen
 bei gestoppter Erweiterung. Keine automatische Rücksetzung auf Revision 0.
 
-state: ready bezeichnet nur die Erreichbarkeit des Empfängers. storage ist
-gesondert auszuwerten. executing bleibt immer false. Die Erweiterung registriert
-keine Geräte-Auslöser, Zeitsteuerung oder Schaltaktionen.
+state: ready bezeichnet die Erreichbarkeit des Empfängers. storage ist gesondert
+auszuwerten. executing bezeichnet die ausdrücklich aktivierte Engine, nicht eine
+bestätigte Gerätewirkung. Status und Aktivierungsvertrag stehen in [RUNTIME.md](RUNTIME.md).
 
 ## Quellen und Testgrenzen
 

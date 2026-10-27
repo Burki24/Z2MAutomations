@@ -88,6 +88,13 @@ und eine noch offene Anfrage.
 
 ## Statusvariablen
 
+Die Erweiterung kann ausdrücklich aktivierte Speicherrevisionen ausführen;
+[Ausführungsregeln und Aktivierungsbefehle](../docs/RUNTIME.md). Dafür gibt es im
+Modul noch keine Aktivierungs-/Stoppbuttons. Speichern aktiviert nichts; eine
+geänderte erfolgreich gespeicherte Revision stoppt die bisherige Ausführung.
+`GetTransportState` übernimmt den gemeldeten Boolean `extension.executing`,
+ohne damit eine konkrete Gerätewirkung zu bestätigen.
+
 Alle Variablen sind ausschließlich lesbar und besitzen keine Schaltaktion.
 
 | Ident | Typ | Bedeutung |

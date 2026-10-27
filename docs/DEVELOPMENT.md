@@ -26,6 +26,11 @@ die vorhandenen Host-Abhängigkeiten verwendet, kein npm-Verzeichnis mitgeliefer
 - php tests/validate_structure.php
 - npm test (nur Erweiterungstests)
 
+`tests/runtime.test.mjs` prüft die Engine über das erzeugte Artefakt mit
+synthetischen Z2M-Geräten, virtueller Zeit und echtem temporärem YAML-Speicher.
+Aktivierung, Abbruch, Mindestdauer, Zeitfenster, Sommerzeit, Sequenzen,
+Transportfehler und Mengenbegrenzung sind eigene Verhaltensnachweise.
+
 Die beiden ersten Befehle verwenden die offizielle StylePHP-Konfiguration.
 Der unveränderte StylePHP-JSON-Checker durchsucht rekursiv auch node_modules;
 seine Vollprüfung erfolgt deshalb in einem Checkout ohne installierte Node-

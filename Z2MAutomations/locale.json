@@ -1,6 +1,9 @@
 {
     "translations": {
         "de": {
+            "YAML stored. Activation is a separate step.": "YAML gespeichert. Die Aktivierung ist ein eigener Schritt.",
+            "Installation requires external JavaScript already enabled in Z2M. Storing YAML does not activate automations.": "Zur Installation muss externes JavaScript in Z2M bereits aktiviert sein. Speichern aktiviert keine Automationen.",
+            "Store exactly the validated YAML in Z2M and replace its stored configuration? Activation is a separate step.": "Genau die geprüfte YAML in Z2M speichern und die dort gespeicherte Konfiguration ersetzen? Die Aktivierung ist ein eigener Schritt.",
             "Enable MQTT connection": "MQTT-Anbindung aktivieren",
             "Zigbee2MQTT base topic": "Zigbee2MQTT-Basistopic",
             "Response timeout (seconds)": "Antwortzeitlimit (Sekunden)",
