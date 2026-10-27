@@ -110,6 +110,8 @@ final class ExtensionContract
             'action_timeout'       => 'An action handover timed out. No automatic retry was started.',
             'rate_limited'         => 'The action rate limit was reached. Excess actions were cancelled.',
             'editor_unavailable'   => 'Load the devices and stored configuration into the editor first.',
+            'editor_missing'       => 'The selected automation is no longer in the draft. Select it again.',
+            'editor_advanced'      => 'This advanced rule supports name and enabled state changes only in the click editor.',
             'editor_invalid'       => 'Choose a name, source, trigger, target and action from the available options.',
             'editor_changed'       => 'The configuration or draft changed. Reload the editor before adding a rule.',
             default                => 'The extension reported an unspecified error.'

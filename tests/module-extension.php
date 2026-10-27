@@ -164,10 +164,81 @@ try {
     $module->LoadAutomationEditor();
     $module->SelectEditorDevice('Source', '0x0000000000000001');
     $module->SelectEditorDevice('Target', '0x0000000000000002');
-    $check($module->CreateSimpleAutomation('Second synthetic rule', '0x0000000000000001', $trigger, '0x0000000000000002', $action), 'Existing stored rules can be extended in the editor');
+    $check($module->CreateSimpleAutomation('Synthetic click automation', '0x0000000000000001', $trigger, '0x0000000000000002', $action, '', false, false), 'A second rule may share a name and be created disabled');
     $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $extended = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
-    $check(count($extended['automations']) === 2 && $extended['automations'][0] === $created['automations'][0], 'Adding a rule preserves the complete existing automation');
+    $check(count($extended['automations']) === 2 && $extended['automations'][0] === $created['automations'][0]
+        && !$extended['automations'][1]['enabled'], 'Adding a disabled rule preserves the complete existing automation');
+    $ruleID = $extended['automations'][0]['id'];
+    $sentBeforeEditing = count($parent->sent);
+    $check($module->SelectAutomation($ruleID), 'Existing rule can be selected by stable ID');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $token = $fields['EditorEditToken']['value'];
+    $check($fields['EditorRule']['options'][1]['value'] !== $fields['EditorRule']['options'][2]['value']
+        && $fields['EditorRule']['options'][1]['caption'] !== $fields['EditorRule']['options'][2]['caption'], 'Duplicate names remain distinguishable and use different stable IDs');
+    $changedTrigger = $fields['EditorSourceChoice']['options'][2]['value'];
+    $changedAction = $fields['EditorTargetChoice']['options'][2]['value'];
+    $check($fields['EditorName']['value'] === $created['automations'][0]['name']
+        && $fields['EditorSourceChoice']['value'] === $trigger && $fields['EditorTargetChoice']['value'] === $action, 'Selecting an existing rule restores all simple fields');
+    $check($module->UpdateAutomation($ruleID, $token, 'Renamed synthetic rule', false, '0x0000000000000001', $changedTrigger, '0x0000000000000002', $changedAction), 'Existing rule can be edited and disabled locally');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $edited = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $check($edited['automations'][0]['id'] === $ruleID && $edited['automations'][0]['name'] === 'Renamed synthetic rule'
+        && !$edited['automations'][0]['enabled'] && $edited['automations'][1] === $extended['automations'][1]
+        && $edited['automations'][0]['triggers'][0]['value'] === 'double' && $edited['automations'][0]['actions'][0]['values'] === ['state' => 'OFF']
+        && $edited['revision'] === 4 && count($parent->sent) === $sentBeforeEditing, 'Editing preserves identity, unrelated rules and remote state');
+    $check(!$module->DeleteAutomation($ruleID, $token) && $state()['lastError'] === 'editor_changed', 'Old selection tokens cannot delete a changed draft');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited rule validates and stores through the real receiver');
+    $module->LoadAutomationEditor();
+    foreach ([$ruleID, $extended['automations'][1]['id']] as $deleteID) {
+        $check($module->SelectAutomation($deleteID), 'Select the precise rule to delete');
+        $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $check($module->DeleteAutomation($deleteID, $fields['EditorEditToken']['value']), 'Delete selected rule from local draft');
+        if ($deleteID === $ruleID) {
+            $remainingForm = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+            $check(json_decode($remainingForm['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === [$extended['automations'][1]], 'Deleting one rule preserves the exact other rule');
+        }
+    }
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check(json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === []
+        && $state()['extension']['storedRevision'] === 4, 'Deleting the last rule creates an empty local draft without touching Z2M');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Deleting all rules persists as a valid empty configuration');
+    $module->LoadAutomationEditor();
+    $advanced = $created['automations'][0];
+    $advanced['triggers'][0]['for_seconds'] = 5;
+    $advanced['actions'][0]['delay_seconds'] = 2;
+    $advanced['conditions'] = [['type' => 'device_value', 'device' => '0x0000000000000002', 'property' => 'state', 'operator' => 'eq', 'value' => 'OFF']];
+    $advancedYaml = json_encode(['schema_version' => 1, 'revision' => 6, 'automations' => [$advanced]], JSON_THROW_ON_ERROR);
+    $module->ValidateYaml($advancedYaml);
+    $check($module->StoreYaml($advancedYaml) !== '', 'Prepare a real stored advanced rule');
+    $module->LoadAutomationEditor();
+    $check($module->SelectAutomation($ruleID), 'Advanced rules remain selectable');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $token = $fields['EditorEditToken']['value'];
+    $check(!$fields['EditorSource']['enabled'] && $fields['EditorName']['value'] === $advanced['name'], 'Advanced rules expose metadata editing without flattening their clauses');
+    $check(!$module->DeleteAutomation($ruleID, $token, '', true) && $state()['lastError'] === 'editor_changed', 'An empty unsaved expert draft cannot be overwritten');
+    $check(!$module->SelectAutomation('unknown-rule') && $state()['lastError'] === 'editor_missing', 'Unknown IDs never fall back to a name or row');
+    $check(!$module->UpdateAutomation($ruleID, $token, 'Unsafe simplification', true, '0x0000000000000001', $trigger, '0x0000000000000002', $action)
+        && $state()['lastError'] === 'editor_advanced', 'Advanced clauses cannot be silently replaced with simple fields');
+    $check($module->UpdateAutomation($ruleID, $token, 'Advanced renamed', false, '', '', '', ''), 'Advanced rules allow safe name and enabled state changes');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $advancedEdited = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'][0];
+    $expectedAdvanced = $advanced;
+    $expectedAdvanced['name'] = 'Advanced renamed';
+    $expectedAdvanced['enabled'] = false;
+    $check($advancedEdited === $expectedAdvanced, 'Metadata edits preserve every advanced condition, trigger and action');
+    $token = $fields['EditorEditToken']['value'];
+    $module->SelectAutomation('');
+    $check(!$module->DeleteAutomation($ruleID, $token), 'Switching to a new rule invalidates the previous selection');
+    $module->SelectAutomation($ruleID);
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $firstWindowToken = $fields['EditorEditToken']['value'];
+    $module->SelectAutomation($ruleID);
+    $check(!$module->DeleteAutomation($ruleID, $firstWindowToken), 'A second form selection invalidates the first form token even for the same ID');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Advanced metadata edits persist through the authoritative receiver');
+    $check(!$module->DeleteAutomation($ruleID, $firstWindowToken), 'Remote revision changes invalidate editor selections');
+    $module->LoadAutomationEditor();
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');
@@ -178,7 +249,7 @@ try {
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
     $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'activation_token')
-        && !str_contains($captured, 'automations: []'), 'Debug must not include draft bodies, names or activation tokens');
+        && !str_contains($captured, $firstWindowToken) && !str_contains($captured, 'automations: []'), 'Debug must not include draft bodies, names or selection/activation tokens');
     foreach ($module->debugMessages as [$category, $body]) {
         $entry = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
         $check(strlen($body) <= 4096 && isset($entry['Instanz'], $entry['Vorgang'], $entry['Aufruf'], $entry['Meldung'], $entry['Bezug']), 'New actions use the central structured debug contract');

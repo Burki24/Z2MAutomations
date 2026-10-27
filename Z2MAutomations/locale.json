@@ -137,7 +137,21 @@
             "Perform this action": "Diese Aktion ausführen",
             "Add automation to draft": "Automation zum Entwurf hinzufügen",
             "Load the editor to choose devices.": "Zum Auswählen der Geräte den Editor laden.",
-            "Show advanced YAML editor": "Erweiterte YAML-Ansicht anzeigen"
+            "Show advanced YAML editor": "Erweiterte YAML-Ansicht anzeigen",
+            "Automation to edit": "Automation bearbeiten",
+            "Create a new automation": "Neue Automation erstellen",
+            "Selection reference": "Auswahlkennung",
+            "Rule enabled": "Regel aktiviert",
+            "Changes affect the local draft. Validate and store it afterwards.": "Änderungen betreffen den lokalen Entwurf. Anschließend prüfen und speichern.",
+            "Advanced rule: name and enabled state can be changed. Conditions and actions are preserved.": "Erweiterte Regel: Name und Aktivierung können geändert werden. Bedingungen und Aktionen bleiben erhalten.",
+            "Apply changes to draft": "Änderungen in den Entwurf übernehmen",
+            "Delete selected automation from draft": "Ausgewählte Automation aus dem Entwurf löschen",
+            "Delete the selected automation from the local draft? The running Z2M configuration changes only after validating and storing the draft.": "Ausgewählte Automation aus dem lokalen Entwurf löschen? Die laufende Z2M-Konfiguration ändert sich erst nach Prüfung und Speicherung des Entwurfs.",
+            "Automation selected. Changes affect the local draft only.": "Automation ausgewählt. Änderungen betreffen nur den lokalen Entwurf.",
+            "Automation updated in the draft. Validate and store it next.": "Automation im Entwurf geändert. Anschließend prüfen und speichern.",
+            "Automation removed from the draft. Validate and store it next.": "Automation aus dem Entwurf entfernt. Anschließend prüfen und speichern.",
+            "The selected automation is no longer in the draft. Select it again.": "Die ausgewählte Automation ist nicht mehr im Entwurf vorhanden. Bitte erneut auswählen.",
+            "This advanced rule supports name and enabled state changes only in the click editor.": "Diese erweiterte Regel unterstützt im Klick-Editor nur Änderungen an Name und Aktivierung."
         }
     }
 }

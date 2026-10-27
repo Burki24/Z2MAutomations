@@ -52,30 +52,20 @@ trait AutomationEditor
         });
     }
 
-    public function CreateSimpleAutomation(string $Name, string $Source, string $Trigger, string $Target, string $Action, string $CurrentDraft = '', bool $CheckDraft = false): bool
+    public function CreateSimpleAutomation(string $Name, string $Source, string $Trigger, string $Target, string $Action, string $CurrentDraft = '', bool $CheckDraft = false, bool $Enabled = true): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Name, $Source, $Trigger, $Target, $Action, $CurrentDraft, $CheckDraft): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Name, $Source, $Trigger, $Target, $Action, $CurrentDraft, $CheckDraft, $Enabled): bool
         {
-            return $this->WithTransportLock(function () use ($Name, $Source, $Trigger, $Target, $Action, $CurrentDraft, $CheckDraft): bool
+            return $this->WithTransportLock(function () use ($Name, $Source, $Trigger, $Target, $Action, $CurrentDraft, $CheckDraft, $Enabled): bool
             {
                 $state = $this->RefreshState();
                 $snapshot = $this->EditorSnapshot();
-                $draftText = $this->ReadAttributeString('EditorDraft');
-                $draft = $draftText === '' ? null : json_decode($draftText, true, 32, JSON_THROW_ON_ERROR);
-                $error = '';
-                if ($draft === null || $snapshot === []) {
-                    $error = 'editor_unavailable';
-                } elseif (!$state['extensionConfirmed'] || $state['workflow'] !== null || $draft['scope'] !== $state['scope']
-                    || $draft['session'] !== $state['extension']['session'] || $draft['baseRevision'] !== $state['extension']['storedRevision']
-                    || $draft['baseChecksum'] !== $state['extension']['checksum'] || $draft['draftChecksum'] !== hash('sha256', $this->ReadAttributeString('YamlDraft'))
-                    || (($CheckDraft || $CurrentDraft !== '') && hash('sha256', $CurrentDraft) !== $draft['draftChecksum'])) {
-                    $error = 'editor_changed';
-                }
+                $draft = $this->ReadEditorDraft();
+                $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft);
                 $source = $this->FindEditorChoice($snapshot, $Source, $Trigger, 'Source');
                 $target = $this->FindEditorChoice($snapshot, $Target, $Action, 'Target');
                 $name = trim($Name);
-                if ($error === '' && ($name === '' || strlen($name) > 480 || preg_match('//u', $name) !== 1 || preg_match_all('/./us', $name) > 120
-                    || preg_match('/[\x00-\x1F\x7F]/', $name) || $source === null || $target === null
+                if ($error === '' && (!$this->ValidEditorName($name) || $source === null || $target === null
                     || count($draft['configuration']['automations']) >= 100)) {
                     $error = 'editor_invalid';
                 }
@@ -86,7 +76,7 @@ trait AutomationEditor
                     return false;
                 }
                 $draft['configuration']['revision'] = $draft['baseRevision'] + 1;
-                $draft['configuration']['automations'][] = ['id' => 'rule_' . bin2hex(random_bytes(8)), 'name' => $name, 'enabled' => true,
+                $draft['configuration']['automations'][] = ['id' => 'rule_' . bin2hex(random_bytes(8)), 'name' => $name, 'enabled' => $Enabled,
                     'triggers'                                   => [['type' => 'device', 'device' => $Source, 'property' => $source['property'], 'operator' => 'eq', 'value' => $source['value']]],
                     'conditions'                                 => [], 'actions' => [['type' => 'set', 'target' => ['type' => 'device', 'id' => $Target],
                         'values'                                                              => [$target['property'] => $target['value']]]]];
@@ -97,6 +87,7 @@ trait AutomationEditor
                     return false;
                 }
                 $this->SaveEditorDraft($draft, $yaml);
+                $this->SetEditorSelection($this->ReadEditorDraft(), '');
                 $state['validation'] = null;
                 $state['lastError'] = '';
                 $state['operation'] = ['kind' => 'editor', 'status' => 'draft_created', 'transaction' => ''];
@@ -166,6 +157,7 @@ trait AutomationEditor
         $draft = ['scope'  => $state['scope'], 'session' => $metadata['session'], 'baseRevision' => $metadata['storedRevision'],
             'baseChecksum' => $metadata['checksum'], 'configuration' => json_decode(json_encode($configuration, JSON_THROW_ON_ERROR), true, 32, JSON_THROW_ON_ERROR)];
         $this->SaveEditorDraft($draft, $yaml);
+        $this->SetEditorSelection($this->ReadEditorDraft(), '');
         $state['validation'] = null;
         $this->UpdateFormField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateFormField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
@@ -188,6 +180,7 @@ trait AutomationEditor
         $this->UpdateFormField('YamlInput', 'value', $yaml);
         $this->UpdateFormField('EditorPreview', 'caption', sprintf($this->Translate('Draft contains %d automations. Z2M is unchanged until storing.'), count($draft['configuration']['automations'])));
         $this->UpdateFormField('EditorRules', 'values', json_encode($this->EditorRuleRows($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateFormField('EditorRule', 'options', json_encode($this->EditorRuleOptions($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
     }
 
     private function EditorSnapshot(): array
@@ -254,6 +247,30 @@ trait AutomationEditor
                 } elseif (($field['name'] ?? '') === 'Editor' . $side . 'Choice') {
                     $field['options'] = $this->EditorChoices($snapshot, $selected, $side);
                 }
+            }
+        }
+        unset($field);
+        $draft = $snapshot === [] ? null : $this->ReadEditorDraft();
+        $selection = $this->EditorSelectionFields($draft);
+        foreach ($form['actions'] as &$field) {
+            $name = $field['name'] ?? '';
+            if ($name === 'EditorRule') {
+                $field['options'] = $this->EditorRuleOptions($draft ?? ['configuration' => ['automations' => []]]);
+            }
+            if ($selection['selected'] && array_key_exists($name, $selection)) {
+                $field['value'] = $selection[$name];
+            }
+            if ($name === 'CreateRuleButton' || $name === 'UpdateRuleButton') {
+                $field['visible'] = $name === 'UpdateRuleButton' ? $selection['selected'] : !$selection['selected'];
+            }
+            if ($name === 'DeleteRuleButton') {
+                $field['enabled'] = $selection['selected'];
+            }
+            if (in_array($name, ['EditorSource', 'EditorSourceChoice', 'EditorTarget', 'EditorTargetChoice'], true)) {
+                $field['enabled'] = $selection['simple'];
+            }
+            if ($name === 'EditorEditInfo') {
+                $field['caption'] = $this->EditorEditInfo($selection);
             }
         }
         unset($field);

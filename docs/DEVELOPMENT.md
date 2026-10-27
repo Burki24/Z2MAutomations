@@ -1,5 +1,19 @@
 # Entwicklung
 
+## Bearbeiten und Löschen im Klick-Editor
+
+Die Erweiterung des Editors wurde offline gegen denselben echten JavaScript-
+Empfänger geprüft: Auswahl über stabile IDs auch bei gleichen Namen, Vorbelegen
+der Felder, Ändern von Ereignis/Aktion/Name/Aktivierung, Erhalt anderer Regeln,
+Löschen der letzten Regel und anschließende Prüfung/Speicherung einer leeren
+Konfiguration. Erweiterte Regeln erlauben Metadatenänderungen ohne Verlust ihrer
+Bedingungen und Schritte. Auswahlkennungen binden Aktionen an den Entwurf;
+veraltete Formulare, fehlende IDs und ungespeicherte Expertentexte werden abgewiesen.
+Alle dynamischen Optionen und Listenwerte bleiben SDK-konform JSON-codiert.
+Die nativen neuen Auswahl-/Ändern-/Löschbuttons wurden noch nicht live installiert
+oder bedient; die folgenden früheren Praxisnachweise gelten für den vorherigen
+Editorstand mit Erstellen, Aktivieren und Stoppen.
+
 ## Native Praxisprüfung: Klick-Editor und Steuerung
 
 Auf der ausdrücklich freigegebenen Testinstallation mit Z2M 2.14.2-dev wurde

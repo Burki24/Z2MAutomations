@@ -9,8 +9,8 @@ trait ModuleDiagnostics
     private function TraceModuleCall(string $function, int $line, callable $callback): mixed
     {
         $void = in_array($function, ['Create', 'ApplyChanges', 'MessageSink', 'ExpireRequest', 'SelectEditorDevice', 'ShowYamlEditor'], true);
-        $results = $function === 'CreateSimpleAutomation'
-            ? ['Keine Automation hinzugefügt; Ablehnungsgrund siehe Ablauf.', 'Automation zum lokalen Entwurf hinzugefügt; Z2M noch unverändert.'] : null;
+        $results = in_array($function, ['CreateSimpleAutomation', 'SelectAutomation', 'UpdateAutomation', 'DeleteAutomation'], true)
+            ? ['Editoraktion abgelehnt; Grund siehe Ablauf.', 'Editoraktion abgeschlossen; Z2M noch unverändert.'] : null;
         return $this->DebugFlowCall($function, $line, \Closure::fromCallable($callback), $void, [], $results);
     }
 

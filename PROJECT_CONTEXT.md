@@ -35,6 +35,10 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - Erster Klick-Editor für diskrete Geräteereignisse und Set-Aktionen aus Z2M-Exposes.
   Vorhandene Regeln werden beim Ergänzen erhalten; YAML bleibt optional sichtbar.
   Numerische-/Zeit-/Gruppenregeln benötigen derzeit die erweiterte YAML-Ansicht.
+- Bearbeiten einfacher Regeln und bestätigtes Löschen beliebiger vorhandener
+  Regeln im lokalen Entwurf implementiert. Bei erweiterten Regeln sind Name und
+  Aktivierung änderbar, ohne die Bedingungen oder Schritte zu ersetzen. Die neue
+  Bedienung ist offline geprüft, noch nicht in der nativen Testkonsole installiert.
 - DebugFlowHelper und dessen DebugHelper-Abhängigkeit sind kanonisch eingebunden.
   Die bestehende Fachinstrumentierung delegiert ihre Abläufe an den zentralen Helper.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
@@ -54,7 +58,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Nächste Schritte
 
-1. Klick-Editor um Bearbeiten/Löschen und weitere Regeltypen erweitern.
+1. Klick-Editor um weitere Regeltypen und die Bearbeitung ihrer Schritte erweitern.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 

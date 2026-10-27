@@ -12,6 +12,7 @@ require_once __DIR__ . '/../libs/Z2MProtocol.php';
 require_once __DIR__ . '/../libs/ExtensionContract.php';
 require_once __DIR__ . '/../libs/ExtensionIntegration.php';
 require_once __DIR__ . '/../libs/AutomationEditor.php';
+require_once __DIR__ . '/../libs/AutomationEditorManagement.php';
 
 use Z2MAutomations\Z2MProtocol;
 
@@ -25,6 +26,7 @@ class Z2MAutomations extends IPSModuleStrict
     use Z2MAutomations\ModuleDiagnostics;
     use Z2MAutomations\ExtensionIntegration;
     use Z2MAutomations\AutomationEditor;
+    use Z2MAutomations\AutomationEditorManagement;
 
     public function Create(): void
     {
@@ -40,6 +42,7 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterAttributeString('EditorDraft', '');
             $this->RegisterAttributeString('EditorSource', '');
             $this->RegisterAttributeString('EditorTarget', '');
+            $this->RegisterAttributeString('EditorSelection', '');
             $this->RegisterAttributeBoolean('ShowYaml', false);
             $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
             $this->RegisterMessage($this->InstanceID, FM_CONNECT);

@@ -2,6 +2,11 @@
 
 ## Neu
 
+- Klick-Editor um Auswahl, Bearbeitung und bestätigtes Löschen bestehender Regeln
+  erweitert. Einfache Regeln behalten ihre ID; andere Regeln bleiben unverändert.
+  Name und Aktivierung erweiterter Regeln können ohne Verlust ihrer Schritte
+  geändert werden. Veraltete Formularauswahlen werden abgewiesen.
+
 - Dynamische Geräte-/Aktionsauswahl und Entwurfsliste werden für die native
   Konsole JSON-codiert aktualisiert. Regressionstest prüft diesen SDK-Vertrag.
 - Set-Aktionen werden direkt an Z2Ms native Befehlsverarbeitung übergeben.

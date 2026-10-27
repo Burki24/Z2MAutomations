@@ -89,10 +89,41 @@
             "onClick": "Z2MA_LoadAutomationEditor($id);"
         },
         {
+            "type": "Select",
+            "name": "EditorRule",
+            "caption": "Automation to edit",
+            "value": "",
+            "options": [
+                {
+                    "caption": "Create a new automation",
+                    "value": ""
+                }
+            ],
+            "onChange": "Z2MA_SelectAutomation($id, $EditorRule, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EditorEditToken",
+            "caption": "Selection reference",
+            "value": "",
+            "visible": false
+        },
+        {
+            "type": "Label",
+            "name": "EditorEditInfo",
+            "caption": "Changes affect the local draft. Validate and store it afterwards."
+        },
+        {
             "type": "ValidationTextBox",
             "name": "EditorName",
             "caption": "Automation name",
             "value": ""
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorEnabled",
+            "caption": "Rule enabled",
+            "value": true
         },
         {
             "type": "Select",
@@ -147,7 +178,23 @@
         {
             "type": "Button",
             "caption": "Add automation to draft",
-            "onClick": "Z2MA_CreateSimpleAutomation($id, $EditorName, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+            "onClick": "Z2MA_CreateSimpleAutomation($id, $EditorName, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, $EditorEnabled);",
+            "name": "CreateRuleButton"
+        },
+        {
+            "type": "Button",
+            "name": "UpdateRuleButton",
+            "caption": "Apply changes to draft",
+            "visible": false,
+            "onClick": "Z2MA_UpdateAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+        },
+        {
+            "type": "Button",
+            "name": "DeleteRuleButton",
+            "caption": "Delete selected automation from draft",
+            "enabled": false,
+            "confirm": "Delete the selected automation from the local draft? The running Z2M configuration changes only after validating and storing the draft.",
+            "onClick": "Z2MA_DeleteAutomation($id, $EditorRule, $EditorEditToken, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
         },
         {
             "type": "Label",

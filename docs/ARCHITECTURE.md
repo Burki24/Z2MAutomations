@@ -43,6 +43,11 @@ korrelierten Steuerauftrag und eine zusätzliche Statusverifikation.
 Der erste Klick-Editor liest begrenzte diskrete Exposes und die gespeicherte
 Konfiguration aus der Erweiterung. Neue Regeln werden lokal ergänzt; Prüfung,
 Speicherung und Aktivierung bleiben ausdrücklich getrennte Bedienaktionen.
+Regeln werden über stabile IDs ausgewählt. Bearbeiten und Löschen erzeugen nur
+einen lokalen Entwurf. Eine Auswahlkennung bindet die Bedienung an den aktuellen
+Entwurf und verhindert Änderungen aus veralteten Formularen. Einfache Regeln
+werden vollständig bearbeitet; bei erweiterten Regeln bleiben die Strukturen
+für sichere Namens-/Aktivierungsänderungen erhalten.
 Geräteaktionen werden innerhalb Z2Ms an `eventBus.emitMQTTMessage` übergeben;
 sie benötigen keine Rückzustellung eigener Set-Veröffentlichungen vom Broker.
 Siehe [ADR 0007](adr/0007-native-command-dispatch.md).

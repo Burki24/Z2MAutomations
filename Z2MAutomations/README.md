@@ -48,7 +48,8 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
    Erweiterungsstatus abfragen.
 2. „Geräte und gespeicherte Automationen laden“ bestätigen. Damit wird der lokale
    Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
-3. Namen eingeben, ein Quellgerät und dessen Ereignis auswählen, beispielsweise
+3. Unter „Automation bearbeiten“ die Auswahl „Neue Automation erstellen“ wählen.
+   Namen eingeben, ein Quellgerät und dessen Ereignis auswählen, beispielsweise
    „Tasterereignis: Einfach drücken“.
 4. Zielgerät und Aktion auswählen, beispielsweise „Zustand: Ein“.
 5. „Automation zum Entwurf hinzufügen“ betätigen. Weitere einfache Regeln können
@@ -67,13 +68,39 @@ Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die erste
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
 Grenzwerte, Zeittrigger und Bedingungen bleiben vorerst der erweiterten YAML-Ansicht
-vorbehalten. Ein vollständiger grafischer Editor mit Löschen/Bearbeiten aller
-Regeltypen ist noch nicht enthalten.
+vorbehalten. Bestehende erweiterte Regeln können umbenannt, deaktiviert oder
+gelöscht werden; ihre Bedingungen und einzelnen Schritte lassen sich hier noch
+nicht grafisch ändern.
 
-Der Klick-Editor ergänzt Regeln; er ersetzt oder entfernt keine einzelnen
-vorhandenen Regeln. Zum erneuten Laden wird das Verwerfen des lokalen Entwurfs
+## Vorhandene Automationen bearbeiten oder löschen
+
+1. Geräte und gespeicherte Automationen laden. Unter „Automation bearbeiten“
+   die gewünschte Regel auswählen. Die Nummer neben dem Namen unterscheidet
+   gleichnamige Regeln; intern bleibt jede Regel über ihre feste ID zugeordnet.
+2. Bei einer einfachen Geräte-Regel werden Name, Aktivierung, Quelle, Ereignis,
+   Ziel und Aktion vorbelegt. Änderungen mit „Änderungen in den Entwurf übernehmen“
+   anwenden. „Regel aktiviert“ legt fest, ob die Regel bei der nächsten Aktivierung
+   der gespeicherten Konfiguration mitläuft; es schaltet nicht sofort ein Gerät.
+3. Alternativ „Ausgewählte Automation aus dem Entwurf löschen“ betätigen und
+   bestätigen. Nur die ausgewählte Regel wird entfernt. Auch die letzte Regel
+   darf gelöscht werden; es entsteht eine gültige leere Konfiguration.
+4. Den geänderten Entwurf in Z2M prüfen und anschließend speichern. Erst diese
+   Übertragung verändert Z2M. Eine geänderte Konfiguration ist danach gestoppt
+   und muss bei Bedarf erneut ausdrücklich aktiviert werden.
+
+Weitere lokale Änderungen können vor dem Übertragen gesammelt werden. Nach
+einer erfolgreichen Übertragung den Editor neu laden, bevor weitere Regeln
+bearbeitet werden. Einfache Regeln behalten beim Bearbeiten ihre ID und Position;
+andere Regeln bleiben unverändert. Bei erweiterten Regeln oder inzwischen
+fehlenden Auswahlwerten werden Geräte-/Aktionsfelder gesperrt. Name und
+Aktivierungszustand bleiben änderbar; vorhandene Bedingungen und Schritte bleiben
+vollständig erhalten. Löschen ist auch für diese Regeln möglich.
+
+Zum erneuten Laden wird das Verwerfen des lokalen Entwurfs
 ausdrücklich bestätigt. Manuelle YAML-Änderungen oder eine inzwischen geänderte
-Speicherrevision werden nicht unbemerkt überschrieben.
+Speicherrevision werden nicht unbemerkt überschrieben. Eine veraltete Auswahl,
+auch aus einem zweiten geöffneten Formular, wird abgewiesen. In diesem Fall
+die Regel erneut auswählen bzw. den Editor nach Speicherung neu laden.
 
 ## Ausführung aktivieren und stoppen
 

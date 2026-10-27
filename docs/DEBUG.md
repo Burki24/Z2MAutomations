@@ -1,5 +1,11 @@
 # Debug und MQTT-Diagnose
 
+Regelauswahl, Bearbeiten und Löschen (`SelectAutomation`, `UpdateAutomation`,
+`DeleteAutomation`) verwenden ebenfalls zentrale Start-/Ende-Abläufe. Debug
+enthält nur feste Fehlercodes, Änderungsart und Regelanzahl; keine Namen,
+Geräte-IDs, Auswahltokens oder YAML. Die Offline-Integration prüft Ablehnungen
+veralteter Auswahlen und den Erhalt erweiterter Regeln über den echten Empfänger.
+
 Die JavaScript-Engine protokolliert Aktivierung, Stopp und Aktionsfolgen über den
 nativen Z2M-Logger mit sicheren deutschen Meldungen. Die PHP-Helper gelten für
 das Symcon-Modul, nicht als JavaScript-Laufzeitabhängigkeit. Einzelheiten und
