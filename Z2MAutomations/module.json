@@ -1,0 +1,14 @@
+{
+    "id": "{23D57681-8424-48DC-9FF0-25C110C533A9}",
+    "name": "Z2MAutomations",
+    "type": 3,
+    "vendor": "",
+    "aliases": [
+        "Zigbee2MQTT Automationen"
+    ],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "Z2MA",
+    "url": "https://github.com/Burki24/Z2MAutomations/blob/dev/Z2MAutomations/README.md"
+}

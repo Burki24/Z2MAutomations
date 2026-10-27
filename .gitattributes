@@ -1,0 +1,4 @@
+* text=auto eol=lf
+/.style/** -text
+/tests/stubs/** -text
+/libs/helper/** -text

@@ -1,0 +1,30 @@
+name: Check Style
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Run shared style check
+        uses: Burki24/Symcon_ModuleCI/style@v1.0.0
+      - name: Set up PHP and PHP CS Fixer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: php-cs-fixer:3.95.27
+          coverage: none
+      - name: Check formatting without changes
+        run: php-cs-fixer fix --config=.style/.php-cs-fixer.php --dry-run --diff --using-cache=no --allow-risky=yes

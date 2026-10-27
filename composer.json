@@ -1,0 +1,13 @@
+{
+    "name": "burki24/z2m-automations",
+    "description": "Symcon library for managing automations executed in Zigbee2MQTT",
+    "type": "library",
+    "license": "PolyForm-Noncommercial-1.0.0",
+    "require": {
+        "php": ">=8.5"
+    },
+    "scripts": {
+        "test": "php tests/run.php",
+        "validate-structure": "php tests/validate_structure.php"
+    }
+}

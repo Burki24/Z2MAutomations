@@ -1,0 +1,9 @@
+{
+    "elements": [
+        {
+            "type": "Label",
+            "caption": "Development scaffold: automation editing, transfer and execution are not available yet."
+        }
+    ],
+    "actions": []
+}
