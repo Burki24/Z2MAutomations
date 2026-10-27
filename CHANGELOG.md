@@ -2,6 +2,11 @@
 
 ## Neu
 
+- Dynamische Geräte-/Aktionsauswahl und Entwurfsliste werden für die native
+  Konsole JSON-codiert aktualisiert. Regressionstest prüft diesen SDK-Vertrag.
+- Set-Aktionen werden direkt an Z2Ms native Befehlsverarbeitung übergeben.
+  Ihre Ausführung benötigt keine MQTT-Rückzustellung eigener Veröffentlichungen.
+
 - Aktivierungs- und Stoppbuttons mit frischer Statusbestätigung, aktiver Revision,
   Regelanzahl und verständlichen Ausführungsfehlern im Symcon-Modul ergänzt.
 - Erster Klick-Editor lädt Geräte aus Z2M und erstellt einfache Regeln durch

@@ -1,5 +1,36 @@
 # Entwicklung
 
+## Native Praxisprüfung: Klick-Editor und Steuerung
+
+Auf der ausdrücklich freigegebenen Testinstallation mit Z2M 2.14.2-dev wurde
+der Editor im geöffneten nativen Konsolenformular bedient: Geräte laden,
+Quelle/Ereignis/Ziel/Aktion auswählen, Regel ohne sichtbaren YAML-Editor erzeugen,
+validieren und als nächste Revision speichern. Die dynamischen Select-Optionen
+und List-Werte benötigen JSON-codierte UpdateFormField-Werte; der Regressionstest
+prüft diesen SDK-Vertrag auch bei bereits geöffnetem Formular.
+
+Aktivieren mit Bestätigungsdialog und Stoppen wurden mit anschließenden frischen
+Z2M-Bestätigungen, Statusvariablen und nativen deutschen Debug-Ausgaben geprüft.
+Der Neustart wurde direkt über MQTT mit frischer Antwort, Offline-/Onlinewechsel
+und neuer Erweiterungssitzung nachgewiesen. Die gespeicherte Revision blieb erhalten
+und war anschließend inaktiv. Der exakte Artefakthash wurde mit dem von Z2M
+gemeldeten Erweiterungscode verglichen.
+
+Ein eigener MQTT-Set-Befehl erreichte auf diesem MQTT-Weg den Z2M-Empfänger
+auch mit skipReceive=false nicht. Der begrenzte Echo-Kontrolltest erhielt keine
+Rückzustellung; die native EventBus-Übergabe schaltete dagegen dasselbe Testgerät.
+Die Engine verwendet deshalb nun Z2Ms interne Befehlsverarbeitung (ADR 0007).
+Nach Installation des korrigierten Artefakts wurde die gespeicherte Regel über
+den Symcon-Aktivierungsbutton bestätigt und praktisch ausgelöst: Das eingeschaltete
+Testlicht meldete anschließend Aus. Nach Betätigung des Stoppbuttons blieb es
+beim erneuten Einschalten An. Aktive Revision, Regelanzahl, gestoppter Zustand
+und leere Fehleranzeige wurden über Formular und Statusvariablen kontrolliert.
+Der native Moduldebug belegt Start/Ende und abgeschlossene Steueraufträge.
+Temporäre Diagnoseerweiterung und Debug-Dateisitzung wurden nach Prüfung beendet;
+die gespeicherte Testregel bleibt gestoppt. Private Gerätedaten sind nicht Teil
+dieses Berichts. Ein vollständiger Ausfall des Symcon-Dienstes wurde nicht erzeugt;
+die Unabhängigkeit bei getrenntem Datenfluss bleibt zusätzlich offline abgesichert.
+
 Es gelten AGENTS.md und die zentrale Basis in ../SymconDevelopment/.
 Zielplattform: IP-Symcon 9.0 / PHP 8.5. Branch: dev.
 

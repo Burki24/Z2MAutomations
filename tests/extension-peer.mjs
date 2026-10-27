@@ -26,6 +26,9 @@ const devices = new Map([
 ]);
 const zigbee = {resolveEntity: id => devices.get(id), devicesIterator: () => devices.values(), groupsIterator: () => [][Symbol.iterator]()};
 const bus = {onMQTTMessage: (_owner, callback) => { listener = callback; },
+    emitMQTTMessage: event => {
+        messages.push({topic: event.topic, payload: JSON.parse(event.message), retain: false});
+    },
     onPublishEntityState: (_owner, callback) => { stateListener = callback; },
     removeListeners: () => { listener = undefined; stateListener = undefined; }};
 const start = async () => {

@@ -18,9 +18,9 @@ function compare(actual, clause) {
 }
 
 export class AutomationRuntime {
-    constructor({zigbee, mqtt, logger, clock = nativeClock, available = true}) {
+    constructor({zigbee, dispatch, logger, clock = nativeClock, available = true}) {
         this.zigbee = zigbee;
-        this.mqtt = mqtt;
+        this.dispatch = dispatch;
         this.logger = logger;
         this.clock = clock;
         this.available = available;
@@ -66,7 +66,7 @@ export class AutomationRuntime {
     }
 
     activate(candidate) {
-        if (!this.available || !this.zigbee?.resolveEntity) throw new RuntimeError('runtime_unavailable');
+        if (!this.available || !this.zigbee?.resolveEntity || typeof this.dispatch !== 'function') throw new RuntimeError('runtime_unavailable');
         const rules = candidate.document.automations.filter(rule => rule.enabled);
         const references = new Map();
         for (const rule of rules) {
@@ -221,12 +221,12 @@ export class AutomationRuntime {
             this.sentAt = this.sentAt.filter(time => now - time < 1000);
             if (this.sentAt.length >= RUNTIME_LIMITS.commandsPerSecond) throw new RuntimeError('rate_limited');
             this.sentAt.push(now);
-            this.log('SENDEN', 'Set-Aktion an MQTT übergeben; Gerätewirkung nicht bestätigt.', {Regel: rule.id, Zielart: action.target.type, Eigenschaften: Object.keys(action.values).length});
+            this.log('SENDEN', 'Set-Aktion an native Z2M-Befehlsverarbeitung übergeben; Gerätewirkung nicht bestätigt.', {Regel: rule.id, Zielart: action.target.type, Eigenschaften: Object.keys(action.values).length});
             let timeout;
             try {
                 await Promise.race([
                     Promise.resolve().then(() => {
-                        if (this.active && this.generation === generation) return this.mqtt.publish(entity.name + '/set', JSON.stringify(action.values), {clientOptions: {retain: false, qos: 0}, skipLog: true});
+                        if (this.active && this.generation === generation) return this.dispatch(entity.name + '/set', JSON.stringify(action.values));
                     }),
                     new Promise((_, reject) => { timeout = this.clock.setTimeout(() => reject(new RuntimeError('action_timeout')), RUNTIME_LIMITS.publishTimeoutMs); })
                 ]);

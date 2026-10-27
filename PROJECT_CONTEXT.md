@@ -8,7 +8,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
-- Entwicklung auf dev; kein Release und keine Live-Installation durch den Agenten.
+- Entwicklung auf dev; kein Release. Installation und Schaltprüfung nur im
+  ausdrücklich freigegebenen Testsystem durchgeführt.
 - IPSModuleStrict-Verwaltungsmodul mit optional aktivierter MQTT-Anbindung.
 - Native MQTT Client und MQTT Server werden als gemeinsam nutzbare Eltern
   angeboten; Gateway-Einstellungen und Subscriptions bleiben unverändert.
@@ -38,7 +39,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Die bestehende Fachinstrumentierung delegiert ihre Abläufe an den zentralen Helper.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
   Host-Abhängigkeiten js-yaml 5.4.2 und Ajv 8.20.0 lokal mit Lockfile geprüft;
-  Referenzvertrag Z2M 2.14.2. Keine reale Z2M-Abnahme.
+  Referenzvertrag Z2M 2.14.2; einzelner Geräteablauf mit 2.14.2-dev praktisch geprüft.
 - StylePHP und SymconStubs sind unveränderte offizielle Git-Submodule.
 - DataFlowHelper, ParentConnectionHelper und VariablePresentationHelper sind
   unverändert über das kanonische Bundle-Verfahren manifestiert eingebunden.
@@ -53,11 +54,9 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Nächste Schritte
 
-1. MQTT-Anbindung nach ausdrücklichem Auftrag mit realem Gateway und Z2M prüfen.
-2. Erweiterung nach ausdrücklichem Praxisauftrag in Z2M prüfen und kompatible
-   Versionen anhand realer Nachweise festlegen.
-3. Klick-Editor um Bearbeiten/Löschen und weitere Regeltypen erweitern.
-4. Neue Formularbedienung und Engine ausdrücklich praktisch prüfen.
+1. Klick-Editor um Bearbeiten/Löschen und weitere Regeltypen erweitern.
+2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
+   der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 
 ## Dokumentation
 
@@ -71,5 +70,9 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - [ADR 0004](docs/adr/0004-correlated-module-workflows.md)
 - [Entwicklung und Prüfungen](docs/DEVELOPMENT.md)
 
-Installation und YAML-Übertragung wurden in der Testinstallation praktisch
-bestätigt. Die neue Engine wurde noch nicht live installiert oder geschaltet.
+Installation, Klick-Editor, YAML-Prüfung und Speicherung sowie Aktivierungs- und
+Stoppbuttons wurden in der freigegebenen Testinstallation praktisch bestätigt.
+Die gespeicherte Geräteautomation wurde real ausgelöst und ausgeführt; nach
+Stopp blieb die erneute Geräteaktion unbeeinflusst. Die Engine übergibt Aktionen
+direkt an Z2Ms native Befehlsverarbeitung (ADR 0007). Die Testregel bleibt
+gespeichert und gestoppt; siehe den aktuellen Nachweis in docs/DEVELOPMENT.md.

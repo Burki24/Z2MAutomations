@@ -80,6 +80,10 @@ Zusätzliche Fehler: `activation_expired`, `checksum_mismatch`, `unknown_entity`
   werden zum Sendezeitpunkt neu aufgelöst. Gruppen werden nicht neu angelegt.
   Eigenschaftswerte setzt der native Z2M-Converter um; eine vollständige Prüfung
   gegen alle Geräte-Exposes ist nicht Teil der Engine.
+- Set-Aktionen gehen über `eventBus.emitMQTTMessage` direkt an Z2Ms native
+  Befehlsverarbeitung, mit vollständigem Basistopic und regulärer `/set`-Nachricht.
+  Es wird kein Set-Befehl über den Broker zurückgeschleift. Fehlt diese Host-API,
+  wird die Aktivierung mit `runtime_unavailable` abgelehnt.
 
 ## Status, Grenzen und Neustart
 
@@ -90,9 +94,12 @@ zur nächsten erfolgreichen neuen Aktivierung. `action_failed`, `action_timeout`
 und `rate_limited` beschreiben Übergabefehler, keine Gerätebestätigung.
 
 Es gelten maximal 16 gleichzeitig laufende Regeln, 20 Set-Übergaben pro Sekunde
-über alle Regeln und fünf Sekunden Wartezeit auf eine MQTT-Publish-Rückgabe.
-Überzählige Läufe oder Aktionen werden verworfen. Der Publish-Timeout bedeutet
-nicht, dass ein bereits gestarteter Transportauftrag zurückgenommen wurde.
+über alle Regeln und fünf Sekunden Wartezeit auf die Rückgabe der Befehlsübergabe.
+Überzählige Läufe oder Aktionen werden verworfen. Die native EventBus-Übergabe
+kehrt unmittelbar zurück; sie wartet nicht auf Converter oder Zigbee-Antworten.
+Spätere Converter-/Gerätefehler stehen im Z2M-Protokoll und werden nicht als
+bestätigte `runtime_error`-Gerätefehler ausgegeben. Der Übergabe-Timeout bedeutet
+nicht, dass ein bereits gestarteter Auftrag zurückgenommen wurde.
 Ein Stopp verhindert weitere Übergaben, kann aber keinen schon gesendeten
 Zigbee-Befehl zurückrufen. Trigger, Timer und Wiederholungen werden nicht auf Platte
 geschrieben. Nach Neustart, Erweiterungsupdate oder geänderter gespeicherter YAML

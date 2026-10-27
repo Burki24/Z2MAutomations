@@ -36,7 +36,7 @@ trait AutomationEditor
                 $Device = '';
             }
             $this->WriteAttributeString('Editor' . $Side, $Device);
-            $this->UpdateFormField('Editor' . $Side . 'Choice', 'options', $this->EditorChoices($snapshot, $Device, $Side));
+            $this->UpdateFormField('Editor' . $Side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $Device, $Side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
             $this->UpdateFormField('Editor' . $Side . 'Choice', 'value', '');
             $this->DebugEvent('AKTION', 'Geräteauswahl im Editor aktualisiert.', ['Bereich' => $Side, 'GerätGefunden' => $Device !== '']);
         });
@@ -167,8 +167,8 @@ trait AutomationEditor
             'baseChecksum' => $metadata['checksum'], 'configuration' => json_decode(json_encode($configuration, JSON_THROW_ON_ERROR), true, 32, JSON_THROW_ON_ERROR)];
         $this->SaveEditorDraft($draft, $yaml);
         $state['validation'] = null;
-        $this->UpdateFormField('EditorSource', 'options', $this->EditorDevices(['devices' => $devices], 'Source'));
-        $this->UpdateFormField('EditorTarget', 'options', $this->EditorDevices(['devices' => $devices], 'Target'));
+        $this->UpdateFormField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateFormField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
             $this->UpdateFormField($field, 'value', '');
         }
@@ -187,7 +187,7 @@ trait AutomationEditor
         $this->WriteAttributeString('YamlDraft', $yaml);
         $this->UpdateFormField('YamlInput', 'value', $yaml);
         $this->UpdateFormField('EditorPreview', 'caption', sprintf($this->Translate('Draft contains %d automations. Z2M is unchanged until storing.'), count($draft['configuration']['automations'])));
-        $this->UpdateFormField('EditorRules', 'values', $this->EditorRuleRows($draft));
+        $this->UpdateFormField('EditorRules', 'values', json_encode($this->EditorRuleRows($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
     }
 
     private function EditorSnapshot(): array

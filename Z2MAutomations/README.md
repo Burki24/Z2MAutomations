@@ -91,6 +91,10 @@ unbekannt und muss erneut abgefragt werden. Bereits gesendete Gerätebefehle las
 sich nicht zurückrufen.
 
 **Symcon ist nach erfolgreicher Aktivierung für die Ausführung nicht erforderlich.**
+Geräteaktionen übergibt die Erweiterung direkt an Z2Ms interne Befehlsverarbeitung.
+Die Ausführung benötigt keine Rückzustellung eigener MQTT-Veröffentlichungen.
+Der Ausführungsstatus bestätigt die aktive Regel, nicht die physische Wirkung
+jeder Aktion. Spätere Converter-/Zigbee-Fehler sind im Z2M-Protokoll nachzusehen.
 Auch das Deaktivieren der MQTT-Anbindung oder eine Unterbrechung der Symcon-
 Verbindung stoppt die Regeln in Z2M nicht automatisch. Erst der ausdrücklich an
 Z2M gesendete Stopp beendet die Ausführung. Nach einem Z2M-/Erweiterungsneustart

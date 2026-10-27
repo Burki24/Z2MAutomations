@@ -3,6 +3,10 @@
 - Datum: 27.10.2026
 - Status: Angenommen
 
+Die hier ursprüngliche MQTT-Veröffentlichung von Geräteaktionen wird durch
+[ADR 0007](0007-native-command-dispatch.md) ersetzt. Aktivierungs- und Speichervertrag
+bleiben unverändert.
+
 ## Entscheidung
 
 Die Erweiterung besitzt eine eigene Engine für das bestehende Schema 1.

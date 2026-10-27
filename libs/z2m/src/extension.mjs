@@ -244,8 +244,9 @@ export default class Z2MAutomationsExtension {
         this.settings = settings;
         this.logger = logger;
         this.zigbee = _zigbee;
-        this.runtime = new AutomationRuntime({zigbee: _zigbee, mqtt, logger, clock: options.clock,
-            available: typeof eventBus.onPublishEntityState === 'function'});
+        this.runtime = new AutomationRuntime({zigbee: _zigbee, logger, clock: options.clock,
+            dispatch: (topic, message) => this.eventBus.emitMQTTMessage({topic: this.baseTopic + '/' + topic, message}),
+            available: typeof eventBus.onPublishEntityState === 'function' && typeof eventBus.emitMQTTMessage === 'function'});
         // A real deployed file is in data/external_extensions, including Z2M temporary import copies.
         const directory = options.directory ?? fileURLToPath(new URL('../z2m-automations/', import.meta.url));
         this.store = new ConfigurationStore(directory, options.io ?? fs);

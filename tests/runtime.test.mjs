@@ -38,7 +38,7 @@ class Clock {
     }
 }
 
-async function harness(directory = null) {
+async function harness(directory = null, nativeDispatch = true) {
     directory ??= await mkdtemp(join(tmpdir(), 'z2ma-runtime-'));
     const clock = new Clock();
     const messages = [], commands = [], logs = [];
@@ -47,13 +47,16 @@ async function harness(directory = null) {
     const group = {ID: 7, name: 'synthetic/group', isDevice: () => false};
     let publishState, receive;
     const bus = {onMQTTMessage: (_owner, callback) => { receive = callback; },
+        emitMQTTMessage: nativeDispatch ? event => {
+            commands.push({topic: event.topic.slice('synthetic/z2m/'.length), fullTopic: event.topic, data: JSON.parse(event.message)});
+            if (h.sendFault) throw new Error('synthetic-private-body');
+        } : undefined,
         onPublishEntityState: (_owner, callback) => { publishState = callback; },
         removeListeners: () => { receive = undefined; publishState = undefined; }};
     const zigbee = {resolveEntity: id => devices.get(id), groupsIterator: () => [group].values()};
     const mqtt = {publish: async (topic, payload, options) => {
         const message = {topic, data: JSON.parse(payload), options};
-        if (topic.endsWith('/set')) { commands.push(message); if (h.sendFault) throw new Error('synthetic-private-body'); }
-        else messages.push(message);
+        messages.push(message);
     }};
     const logger = Object.fromEntries(['debug', 'info', 'warning', 'error'].map(level => [level, text => { logs.push(text); if (h.logFault) throw new Error('sink unavailable'); }]));
     const extension = new Extension(zigbee, mqtt, null, null, bus, null, null, null,
@@ -90,7 +93,8 @@ test('storage never executes; explicit activation executes a fresh device trigge
         assert.equal(h.commands.length, 1);
         assert.equal(h.commands[0].topic, 'synthetic/target/set');
         assert.deepEqual(h.commands[0].data, {state: 'ON'});
-        assert.equal(h.commands[0].options.clientOptions.retain, false);
+        assert.equal(h.commands[0].fullTopic, 'synthetic/z2m/synthetic/target/set');
+        assert.equal(h.messages.filter(message => message.topic.endsWith('/set')).length, 0, 'Device commands must not depend on broker loopback');
         assert.equal(h.extension.status().executing, true);
     } finally { await h.close(); }
 });
@@ -114,6 +118,16 @@ test('activation binds session, revision and checksum; disabled rules and missin
         await h.event({occupancy: true});
         assert.equal(h.commands.length, 0);
         assert.equal(h.extension.status().enabled_count, 0);
+    } finally { await h.close(); }
+});
+
+test('activation rejects hosts without native command dispatch instead of falling back to broker loopback', async () => {
+    const h = await harness(null, false);
+    try {
+        await h.store(yaml());
+        assert.equal((await h.activate()).error.code, 'runtime_unavailable');
+        assert.equal(h.extension.status().executing, false);
+        assert.equal(h.commands.length, 0);
     } finally { await h.close(); }
 });
 
@@ -319,7 +333,7 @@ test('global publication rate and concurrent rules are bounded; hung publication
         assert.equal(h.extension.status().runtime_error, 'rate_limited');
         await h.store(yaml([rule()], 2)); await h.activate();
         await h.clock.advance(1000);
-        h.extension.runtime.mqtt = {publish: () => new Promise(() => {})};
+        h.extension.runtime.dispatch = () => new Promise(() => {});
         await h.event({occupancy: true}); await h.clock.advance(5000);
         assert.equal(h.extension.status().runtime_error, 'action_timeout');
         assert.equal(h.extension.runtime.tasks.size, 0);

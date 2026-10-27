@@ -43,6 +43,9 @@ korrelierten Steuerauftrag und eine zusätzliche Statusverifikation.
 Der erste Klick-Editor liest begrenzte diskrete Exposes und die gespeicherte
 Konfiguration aus der Erweiterung. Neue Regeln werden lokal ergänzt; Prüfung,
 Speicherung und Aktivierung bleiben ausdrücklich getrennte Bedienaktionen.
+Geräteaktionen werden innerhalb Z2Ms an `eventBus.emitMQTTMessage` übergeben;
+sie benötigen keine Rückzustellung eigener Set-Veröffentlichungen vom Broker.
+Siehe [ADR 0007](adr/0007-native-command-dispatch.md).
 
 ## Persistenz und Fehlerfälle
 

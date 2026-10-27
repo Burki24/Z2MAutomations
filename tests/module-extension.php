@@ -28,6 +28,16 @@ class ObservedAutomationModule extends Z2MAutomations
     public array $debugMessages = [];
     public bool $debugFails = false;
 
+    protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
+    {
+        if (in_array($Parameter, ['options', 'values'], true)) {
+            if (!is_string($Value) || !is_array(json_decode($Value, true, 512, JSON_THROW_ON_ERROR))) {
+                throw new RuntimeException('Complex live form updates must be JSON encoded.');
+            }
+        }
+        return true;
+    }
+
     // The test subclass lives outside the module directory; keep the real form as its fixture.
     protected function LoadConfigurationForm(): array
     {
