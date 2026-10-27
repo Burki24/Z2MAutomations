@@ -12,22 +12,43 @@ DataFlowHelper, ParentConnectionHelper und VariablePresentationHelper sind
 unverändert aus dem kanonischen Consumer-Bundle eingebunden; Herkunft und Hashes
 stehen in libs/helper/manifest.json. .helper-sync.json deklariert die Auswahl.
 Der zentrale Consumer-Eintrag und GitHub-App-Zugriff wurden hier nicht eingerichtet.
-Es gibt keine npm-Abhängigkeiten.
+Node ab 22.2 und npm ci sind für die Erweiterungstests erforderlich. package-lock.json
+fixiert js-yaml 5.4.2 und Ajv 8.20.0 als lokale Testabhängigkeiten. In Z2M werden
+die vorhandenen Host-Abhängigkeiten verwendet, kein npm-Verzeichnis mitgeliefert.
 
 ## Lokale Prüfungen
 
-- php tests/run.php
-- php tests/validate_structure.php
 - php .style/json-check.php
 - php /path/to/php-cs-fixer.phar fix --config=.style/.php-cs-fixer.php --dry-run --diff --using-cache=no --allow-risky=yes
+- npm ci --ignore-scripts --no-audit --no-fund
+- npm run check:extension
+- php tests/run.php
+- php tests/validate_structure.php
+- npm test (nur Erweiterungstests)
 
-Die beiden letzten Befehle verwenden die offizielle StylePHP-Konfiguration.
+Die beiden ersten Befehle verwenden die offizielle StylePHP-Konfiguration.
+Der unveränderte StylePHP-JSON-Checker durchsucht rekursiv auch node_modules;
+seine Vollprüfung erfolgt deshalb in einem Checkout ohne installierte Node-
+Abhängigkeiten. CI hält Style- und Testjob entsprechend getrennt.
 CI nutzt Symcon_ModuleCI v1.0.0 für StylePHP und PHP-Tests. Zusätzlich läuft
 php-cs-fixer explizit im Prüfmodus mit festgelegter Werkzeugversion.
 
 tests/run.php umfasst Strukturprüfung, Helper-Integrität, Instanzerstellung,
-wiederholtes ApplyChanges sowie MQTT-Integration mit synthetischen Gateways.
+wiederholtes ApplyChanges, MQTT-Integration mit synthetischen Gateways und
+Erweiterungstests mit echten Dateien in temporären Testverzeichnissen.
+Die PHP-Tests laden das produktive Modul gezielt über loadSingleModule, weil
+der offizielle Stub-Lader node_modules sonst fälschlich als Modul behandelt.
+Library-Metadaten prüft weiterhin tests/validate_structure.php.
 Diese Nachweise ersetzen keine Symcon-Laufzeitprüfung.
+
+## Erweiterungsartefakt
+
+Nach Änderungen an libs/z2m/src/extension.mjs oder automations.schema.json:
+npm run build:extension. Der Builder ersetzt ausschließlich den Schema-Import
+durch das kanonische Schema und erzeugt libs/z2m/z2m-automations.mjs.
+Kein Fremdcode wird gebündelt. npm test und tests/run.php prüfen vor Ausführung,
+dass das Artefakt exakt zu den Quellen passt. Nur dieses Einzeldatei-Artefakt
+gehört bei einer später beauftragten Installation nach data/external_extensions.
 
 ## Grenzen
 
@@ -67,3 +88,22 @@ tests/validate_structure.php, offizieller StylePHP-JSON-Check und PHP CS Fixer
 PHP-Dateien bestehen die Syntaxprüfung. Helper-Hashes stimmen mit dem Manifest;
 offizielle Submodule sind unverändert. Eigene Textdateien verwenden LF ohne BOM,
 git diff --check ist sauber. GitHub-CI wurde lokal nicht ausgeführt.
+
+## Erweiterung: Nachweis am 27.10.2026
+
+- Der erste Fehltest bestätigte das fehlende Einzeldatei-Artefakt vor Implementierung.
+- 13 Node-Tests mit echten temporären Dateien bestanden unter Node 24.20.0 und
+  zusätzlich unter der vorgesehenen Mindestversion Node 22.2.0.
+- Geprüft: eigenes Beispieldokument, strikte Syntax-/Schema-/Semantikprüfung,
+  Schreibfreiheit von validate, Konflikte, Idempotenz, Sitzung und Replay,
+  serialisierte begrenzte Warteschlange, Open-/Write-/Sync-/Close-/Rename-Fehler,
+  beschädigte Dateien, Sicherungslesemodus, externe Änderungen und MQTT-Ausfälle.
+- Der Test einer kopierten Einzeldatei in synthetischem data/external_extensions
+  prüft die tatsächliche Ableitung des persistenten Datenpfads ohne Test-Override.
+- tests/run.php prüft zusätzlich alle bisherigen PHP-/MQTT-Tests und die
+  reproduzierbare Übereinstimmung von Quellen, Schema und Artefakt.
+- Offizieller StylePHP-JSON-Check und php-cs-fixer im Prüfmodus erfolgreich.
+  node_modules wurde dafür vorübergehend außerhalb des Quellbaums gehalten und
+  anschließend unverändert zurückgelegt. Offizielle Quellen bleiben unverändert.
+- Noch keine reale Installation, kein Broker-Verbindungstest und keine Abnahme
+  in Z2M; keine Ausführungsengine implementiert oder geprüft.

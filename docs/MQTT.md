@@ -1,5 +1,9 @@
 # MQTT-Vertrag und Nachweise
 
+Diese Datei beschreibt den vorhandenen Symcon-Transport. Der getrennte
+[Empfängervertrag der Z2M-Erweiterung](EXTENSION_PROTOCOL.md) ist implementiert,
+aber noch nicht in die PHP-Upload-/Empfangsfunktionen integriert.
+
 ## Symcon-Verbindung
 
 Native Eltern: MQTT Client {F7A0DD2E-7684-95C0-64C2-D2A9DC47577B} und

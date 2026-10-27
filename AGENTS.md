@@ -29,3 +29,9 @@ die zentralen principles/ und die relevanten standards/. Sie gelten für dieses 
 - Nach Änderungen englischen Commit-Betreff und englische Erklärung liefern.
 - Prüfung: php tests/run.php, php tests/validate_structure.php, offizielle
   StylePHP-Prüfung und php-cs-fixer im Prüfmodus.
+- Erweiterung: libs/z2m/src/extension.mjs und automations.schema.json sind die
+  Quellen. Das hochladbare libs/z2m/z2m-automations.mjs wird ausschließlich mit
+  npm run build:extension erzeugt; npm run check:extension prüft seine Aktualität.
+- npm ci installiert nur lokale Entwicklungs-/Testabhängigkeiten. Der Z2M-Host
+  stellt js-yaml und Ajv bereit; keine fremden Implementierungen in das
+  Erweiterungsartefakt kopieren. tests/run.php benötigt Node und npm ci.

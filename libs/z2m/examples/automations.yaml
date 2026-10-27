@@ -1,0 +1,43 @@
+schema_version: 1
+revision: 1
+automations:
+  - id: hallway_motion
+    name: Synthetic hallway motion
+    enabled: false
+    triggers:
+      - type: device
+        device: "0x0000000000000001"
+        property: occupancy
+        operator: eq
+        value: true
+        for_seconds: 0
+    conditions:
+      - type: time_window
+        after: "18:00:00"
+        before: "06:00:00"
+        timezone: Europe/Berlin
+        weekdays: [1, 2, 3, 4, 5, 6, 7]
+    actions:
+      - type: set
+        target:
+          type: device
+          id: "0x0000000000000002"
+        values:
+          state: "ON"
+          brightness: 102
+        delay_seconds: 0
+  - id: evening_group
+    name: Synthetic evening group
+    enabled: false
+    triggers:
+      - type: time
+        at: "22:00:00"
+        timezone: UTC
+    conditions: []
+    actions:
+      - type: set
+        target:
+          type: group
+          id: 7
+        values:
+          state: "OFF"

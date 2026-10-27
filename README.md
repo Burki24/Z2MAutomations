@@ -14,8 +14,13 @@ Die MQTT-Anbindung empfängt den Z2M-Status, Versionsinformationen und die Liste
 externer Erweiterungen. Eine Verbindungsprüfung sendet eine Gesundheitsanfrage
 und zeigt das Ergebnis nach der passenden Antwort an.
 
-Regelerstellung, Erweiterungsinstallation, YAML-Übertragung und Ausführung
-von Automationen sind noch nicht verfügbar.
+Die eigene Z2M-Erweiterung kann inzwischen versionierte YAML empfangen,
+validieren und persistent speichern. Sie führt noch keine Automationen aus.
+Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
+eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.
+
+Regelerstellung, automatische Erweiterungsinstallation und YAML-Übertragung
+aus dem Symcon-Formular sind noch nicht verfügbar.
 
 ## Voraussetzungen
 
@@ -29,6 +34,8 @@ von Automationen sind noch nicht verfügbar.
 
 - [Z2MAutomations](Z2MAutomations/README.md): MQTT-Anbindung, Statusanzeige und
   Verbindungsprüfung als Grundlage der geplanten Automationsverwaltung.
+- [Eigene Z2M-Erweiterung](libs/z2m/README.md): Empfänger mit Schema-Prüfung,
+  persistentem Konfigurationsspeicher und Sicherung der vorherigen Fassung.
 
 ## Installation
 

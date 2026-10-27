@@ -19,8 +19,8 @@ $check = static function (bool $value, string $message): void
     }
 };
 IPS\Kernel::reset();
-IPS\ModuleLoader::loadLibrary(dirname(__DIR__) . '/library.json');
 $library = json_decode(file_get_contents(dirname(__DIR__) . '/library.json'), true, 512, JSON_THROW_ON_ERROR);
+IPS\ModuleLoader::loadSingleModule(dirname(__DIR__) . '/Z2MAutomations', $library['id']);
 IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/MQTTClient', $library['id']);
 IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/MQTTServer', $library['id']);
 $metadata = json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/module.json'), true, 512, JSON_THROW_ON_ERROR);

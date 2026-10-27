@@ -1,0 +1,20 @@
+{
+    "name": "z2m-automations",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "license": "PolyForm-Noncommercial-1.0.0",
+    "engines": {
+        "node": ">=22.2"
+    },
+    "scripts": {
+        "build:extension": "node tests/build-extension.mjs",
+        "check:extension": "node tests/build-extension.mjs --check",
+        "pretest": "node tests/build-extension.mjs --check",
+        "test": "node --test tests/extension.test.mjs"
+    },
+    "devDependencies": {
+        "ajv": "8.20.0",
+        "js-yaml": "5.4.2"
+    }
+}

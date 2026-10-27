@@ -6,7 +6,8 @@ Symcon ist der Editor und Verwalter. Zigbee2MQTT ist die Laufzeit.
 Beide Teile erhalten eigenen Implementierungscode in diesem Repository:
 
 - Z2MAutomations/: Symcon-Modul mit Formularen und künftig MQTT-Übertragung.
-- libs/z2m/: eigener JavaScript-Erweiterungscode, sobald implementiert.
+- libs/z2m/: eigene Erweiterungsquellen, kanonisches YAML-Schema und hochladbare
+  Einzeldatei mit eingebettetem Schema.
 - libs/Z2MProtocol.php: librarylokaler MQTT-/Z2M-Vertrag.
 - libs/helper/: unverändertes, manifestiertes Bundle aus Symcon_ModuleHelper.
 - libs/: librarylokale Logik, sobald benötigt.
@@ -29,16 +30,18 @@ oder MQTT Server. Es gibt keinen eigenen Broker-Client und keinen Zwischenweg
 6. Symcon zeigt erst nach Bestätigung die aktive Revision an.
 
 Die MQTT-Grundlage mit konfigurierbarem Basistopic, Bridge-Status und manuellem
-health_check ist implementiert. Installation und YAML-Übertragung sind noch nicht
-implementiert. Eigene Erweiterungstopics und YAML-Schema sind nicht veröffentlicht.
+health_check ist implementiert. Die Z2M-Seite empfängt und speichert inzwischen
+versionierte YAML über eigene Topics; siehe [Erweiterungsprotokoll](EXTENSION_PROTOCOL.md)
+und [YAML-Vertrag](YAML_SCHEMA.md). Symcon-Upload, automatische Installation,
+Ausführungsengine und Aktivierung sind noch nicht implementiert.
 
 ## Persistenz und Fehlerfälle
 
-Die Erweiterung soll die letzte gültige YAML im persistenten Z2M-Datenverzeichnis
-halten und beim Neustart laden. Fehler dürfen die gültige Konfiguration nicht
-ersetzen. Geplant sind Revisionskontrolle, Inhaltsprüfsumme, begrenzte Nachrichten,
-wiederholbar sichere Aufträge und eine gesicherte vorherige Fassung. Persistenz,
-Aktivierung und Rücknahme benötigen eigene Tests.
+Die Erweiterung hält die letzte gültige YAML im eigenen persistenten Unterordner
+und lädt sie beim Neustart. Revisionskontrolle, Prüfsumme, Größenlimits,
+idempotente Wiederholung und Sicherung der Vorversion sind implementiert.
+Offline-Tests decken echte Dateischreibvorgänge, Schreibfehler und Wiederanlauf ab.
+Aktivierung und Rücknahme ausführbarer Regeln gehören zur künftigen Engine.
 
 Code-Updates und Regeländerungen sind getrennte Vorgänge. Der offizielle Upload
 schreibt JavaScript vor dem Laden und garantiert keinen automatischen Rollback.

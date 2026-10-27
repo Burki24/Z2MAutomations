@@ -76,4 +76,6 @@ Eine Gesundheitsantwort setzt den Bridge-Onlinezustand nicht eigenständig.
 
 Es wird nur eine offene Gesundheitsanfrage pro Instanz geführt. Antworten ohne
 passende Transaktions-ID und gespeicherte Retain-Antworten schließen sie nicht ab.
-Regelerstellung, YAML-Übertragung und Erweiterungsinstallation folgen später.
+Die eigene Z2M-Erweiterung bietet bereits Empfang und Speicherung der YAML;
+Regelerstellung, YAML-Übertragung und Erweiterungsinstallation aus diesem
+Symcon-Modul folgen später. Die Erweiterung führt noch keine Automationen aus.

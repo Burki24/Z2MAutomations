@@ -15,7 +15,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - Konfigurierbares Basistopic, lesbare Statusvariablen, normalisierter Bridge-Cache
   und asynchroner health_check mit Transaktion und Zeitlimit implementiert.
 - Standardmäßig deaktiviert; keine automatischen Anfragen oder Schaltaktionen.
-- JavaScript-Erweiterung und YAML-Schema sind noch nicht implementiert.
+- Eigene JavaScript-Erweiterung und YAML-Schema Version 1 implementiert.
+- Erweiterungsbefehle validate/store/get/status mit Protokollversion 1,
+  Sitzungskennung, Revisionskontrolle, SHA-256 und serialisierter Verarbeitung.
+- Persistente YAML mit Vorversion und temporärem, gespültem Schreiben vor rename.
+  Beschädigte Hauptdateien führen mit gültiger Sicherung zu recovered_read_only.
+- Noch keine Ausführung, Aktivierung oder Übertragung aus dem Symcon-Formular.
+- Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
+  Host-Abhängigkeiten js-yaml 5.4.2 und Ajv 8.20.0 lokal mit Lockfile geprüft;
+  Referenzvertrag Z2M 2.14.2. Keine reale Z2M-Abnahme.
 - StylePHP und SymconStubs sind unveränderte offizielle Git-Submodule.
 - DataFlowHelper, ParentConnectionHelper und VariablePresentationHelper sind
   unverändert über das kanonische Bundle-Verfahren manifestiert eingebunden.
@@ -30,10 +38,11 @@ sie persistent und führt sie unabhängig von Symcon aus.
 ## Nächste Schritte
 
 1. MQTT-Anbindung nach ausdrücklichem Auftrag mit realem Gateway und Z2M prüfen.
-2. Unterstützte Z2M-Version festlegen und Erweiterungsverträge dagegen prüfen.
-3. YAML-Schema und versioniertes MQTT-Protokoll mit synthetischen Fixtures definieren.
-4. Eigene Erweiterung mit Validierung, Persistenz und bestätigter Aktivierung bauen.
-5. Regel-Formulare, Vorschau und bewusstes Übertragen implementieren.
+2. Erweiterung nach ausdrücklichem Praxisauftrag in Z2M prüfen und kompatible
+   Versionen anhand realer Nachweise festlegen.
+3. Neue Erweiterungstopics und Speicheraufträge in Symcon integrieren.
+4. Regel-Formulare, Vorschau und bewusstes Übertragen implementieren.
+5. Ausführungsengine und getrennte Aktivierungsbestätigung entwickeln.
 
 ## Dokumentation
 
@@ -41,6 +50,9 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - [ADR 0001](docs/adr/0001-execute-automations-in-z2m.md)
 - [ADR 0002](docs/adr/0002-use-native-symcon-mqtt.md)
 - [MQTT-Vertrag und Testgrenzen](docs/MQTT.md)
+- [YAML-Schema](docs/YAML_SCHEMA.md)
+- [Erweiterungsprotokoll und Persistenz](docs/EXTENSION_PROTOCOL.md)
+- [ADR 0003](docs/adr/0003-versioned-yaml-storage.md)
 - [Entwicklung und Prüfungen](docs/DEVELOPMENT.md)
 
 Keine Installation in Symcon oder Z2M und keine Praxisabnahme erfolgt.

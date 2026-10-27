@@ -5,7 +5,8 @@ declare(strict_types=1);
 require __DIR__ . '/stubs/autoload.php';
 
 IPS\Kernel::reset();
-IPS\ModuleLoader::loadLibrary(dirname(__DIR__) . '/library.json');
+$library = json_decode(file_get_contents(dirname(__DIR__) . '/library.json'), true, 512, JSON_THROW_ON_ERROR);
+IPS\ModuleLoader::loadSingleModule(dirname(__DIR__) . '/Z2MAutomations', $library['id']);
 $metadata = json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/module.json'), true, 512, JSON_THROW_ON_ERROR);
 $id = IPS_CreateInstance($metadata['id']);
 IPS_ApplyChanges($id);
