@@ -17,8 +17,16 @@ Die Kategorie enthält Modul, Ereignis, Funktion und Quellzeile. Die Nutzdaten
 enthalten Instanz, Vorgang, Aufruf, Meldung und Bezug und sind auf 4096 Bytes
 begrenzt. YAML, Erweiterungscode, gesamte MQTT-Bodies, Sitzungskennungen und
 beliebige fremde Fehlermeldungen werden nicht ausgegeben. Der unveränderte
-zentrale DebugHelper bereinigt zusätzlich bekannte Geheimnisse. Ein defekter
+zentrale DebugFlowHelper (mit DebugHelper) besitzt den Ablauf und bereinigt
+zusätzlich bekannte Geheimnisse. ModuleDiagnostics ist nur noch ein dünner
+Adapter zur bestehenden Fachinstrumentierung, kein eigener Ablaufzähler. Ein defekter
 Debugkanal darf den Datenfluss nicht verändern.
+
+Aktivierung, Stopp, Editor-Laden, Geräteauswahl, Entwurfserzeugung und dessen
+Prüfung/Speicherung besitzen START/ENDE über den zentralen Helper. Tokens und
+Editor-/YAML-Inhalte werden vor der Debugschnittstelle ausgeschlossen. Die
+PHP-/JavaScript-Integration prüft Erfolg, Ablehnung, Timeout, verschachtelte
+Aufrufe, Geheimnisschutz und einen absichtlich defekten Debugkanal.
 
 MQTT Client und MQTT Server werden unterstützt. Der MQTT Client verbindet sich
 über seinen Client Socket mit dem Broker, an dem auch Z2M angemeldet ist.

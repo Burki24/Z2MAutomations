@@ -2,6 +2,14 @@
 
 ## Neu
 
+- Aktivierungs- und Stoppbuttons mit frischer Statusbestätigung, aktiver Revision,
+  Regelanzahl und verständlichen Ausführungsfehlern im Symcon-Modul ergänzt.
+- Erster Klick-Editor lädt Geräte aus Z2M und erstellt einfache Regeln durch
+  Auswahl von Quelle, Ereignis, Ziel und Aktion. Bestehende Regeln bleiben erhalten;
+  YAML ist nur noch eine zusätzliche erweiterte Ansicht.
+- Debug-Abläufe verwenden den zentralen DebugFlowHelper. Tests belegen die
+  Z2M-Ausführung auch bei getrenntem Symcon-Datenfluss.
+
 - Eigene Ausführungsengine für gespeicherte YAML mit Geräte-/Zeittriggern,
   Bedingungen, Mindestdauer und geordneten verzögerten Set-Aktionen ergänzt.
 - Ausführung wird getrennt per MQTT aktiviert und gestoppt. Aktivierung prüft

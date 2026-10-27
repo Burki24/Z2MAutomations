@@ -55,16 +55,153 @@
             "type": "Label"
         },
         {
+            "type": "Label",
+            "name": "ExecutionInfo",
+            "caption": "Execution state unknown. Refresh extension status."
+        },
+        {
+            "type": "Label",
+            "name": "RuntimeErrorInfo",
+            "caption": "No execution error."
+        },
+        {
+            "type": "Button",
+            "name": "ActivateButton",
+            "caption": "Activate stored automations in Z2M",
+            "confirm": "Activate the currently stored revision in Z2M? Enabled automations may switch devices and continue without Symcon.",
+            "onClick": "Z2MA_ActivateAutomations($id);",
+            "enabled": false
+        },
+        {
+            "type": "Button",
+            "name": "StopButton",
+            "caption": "Stop automations in Z2M",
+            "onClick": "Z2MA_StopAutomations($id);"
+        },
+        {
+            "type": "Label",
+            "caption": "Create a simple automation by choosing devices and actions. Validate, store and activate the draft afterwards."
+        },
+        {
+            "type": "Button",
+            "caption": "Load devices and stored automations",
+            "confirm": "Replace the local draft with the currently stored Z2M configuration? Nothing in Z2M will be changed.",
+            "onClick": "Z2MA_LoadAutomationEditor($id);"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EditorName",
+            "caption": "Automation name",
+            "value": ""
+        },
+        {
+            "type": "Select",
+            "name": "EditorSource",
+            "caption": "Source device",
+            "options": [
+                {
+                    "caption": "Choose device",
+                    "value": ""
+                }
+            ],
+            "value": "",
+            "onChange": "Z2MA_SelectEditorDevice($id, 'Source', $EditorSource);"
+        },
+        {
+            "type": "Select",
+            "name": "EditorSourceChoice",
+            "caption": "When this event occurs",
+            "options": [
+                {
+                    "caption": "Choose event or action",
+                    "value": ""
+                }
+            ],
+            "value": ""
+        },
+        {
+            "type": "Select",
+            "name": "EditorTarget",
+            "caption": "Target device",
+            "options": [
+                {
+                    "caption": "Choose device",
+                    "value": ""
+                }
+            ],
+            "value": "",
+            "onChange": "Z2MA_SelectEditorDevice($id, 'Target', $EditorTarget);"
+        },
+        {
+            "type": "Select",
+            "name": "EditorTargetChoice",
+            "caption": "Perform this action",
+            "options": [
+                {
+                    "caption": "Choose event or action",
+                    "value": ""
+                }
+            ],
+            "value": ""
+        },
+        {
+            "type": "Button",
+            "caption": "Add automation to draft",
+            "onClick": "Z2MA_CreateSimpleAutomation($id, $EditorName, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+        },
+        {
+            "type": "Label",
+            "name": "EditorPreview",
+            "caption": "Load the editor to choose devices."
+        },
+        {
+            "type": "List",
+            "name": "EditorRules",
+            "caption": "Draft automations",
+            "rowCount": 4,
+            "columns": [
+                {
+                    "name": "Name",
+                    "caption": "Automation name",
+                    "width": "30%"
+                },
+                {
+                    "name": "Source",
+                    "caption": "Source device",
+                    "width": "30%"
+                },
+                {
+                    "name": "Target",
+                    "caption": "Target device",
+                    "width": "30%"
+                },
+                {
+                    "name": "Enabled",
+                    "caption": "Enabled",
+                    "width": "10%"
+                }
+            ],
+            "values": []
+        },
+        {
+            "type": "CheckBox",
+            "name": "ShowYamlControl",
+            "caption": "Show advanced YAML editor",
+            "value": false,
+            "onChange": "Z2MA_ShowYamlEditor($id, $ShowYamlControl);"
+        },
+        {
             "value": "",
             "caption": "Automation YAML draft",
             "name": "YamlInput",
             "rowCount": 18,
-            "type": "ScriptEditor"
+            "type": "ScriptEditor",
+            "visible": false
         },
         {
-            "caption": "Validate YAML in Z2M",
+            "caption": "Validate draft in Z2M",
             "type": "Button",
-            "onClick": "Z2MA_ValidateYaml($id, $YamlInput);"
+            "onClick": "$ShowYamlControl ? Z2MA_ValidateYaml($id, $YamlInput) : Z2MA_ValidateAutomationDraft($id);"
         },
         {
             "caption": "No current YAML validation.",
@@ -73,9 +210,9 @@
         },
         {
             "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Activation is a separate step.",
-            "caption": "Store validated YAML in Z2M",
+            "caption": "Store validated draft in Z2M",
             "type": "Button",
-            "onClick": "Z2MA_StoreYaml($id, $YamlInput);",
+            "onClick": "$ShowYamlControl ? Z2MA_StoreYaml($id, $YamlInput) : Z2MA_StoreAutomationDraft($id);",
             "name": "StoreButton"
         }
     ],

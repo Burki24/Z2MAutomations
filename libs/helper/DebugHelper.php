@@ -19,7 +19,7 @@ use Throwable;
  * quoted/plain text assignments and JSON encoded as text), and
  * limiting oversized messages unless the caller explicitly raises the limit.
  *
- * @version 1.0.2
+ * @version 1.0.3
  */
 trait DebugHelper
 {

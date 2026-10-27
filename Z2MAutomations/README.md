@@ -42,7 +42,64 @@ keine automatische Rücknahme auf eine vorherige JavaScript-Version aus.
 Bei bereits installierter Erweiterung genügt „Erweiterungsstatus abfragen“.
 Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
 
-## YAML prüfen und speichern
+## Einfache Automation per Klick erstellen
+
+1. Neue mitgelieferte Erweiterung installieren bzw. aktualisieren und den
+   Erweiterungsstatus abfragen.
+2. „Geräte und gespeicherte Automationen laden“ bestätigen. Damit wird der lokale
+   Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
+3. Namen eingeben, ein Quellgerät und dessen Ereignis auswählen, beispielsweise
+   „Tasterereignis: Einfach drücken“.
+4. Zielgerät und Aktion auswählen, beispielsweise „Zustand: Ein“.
+5. „Automation zum Entwurf hinzufügen“ betätigen. Weitere einfache Regeln können
+   vor der Übertragung ergänzt werden. Vorhandene gespeicherte Regeln bleiben
+   im Entwurf vollständig erhalten.
+6. „Entwurf in Z2M prüfen“ und anschließend „Geprüften Entwurf in Z2M speichern“
+   bestätigen. Die YAML wird automatisch erzeugt; sie muss weder angezeigt noch
+   bearbeitet werden. Die Liste zeigt Namen, erste Quelle, erstes Ziel und den
+   gewünschten Aktivierungszustand der Regeln im Entwurf.
+7. „Gespeicherte Automationen in Z2M aktivieren“ bestätigen.
+
+Der erste Editor unterstützt diskrete Geräteereignisse und Geräteaktionen aus
+den Z2M-Exposes (Enum und Binary): etwa Taster, Bewegung oder Ein-/Ausschalten.
+Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die ersten
+256 Geräte und insgesamt 1024 Auswahlwerte werden geladen; unpassende Exposes
+werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
+die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
+Grenzwerte, Zeittrigger und Bedingungen bleiben vorerst der erweiterten YAML-Ansicht
+vorbehalten. Ein vollständiger grafischer Editor mit Löschen/Bearbeiten aller
+Regeltypen ist noch nicht enthalten.
+
+Der Klick-Editor ergänzt Regeln; er ersetzt oder entfernt keine einzelnen
+vorhandenen Regeln. Zum erneuten Laden wird das Verwerfen des lokalen Entwurfs
+ausdrücklich bestätigt. Manuelle YAML-Änderungen oder eine inzwischen geänderte
+Speicherrevision werden nicht unbemerkt überschrieben.
+
+## Ausführung aktivieren und stoppen
+
+Die Aktivierung bezieht sich auf die **gespeicherte** Revision, nicht auf einen
+unveröffentlichten Entwurf. Das Modul fragt den aktuellen Zustand und die frische
+Einmalkennung ab, sendet den Aktivierungsauftrag und prüft danach den tatsächlichen
+Status erneut. Erst dann werden aktive Revision und Regelanzahl angezeigt.
+Eine ältere Erweiterung wird mit einer verständlichen Update-Meldung erkannt.
+
+„Automationen in Z2M stoppen“ verwirft ausstehende Auslöser und Verzögerungen.
+Ein Stopp erhält Vorrang vor einem noch laufenden Modulauftrag. Bei aktiver
+MQTT-Anbindung darf er auch bei noch unbekanntem Bridge-Onlinezustand versucht
+werden. Ein Timeout bestätigt keinen Stopp: Dann bleibt der Ausführungsstatus
+unbekannt und muss erneut abgefragt werden. Bereits gesendete Gerätebefehle lassen
+sich nicht zurückrufen.
+
+**Symcon ist nach erfolgreicher Aktivierung für die Ausführung nicht erforderlich.**
+Auch das Deaktivieren der MQTT-Anbindung oder eine Unterbrechung der Symcon-
+Verbindung stoppt die Regeln in Z2M nicht automatisch. Erst der ausdrücklich an
+Z2M gesendete Stopp beendet die Ausführung. Nach einem Z2M-/Erweiterungsneustart
+oder dem Speichern einer geänderten Revision ist bewusst neu zu aktivieren.
+
+## Erweiterte YAML-Ansicht
+
+Mit „Erweiterte YAML-Ansicht anzeigen“ kann der zusätzliche Editor eingeblendet
+werden. Für die einfache Geräteautomation ist er nicht erforderlich.
 
 1. YAML in „YAML-Entwurf der Automationen“ einfügen. Ein
    [synthetisches Beispiel](../libs/z2m/examples/automations.yaml) und der
@@ -50,11 +107,11 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
 2. Für eine neue Fassung die nächste Revision verwenden. Eine leere Installation
    beginnt mit Revision 1. Eine unveränderte Kopie der bereits gespeicherten
    Fassung kann nach erneuter Prüfung idempotent bestätigt werden.
-3. „YAML in Z2M prüfen“ starten. Das Modul fragt zuerst den aktuellen Empfänger-
+3. „Entwurf in Z2M prüfen“ starten. Das Modul fragt zuerst den aktuellen Empfänger-
    und Speicherzustand ab und sendet dann die YAML zur dortigen Schema-Prüfung.
 4. In der Vorschau Revision, Anzahl der Automationen, bisher gespeicherte
    Revision und SHA-256 kontrollieren.
-5. „Geprüfte YAML in Z2M speichern“ bestätigen. Das Modul prüft Sitzung und
+5. „Geprüften Entwurf in Z2M speichern“ bestätigen. Das Modul prüft Sitzung und
    Revision erneut, bevor genau die geprüften Bytes übertragen werden.
 
 Der zuletzt zur Prüfung oder Speicherung eingereichte Entwurf bleibt beim
@@ -89,8 +146,7 @@ und eine noch offene Anfrage.
 ## Statusvariablen
 
 Die Erweiterung kann ausdrücklich aktivierte Speicherrevisionen ausführen;
-[Ausführungsregeln und Aktivierungsbefehle](../docs/RUNTIME.md). Dafür gibt es im
-Modul noch keine Aktivierungs-/Stoppbuttons. Speichern aktiviert nichts; eine
+[Ausführungsregeln und Aktivierungsbefehle](../docs/RUNTIME.md). Speichern aktiviert nichts; eine
 geänderte erfolgreich gespeicherte Revision stoppt die bisherige Ausführung.
 `GetTransportState` übernimmt den gemeldeten Boolean `extension.executing`,
 ohne damit eine konkrete Gerätewirkung zu bestätigen.
@@ -108,6 +164,11 @@ Alle Variablen sind ausschließlich lesbar und besitzen keine Schaltaktion.
 | StoredRevision | Integer | Zuletzt gemeldete Speicherrevision; 0 auch bei noch unbekanntem Zustand |
 | OperationStatus | String | Fortschritt und Ergebnis der letzten Erweiterungsaktion |
 | LastError | String | Feste verständliche Meldung zum letzten Erweiterungsfehler |
+| ExecutionActive | Boolean | Ausführung durch einen frischen Antwortablauf bestätigt; false kann auch unbekannt bedeuten |
+| ActiveRevision | Integer | Bestätigte aktive Revision; 0 bei gestopptem oder unbekanntem Zustand |
+| EnabledAutomations | Integer | Bestätigte Anzahl aktivierter Regeln |
+| ExecutionStatus | String | Maßgebliche Unterscheidung zwischen aktiv, gestoppt und unbekannt |
+| RuntimeError | String | Feste Erklärung des zuletzt gemeldeten Engine-Fehlers |
 
 Eine erkannte Erweiterungsdatei bestätigt noch nicht deren Betriebsbereitschaft.
 Die beiden Online-Anzeigen unterscheiden die MQTT-Verbindung vom Zustand der

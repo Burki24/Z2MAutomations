@@ -324,6 +324,42 @@ export function validateYaml(yaml) {
     return {yaml, document, checksum: hash(yaml)};
 }
 
+// Only discrete exposed values enter the click editor; raw definitions stay in Z2M.
+export function buildEditorCatalog(zigbee) {
+    const result = [];
+    let optionCount = 0, devicesSeen = 0;
+    const scalar = value => value === null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))
+        || (typeof value === 'string' && [...value].length <= 256);
+    for (const device of zigbee?.devicesIterator?.() ?? []) {
+        if (++devicesSeen > 256) break;
+        if (!device?.isDevice?.() || device.zh?.type === 'Coordinator' || !/^0x[0-9a-f]{16}$/.test(device.ieeeAddr)) continue;
+        const triggers = [], actions = [];
+        let visited = 0;
+        const walk = (features, depth = 0) => {
+            if (!Array.isArray(features) || depth > 6) return;
+            for (const feature of features) {
+                if (++visited > 128 || optionCount >= 1024) break;
+                if (!isObject(feature)) continue;
+                walk(feature.features, depth + 1);
+                if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
+                    || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
+                const values = feature.type === 'binary' ? [feature.value_on, feature.value_off]
+                    : feature.type === 'enum' && Array.isArray(feature.values) ? feature.values.slice(0, 32) : [];
+                for (const value of values) {
+                    if (!scalar(value) || optionCount >= 1024) continue;
+                    const entry = {property: feature.property, value};
+                    if ((feature.access & 1) !== 0 && triggers.length < 64) { triggers.push(entry); optionCount++; }
+                    if ((feature.access & 2) !== 0 && actions.length < 64) { actions.push(entry); optionCount++; }
+                }
+            }
+        };
+        try { walk(device.exposes()); } catch { continue; }
+        if (triggers.length || actions.length) result.push({id: device.ieeeAddr,
+            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions});
+    }
+    return result;
+}
+
 class ConfigurationStore {
     constructor(directory, io = fs) {
         this.directory = directory;
@@ -444,6 +480,7 @@ export default class Z2MAutomationsExtension {
         this.eventBus = eventBus;
         this.settings = settings;
         this.logger = logger;
+        this.zigbee = _zigbee;
         this.runtime = new AutomationRuntime({zigbee: _zigbee, mqtt, logger, clock: options.clock,
             available: typeof eventBus.onPublishEntityState === 'function'});
         // A real deployed file is in data/external_extensions, including Z2M temporary import copies.
@@ -505,7 +542,7 @@ export default class Z2MAutomationsExtension {
         const prefix = this.baseTopic + '/' + PREFIX + '/request/';
         if (typeof event?.topic !== 'string' || !event.topic.startsWith(prefix)) return;
         const operation = event.topic.slice(prefix.length);
-        if (!['validate', 'store', 'get', 'status', 'activate', 'deactivate'].includes(operation)) return;
+        if (!['validate', 'store', 'get', 'status', 'activate', 'deactivate', 'editor'].includes(operation)) return;
         this.runtime.log('START', 'Erweiterungsauftrag empfangen.', {Auftrag: operation});
         try { await this.handleRequest(operation, event); }
         finally { this.runtime.log('ENDE', 'Erweiterungsauftrag beendet; Ergebnis siehe Antwort.', {Auftrag: operation}); }
@@ -545,6 +582,8 @@ export default class Z2MAutomationsExtension {
                     data = {...this.status(), activation_token: this.activationToken.value};
                 }
                 if (operation === 'get') data = {...this.store.metadata(), executing: this.runtime.metadata().executing, yaml: this.store.current?.yaml ?? null};
+                if (operation === 'editor') data = {...this.status(), editor_version: 1, devices: buildEditorCatalog(this.zigbee), yaml: this.store.current?.yaml ?? null,
+                    configuration: this.store.current?.document ?? {schema_version: 1, revision: 0, automations: []}};
                 if (operation === 'validate') {
                     const candidate = validateYaml(request.yaml);
                     data = {valid: true, revision: candidate.document.revision, checksum: candidate.checksum,

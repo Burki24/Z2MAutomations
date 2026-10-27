@@ -43,18 +43,32 @@ trait ExtensionIntegration
         });
     }
 
+    public function ActivateAutomations(): string
+    {
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): string => $this->StartExtensionWorkflow('activate'));
+    }
+
+    public function StopAutomations(): string
+    {
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): string => $this->StartExtensionWorkflow('deactivate'));
+    }
+
     private function NewExtensionState(): array
     {
-        return ['extension' => null, 'extensionConfirmed' => false, 'workflow' => null, 'validation' => null,
+        return ['extension' => null, 'extensionConfirmed' => false, 'runtimeConfirmed' => false, 'workflow' => null, 'validation' => null,
             'operation'     => ['kind' => 'none', 'status' => 'idle', 'transaction' => ''], 'lastError' => ''];
     }
 
     private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = ''): string
     {
-        $this->DebugEvent('AKTION', 'Erweiterungsauftrag prÃ¼fen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
+        $this->DebugEvent('AKTION', 'Erweiterungsauftrag prüfen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
         $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code): array
         {
             $state = $this->RefreshState();
+            if ($kind === 'deactivate' && $state['workflow'] !== null && $state['workflow']['kind'] !== 'deactivate') {
+                $this->FinishExtensionWorkflow($state, 'cancelled', 'cancelled');
+                $this->DebugEvent('AKTION', 'Stopp hat Vorrang; vorherigen Auftrag nicht erneut senden.');
+            }
             $checksum = strlen($yaml) <= ExtensionContract::MAX_YAML_BYTES ? hash('sha256', $yaml) : '';
             if ($state['workflow'] !== null) {
                 if ($state['workflow']['kind'] === $kind && $state['workflow']['checksum'] === $checksum) {
@@ -76,7 +90,7 @@ trait ExtensionIntegration
                 }
             }
             if ($error === '') {
-                $error = !$state['mqttConnected'] ? 'not_connected' : (!$state['bridgeOnline'] ? 'bridge_offline' : '');
+                $error = !$state['mqttConnected'] ? 'not_connected' : (!$state['bridgeOnline'] && $kind !== 'deactivate' ? 'bridge_offline' : '');
             }
             if ($error === '' && $kind === 'install') {
                 $error = $state['externalJS'] !== true ? 'external_js_disabled' : ($code === '' ? 'artifact_unavailable' : '');
@@ -95,7 +109,10 @@ trait ExtensionIntegration
             $state['operation'] = ['kind' => $kind, 'status' => 'pending', 'transaction' => $id];
             $state['lastError'] = '';
             $state['workflow'] = ['id' => $id, 'kind' => $kind, 'checksum' => $checksum, 'yaml' => $yaml,
-                'previousSession'      => $state['extension']['session'] ?? null, 'target' => null];
+                'previousSession'      => $state['extension']['session'] ?? null, 'target' => null, 'verifyRuntime' => false];
+            if (in_array($kind, ['activate', 'deactivate'], true)) {
+                $state['runtimeConfirmed'] = false;
+            }
             if ($kind === 'install') {
                 $state['extensionConfirmed'] = false;
                 $state['validation'] = null;
@@ -124,6 +141,9 @@ trait ExtensionIntegration
         $state['workflow']['wire'] = $wire;
         $state['workflow']['transaction'] = $transaction;
         $state['workflow']['deadline'] = $this->Now() + $this->ReadPropertyInteger('RequestTimeout');
+        if ($wire === 'store') {
+            $state['runtimeConfirmed'] = false;
+        }
         $payload = ['transaction' => $transaction] + $payload;
         if ($wire !== 'install') {
             $payload = ['protocol_version' => 1] + $payload;
@@ -140,7 +160,7 @@ trait ExtensionIntegration
             {
                 $state = $this->RefreshState();
                 $this->SaveState($state);
-                return $state['scope'] === $frame['scope'] && $state['mqttConnected'] && $state['bridgeOnline']
+                return $state['scope'] === $frame['scope'] && $state['mqttConnected'] && ($state['bridgeOnline'] || ($state['workflow']['kind'] ?? '') === 'deactivate')
                     && ($state['workflow']['transaction'] ?? null) === $frame['transaction'];
             });
             if (!$send) {
@@ -150,7 +170,7 @@ trait ExtensionIntegration
                 throw new \RuntimeException('Request too large');
             }
             // Never hold the state semaphore while the parent dispatches replies.
-            $this->DebugEvent('SENDEN', 'Erweiterungsanfrage an MQTT-Gateway Ã¼bergeben; BestÃ¤tigung steht aus.', ['Gateway' => $this->GetParentID(), 'Topic' => $frame['topic'], 'Nutzdatenbytes' => strlen($frame['payload']), 'Anfragebezug' => substr(hash('sha256', $frame['transaction']), 0, 16)]);
+            $this->DebugEvent('SENDEN', 'Erweiterungsanfrage an MQTT-Gateway übergeben; Bestätigung steht aus.', ['Gateway' => $this->GetParentID(), 'Topic' => $frame['topic'], 'Nutzdatenbytes' => strlen($frame['payload']), 'Anfragebezug' => substr(hash('sha256', $frame['transaction']), 0, 16)]);
             $this->SendDataToParent($this->EncodeDataFlowMessage(Z2MProtocol::MQTT_TX, [
                 'PacketType' => 3, 'QualityOfService' => 0, 'Retain' => false,
                 'Topic'      => $frame['topic'], 'Payload' => bin2hex($frame['payload'])
@@ -171,6 +191,9 @@ trait ExtensionIntegration
 
     private function FinishExtensionWorkflow(array &$state, string $status, string $error = ''): void
     {
+        if ($error !== '' && in_array($state['workflow']['kind'] ?? '', ['activate', 'deactivate'], true)) {
+            $state['runtimeConfirmed'] = false;
+        }
         $this->DebugEvent($error === '' ? 'AKTION' : 'FEHLER', 'Erweiterungsauftrag abgeschlossen.', ['Auftrag' => $state['workflow']['kind'] ?? 'none', 'Ergebnis' => $status, 'Grund' => $error]);
         $state['operation']['status'] = $status;
         $state['lastError'] = $error;
@@ -184,8 +207,11 @@ trait ExtensionIntegration
         if ($prior !== $metadata) {
             $state['validation'] = null;
             $state['extensionConfirmed'] = false;
+            $state['runtimeConfirmed'] = false;
         }
-        if (($changedSession || !$metadata['ready']) && $state['workflow'] !== null && $state['workflow']['kind'] !== 'install') {
+        $freshStopProbe = $state['workflow'] !== null && $state['workflow']['kind'] === 'deactivate'
+            && $state['workflow']['wire'] === 'status' && !($state['workflow']['verifyRuntime'] ?? false);
+        if (($changedSession || !$metadata['ready']) && $state['workflow'] !== null && $state['workflow']['kind'] !== 'install' && !$freshStopProbe) {
             $this->FinishExtensionWorkflow($state, 'cancelled', 'session_mismatch');
         }
         $state['extension'] = $metadata;
@@ -255,7 +281,44 @@ trait ExtensionIntegration
             $receipt = $state['validation'];
             $state['extension'] = $metadata;
             $state['extensionConfirmed'] = true;
+            $state['runtimeConfirmed'] = $metadata['runtimeVersion'] === 1;
+            if (in_array($workflow['kind'], ['activate', 'deactivate'], true)) {
+                $state['bridgeState'] = 'online';
+            }
             $state['workflow']['target'] = $metadata;
+            if (in_array($workflow['kind'], ['activate', 'deactivate'], true)) {
+                if ($metadata['runtimeVersion'] !== 1) {
+                    $this->FinishExtensionWorkflow($state, 'error', 'runtime_unavailable');
+                    return null;
+                }
+                $wantActive = $workflow['kind'] === 'activate';
+                if ($workflow['verifyRuntime']) {
+                    if (!$this->RuntimeMatches($metadata, $workflow['target'], $wantActive)) {
+                        $this->FinishExtensionWorkflow($state, 'error', 'runtime_mismatch');
+                    } else {
+                        $this->FinishExtensionWorkflow($state, $wantActive ? 'activated' : 'stopped');
+                    }
+                    return null;
+                }
+                if ($wantActive && ($metadata['storage'] !== 'ok' || $metadata['storedRevision'] === 0)) {
+                    $this->FinishExtensionWorkflow($state, 'error', 'storage_unavailable');
+                    return null;
+                }
+                $state['runtimeConfirmed'] = false;
+                $command = ['session' => $metadata['session']];
+                if ($wantActive) {
+                    $token = $payload->data->activation_token ?? null;
+                    if (!is_string($token) || preg_match('/\A[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}\z/D', $token) !== 1) {
+                        $this->FinishExtensionWorkflow($state, 'error', 'activation_expired');
+                        return null;
+                    }
+                    $command += ['activation_token' => $token, 'expected_revision' => $metadata['storedRevision'], 'checksum' => $metadata['checksum']];
+                }
+                return $this->ExtensionFrame($state, $workflow['kind'], $command);
+            }
+            if ($workflow['kind'] === 'editor') {
+                return $this->ExtensionFrame($state, 'editor');
+            }
             if ($workflow['kind'] === 'status' || $workflow['kind'] === 'install') {
                 if ($receipt !== null && !$this->ReceiptMatches($receipt, $metadata)) {
                     $state['validation'] = null;
@@ -286,6 +349,21 @@ trait ExtensionIntegration
             }
             return $this->ExtensionFrame($state, 'store', ['yaml' => $workflow['yaml'], 'session' => $metadata['session'], 'expected_revision' => $metadata['storedRevision']]);
         }
+        if (in_array($workflow['wire'], ['activate', 'deactivate'], true)) {
+            $metadata = ExtensionContract::Status($payload->data);
+            if ($metadata === null || !$this->RuntimeMatches($metadata, $workflow['target'], $workflow['wire'] === 'activate')) {
+                $this->FinishExtensionWorkflow($state, 'error', 'runtime_mismatch');
+                return null;
+            }
+            $state['extension'] = $metadata;
+            $state['runtimeConfirmed'] = false;
+            $state['workflow']['verifyRuntime'] = true;
+            return $this->ExtensionFrame($state, 'status');
+        }
+        if ($workflow['wire'] === 'editor') {
+            $this->ReceiveEditorData($state, $payload->data, $workflow['target']);
+            return null;
+        }
         if ($workflow['wire'] === 'validate') {
             $data = $payload->data;
             $target = $workflow['target'];
@@ -315,6 +393,13 @@ trait ExtensionIntegration
             return null;
         }
         $state['extension'] = array_replace($workflow['target'], $metadata);
+        if (!$metadata['executing']) {
+            $state['extension']['activeRevision'] = null;
+            $state['extension']['activeChecksum'] = null;
+            $state['extension']['enabledCount'] = 0;
+        }
+        $state['extensionConfirmed'] = true;
+        $state['runtimeConfirmed'] = $state['extension']['runtimeVersion'] === 1;
         $state['validation'] = null;
         $this->FinishExtensionWorkflow($state, 'stored');
         return null;
@@ -326,12 +411,22 @@ trait ExtensionIntegration
             && $receipt['previousChecksum'] === $metadata['checksum'];
     }
 
+    private function RuntimeMatches(array $metadata, array $target, bool $active): bool
+    {
+        return $metadata['ready'] && $metadata['runtimeVersion'] === 1 && $metadata['session'] === $target['session']
+            && $metadata['executing'] === $active && (!$active || ($metadata['activeRevision'] === $target['storedRevision']
+                && $metadata['activeChecksum'] === $target['checksum']));
+    }
+
     private function RefreshExtensionWorkflow(array $state): array
     {
         $state += $this->NewExtensionState();
         if ($state['workflow'] !== null && $state['workflow']['deadline'] <= $this->Now()) {
             $this->FinishExtensionWorkflow($state, 'timeout', 'timeout');
             $state['extensionConfirmed'] = false;
+        }
+        if (!$state['mqttConnected'] || !$state['bridgeOnline'] || !$state['extensionConfirmed']) {
+            $state['runtimeConfirmed'] = false;
         }
         return $state;
     }
@@ -341,6 +436,19 @@ trait ExtensionIntegration
         $ready = $state['extensionConfirmed'] && ($state['extension']['ready'] ?? false);
         $this->SetValue('ExtensionReady', $ready);
         $this->SetValue('StoredRevision', $state['extension']['storedRevision'] ?? 0);
+        $confirmed = $state['runtimeConfirmed'] && $state['extensionConfirmed'];
+        $executing = $confirmed && ($state['extension']['executing'] ?? false);
+        $this->DebugFlowWriteValue('ExecutionActive', $executing, __FUNCTION__, __LINE__);
+        $this->DebugFlowWriteValue('ActiveRevision', $executing ? $state['extension']['activeRevision'] : 0, __FUNCTION__, __LINE__);
+        $this->DebugFlowWriteValue('EnabledAutomations', $executing ? $state['extension']['enabledCount'] : 0, __FUNCTION__, __LINE__);
+        $runtime = $this->ExecutionText($state);
+        $this->DebugFlowWriteValue('ExecutionStatus', $runtime, __FUNCTION__, __LINE__);
+        $runtimeError = $this->Translate(ExtensionContract::ErrorText($state['extension']['runtimeError'] ?? ''));
+        $this->DebugFlowWriteValue('RuntimeError', $runtimeError, __FUNCTION__, __LINE__);
+        $this->UpdateFormField('RuntimeErrorInfo', 'caption', $runtimeError);
+        $this->UpdateFormField('ExecutionInfo', 'caption', $runtime);
+        $this->UpdateFormField('ActivateButton', 'enabled', $confirmed && ($state['extension']['storedRevision'] ?? 0) > 0 && $state['workflow'] === null);
+        $this->UpdateFormField('StopButton', 'enabled', $state['mqttConnected']);
         $status = $this->OperationText($state);
         $error = $this->Translate(ExtensionContract::ErrorText($state['lastError']));
         $this->SetValue('OperationStatus', $status);
@@ -350,6 +458,22 @@ trait ExtensionIntegration
         $this->UpdateFormField('ValidationInfo', 'caption', $this->ValidationPreview($state));
     }
 
+    private function ExecutionText(array $state): string
+    {
+        if ($state['extensionConfirmed'] && ($state['extension']['runtimeVersion'] ?? 0) !== 1) {
+            return $this->Translate('Update the bundled extension to use execution controls.');
+        }
+        if (!$state['runtimeConfirmed'] || !$state['extensionConfirmed']) {
+            return $this->Translate('Execution state unknown. Refresh extension status.');
+        }
+        return !$state['extension']['executing'] ? $this->Translate('Automations are stopped in Z2M.')
+            : sprintf(
+                $this->Translate('Active revision %d with %d enabled automations. Z2M runs independently of Symcon.'),
+                $state['extension']['activeRevision'],
+                $state['extension']['enabledCount']
+            );
+    }
+
     private function OperationText(array $state): string
     {
         return $this->Translate(match ($state['operation']['status']) {
@@ -357,6 +481,10 @@ trait ExtensionIntegration
             'validated'       => 'YAML validated. Review the preview before storing.',
             'stored'          => 'YAML stored. Activation is a separate step.',
             'status_received' => 'Receiver status confirmed.',
+            'activated'       => 'Stored revision activated and confirmed by Z2M.',
+            'stopped'         => 'Execution stopped and confirmed by Z2M.',
+            'editor_loaded'   => 'Devices and stored automations loaded. Choose source and target.',
+            'draft_created'   => 'Automation added to the draft. Validate, store and activate it next.',
             default           => ucfirst($state['operation']['status'])
         });
     }

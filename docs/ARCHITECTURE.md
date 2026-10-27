@@ -38,7 +38,11 @@ und [YAML-Vertrag](YAML_SCHEMA.md). Die Symcon-Seite installiert das feste Artef
 auf ausdrückliche Bedienung, prüft den Empfänger und überträgt nach Vorschau und
 Bestätigung validierte YAML. Die eigene Engine verarbeitet eine ausdrücklich
 aktivierte Speicherrevision; siehe [ADR 0005](adr/0005-explicit-execution.md).
-Aktivierungs-/Stoppbuttons im Symcon-Formular folgen als eigene Integration.
+Aktivierungs-/Stoppbuttons im Modul verwenden eine frische Abfrage, den
+korrelierten Steuerauftrag und eine zusätzliche Statusverifikation.
+Der erste Klick-Editor liest begrenzte diskrete Exposes und die gespeicherte
+Konfiguration aus der Erweiterung. Neue Regeln werden lokal ergänzt; Prüfung,
+Speicherung und Aktivierung bleiben ausdrücklich getrennte Bedienaktionen.
 
 ## Persistenz und Fehlerfälle
 

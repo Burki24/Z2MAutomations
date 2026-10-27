@@ -28,8 +28,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - Zusätzliche lesbare Statusvariablen für Empfängerbereitschaft, Speicherrevision,
   Aktionsstatus und Fehler. Eigene Ausführungsengine mit ausdrücklicher
   MQTT-Aktivierung einer gespeicherten Revision implementiert; siehe docs/RUNTIME.md.
-  Der Symcon-Status akzeptiert auch eine aktive Engine. Aktivierungs-/Stoppbuttons
-  im Formular sind noch ein eigener Integrationsschritt.
+  Das Modul integriert Aktivierungs-/Stoppbuttons, Einmalkennung und zusätzliche
+  frische Statusbestätigung. Ausführungsstatus, aktive Revision, Regelanzahl und
+  Engine-Fehler besitzen eigene lesbare Statusvariablen.
+- Erster Klick-Editor für diskrete Geräteereignisse und Set-Aktionen aus Z2M-Exposes.
+  Vorhandene Regeln werden beim Ergänzen erhalten; YAML bleibt optional sichtbar.
+  Numerische-/Zeit-/Gruppenregeln benötigen derzeit die erweiterte YAML-Ansicht.
+- DebugFlowHelper und dessen DebugHelper-Abhängigkeit sind kanonisch eingebunden.
+  Die bestehende Fachinstrumentierung delegiert ihre Abläufe an den zentralen Helper.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
   Host-Abhängigkeiten js-yaml 5.4.2 und Ajv 8.20.0 lokal mit Lockfile geprüft;
   Referenzvertrag Z2M 2.14.2. Keine reale Z2M-Abnahme.
@@ -50,8 +56,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 1. MQTT-Anbindung nach ausdrücklichem Auftrag mit realem Gateway und Z2M prüfen.
 2. Erweiterung nach ausdrücklichem Praxisauftrag in Z2M prüfen und kompatible
    Versionen anhand realer Nachweise festlegen.
-3. Grafischen Regeleditor auf Basis des bestehenden YAML-Vertrags entwickeln.
-4. Aktivierungs-/Stoppbedienung in Symcon integrieren und Engine ausdrücklich praktisch prüfen.
+3. Klick-Editor um Bearbeiten/Löschen und weitere Regeltypen erweitern.
+4. Neue Formularbedienung und Engine ausdrücklich praktisch prüfen.
 
 ## Dokumentation
 

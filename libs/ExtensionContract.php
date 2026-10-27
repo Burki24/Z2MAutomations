@@ -12,7 +12,8 @@ final class ExtensionContract
     public const VERSION = '0.1.0';
     public const PREFIX = 'symcon/automations/';
     public const MAX_YAML_BYTES = 131072;
-    public const ERROR_CODES = ['invalid_request', 'invalid_yaml', 'invalid_schema', 'invalid_semantics', 'session_mismatch', 'revision_conflict', 'revision_reused', 'storage_unavailable', 'storage_error', 'busy', 'not_ready'];
+    public const ERROR_CODES = ['invalid_request', 'invalid_yaml', 'invalid_schema', 'invalid_semantics', 'session_mismatch', 'revision_conflict', 'revision_reused', 'storage_unavailable', 'storage_error', 'busy', 'not_ready', 'activation_expired', 'checksum_mismatch', 'unknown_entity', 'runtime_unavailable'];
+    public const RUNTIME_ERRORS = ['', 'unknown_entity', 'action_failed', 'action_timeout', 'rate_limited'];
 
     public static function ValidYamlText(string $yaml): bool
     {
@@ -57,7 +58,21 @@ final class ExtensionContract
             || !in_array($data->state ?? null, ['ready', 'stopped'], true)) {
             return null;
         }
-        return $storage + ['session' => $data->session, 'ready' => $data->state === 'ready', 'version' => $data->extension_version];
+        $runtime = ['runtimeVersion' => 0, 'activeRevision' => null, 'activeChecksum' => null, 'enabledCount' => 0, 'runtimeError' => ''];
+        if (property_exists($data, 'runtime_version')) {
+            if ($data->runtime_version !== 1 || !property_exists($data, 'active_revision') || !property_exists($data, 'active_checksum')
+                || !is_int($data->enabled_count ?? null) || $data->enabled_count < 0 || $data->enabled_count > $data->automation_count
+                || !in_array($data->runtime_error ?? null, self::RUNTIME_ERRORS, true)
+                || ($data->executing ? ($data->active_revision !== $data->stored_revision || $data->active_checksum !== $data->checksum || $data->stored_revision === 0)
+                    : ($data->active_revision !== null || $data->active_checksum !== null || $data->enabled_count !== 0))) {
+                return null;
+            }
+            $runtime = ['runtimeVersion' => 1, 'activeRevision' => $data->active_revision, 'activeChecksum' => $data->active_checksum,
+                'enabledCount'           => $data->enabled_count, 'runtimeError' => $data->runtime_error];
+        } elseif ($data->executing) {
+            return null;
+        }
+        return $storage + $runtime + ['session' => $data->session, 'ready' => $data->state === 'ready', 'version' => $data->extension_version];
     }
 
     public static function ErrorText(string $code): string
@@ -86,6 +101,17 @@ final class ExtensionContract
             'storage_unavailable'  => 'The receiver storage is unavailable or read-only.',
             'storage_error'        => 'The receiver could not persist the YAML.',
             'not_ready'            => 'The extension is not ready to accept requests.',
+            'activation_expired'   => 'The activation approval expired. Refresh the state and activate again.',
+            'checksum_mismatch'    => 'The stored configuration changed before activation.',
+            'unknown_entity'       => 'A configured device or group is unavailable in Z2M.',
+            'runtime_unavailable'  => 'Update the bundled extension to use execution controls.',
+            'runtime_mismatch'     => 'Z2M did not confirm the requested execution state. Refresh the status.',
+            'action_failed'        => 'Z2M could not hand over an action. The remaining sequence was cancelled.',
+            'action_timeout'       => 'An action handover timed out. No automatic retry was started.',
+            'rate_limited'         => 'The action rate limit was reached. Excess actions were cancelled.',
+            'editor_unavailable'   => 'Load the devices and stored configuration into the editor first.',
+            'editor_invalid'       => 'Choose a name, source, trigger, target and action from the available options.',
+            'editor_changed'       => 'The configuration or draft changed. Reload the editor before adding a rule.',
             default                => 'The extension reported an unspecified error.'
         };
     }

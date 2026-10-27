@@ -39,3 +39,5 @@ die zentralen principles/ und die relevanten standards/. Sie gelten fÃ¼r diese
 - Debug ist für alle Module verpflichtend: ../SymconDevelopment/standards/DEBUG_OUTPUT.md
   und docs/DEBUG.md beachten. Öffentliche Einstiege, Entscheidungen und Datenfluss
   müssen mit deutschen, bereinigten nativen Debug-Ausgaben nachvollziehbar sein.
+  Abläufe verwenden den kanonisch eingebundenen DebugFlowHelper; eigene Zähler
+  oder parallele Maskierungslogik werden nicht eingeführt.

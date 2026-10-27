@@ -2,9 +2,10 @@
 
 Die Erweiterung kann gespeicherte Schema-1-Automationen ausführen. Sie lädt die
 YAML beim Start, bleibt zunächst aber inaktiv. Speichern, Validieren und
-Aktivieren sind getrennte Vorgänge. Die aktuelle Symcon-Oberfläche besitzt noch
-keine Aktivierungs-/Stoppbuttons; die folgenden zusätzlichen Erweiterungsbefehle
-sind die Schnittstelle für diesen nächsten Integrationsschritt.
+Aktivieren sind getrennte Vorgänge. Die Symcon-Oberfläche bietet dafür eigene
+Aktivierungs-/Stoppbuttons mit erneuter Statusbestätigung sowie einen ersten
+Klick-Editor; siehe [Bedienung](../Z2MAutomations/README.md). Die folgenden
+Erweiterungsbefehle beschreiben den dabei verwendeten Transportvertrag.
 
 ## Aktivieren und stoppen
 

@@ -11,6 +11,8 @@ symcon/SymconStubs. Die Gitlinks pinnen den jeweiligen Stand.
 DataFlowHelper, ParentConnectionHelper, VariablePresentationHelper und ConfigurationFormHelper sind
 unverändert aus dem kanonischen Consumer-Bundle eingebunden; Herkunft und Hashes
 stehen in libs/helper/manifest.json. .helper-sync.json deklariert die Auswahl.
+DebugFlowHelper und dessen DebugHelper-Abhängigkeit werden ebenfalls über das
+kanonische Bundle bezogen. ModuleDiagnostics delegiert nur noch an diesen Ablauf.
 Der zentrale Consumer-Eintrag und GitHub-App-Zugriff wurden hier nicht eingerichtet.
 Node ab 22.2 und npm ci sind für die Erweiterungstests erforderlich. package-lock.json
 fixiert js-yaml 5.4.2 und Ajv 8.20.0 als lokale Testabhängigkeiten. In Z2M werden
@@ -30,6 +32,15 @@ die vorhandenen Host-Abhängigkeiten verwendet, kein npm-Verzeichnis mitgeliefer
 synthetischen Z2M-Geräten, virtueller Zeit und echtem temporärem YAML-Speicher.
 Aktivierung, Abbruch, Mindestdauer, Zeitfenster, Sommerzeit, Sequenzen,
 Transportfehler und Mengenbegrenzung sind eigene Verhaltensnachweise.
+
+`tests/module-extension.php` verwendet den echten Node-Empfänger zusätzlich für
+Gerätekatalog, Klick-Entwurf, Aktivierung und Stopp mit anschließender Verifikation.
+Der Datenfluss wird während einer synthetischen Geräteaktion getrennt: Die
+gespeicherte Regel muss unabhängig vom Symcon-Modul weiter ausgeführt werden.
+Negative Fälle prüfen fremde Revision, retained ACK, Timeout, Stoppvorrang,
+unveränderte vorhandene Regeln, ungespeicherte Expertentexte und defektes Debug.
+Das Formular wird in den Stubs strukturell geprüft. Seine reale Bedienung in
+der nativen Konsole ist noch praktisch zu prüfen; kein Live-Schalten durch diese Tests.
 
 Die beiden ersten Befehle verwenden die offizielle StylePHP-Konfiguration.
 Der unveränderte StylePHP-JSON-Checker durchsucht rekursiv auch node_modules;

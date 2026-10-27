@@ -5,10 +5,27 @@ import {readFile, writeFile, readdir, mkdtemp, mkdir, symlink, copyFile, rm} fro
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
-import Extension, {validateYaml, LIMITS} from '../libs/z2m/z2m-automations.mjs';
+import Extension, {validateYaml, LIMITS, buildEditorCatalog} from '../libs/z2m/z2m-automations.mjs';
 
 const emptyYaml = revision => `schema_version: 1\nrevision: ${revision}\nautomations: []\n`;
 const fixtureYaml = await readFile(new URL('../libs/z2m/examples/automations.yaml', import.meta.url), 'utf8');
+
+test('click editor reads bounded discrete Exposes and ignores unsupported values and raw definitions', () => {
+    const catalog = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000001', name: 'Synthetic button', isDevice: () => true,
+        exposes: () => [{features: [{property: 'action', type: 'enum', access: 1, values: ['single', 'double']},
+            {property: 'state', type: 'binary', access: 7, value_on: true, value_off: false},
+            {property: 'temperature', type: 'numeric', access: 1, value_min: -40, value_max: 80},
+            {property: '__proto__', type: 'enum', access: 7, values: ['forbidden']},
+            {property: 'bad', type: 'enum', access: 7, values: [{private: 'raw-definition'}]}]}]}]});
+    assert.equal(catalog.length, 1);
+    assert.deepEqual(catalog[0].triggers.map(item => item.property), ['action', 'action', 'state', 'state']);
+    assert.deepEqual(catalog[0].actions.map(item => item.value), [true, false]);
+    assert.equal(JSON.stringify(catalog).includes('raw-definition'), false);
+    let seen = 0;
+    const many = {devicesIterator: function* () { for (let i = 0; i < 1000; i++) { seen++; yield {isDevice: () => false}; } }};
+    assert.deepEqual(buildEditorCatalog(many), []);
+    assert.ok(seen <= 257);
+});
 
 async function harness(options = {}) {
     const directory = options.directory ?? await mkdtemp(join(tmpdir(), 'z2ma-test-'));

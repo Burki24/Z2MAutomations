@@ -14,7 +14,8 @@ final class Z2MProtocol
     public const MQTT_RX = '{7F7632D9-FA40-4F38-8DEA-C83CD4325A32}';
     public const TOPICS = ['bridge/state', 'bridge/info', 'bridge/extensions', 'bridge/response/health_check',
         'bridge/response/extension/save', 'symcon/automations/status', 'symcon/automations/response/status',
-        'symcon/automations/response/validate', 'symcon/automations/response/store'];
+        'symcon/automations/response/validate', 'symcon/automations/response/store',
+        'symcon/automations/response/activate', 'symcon/automations/response/deactivate', 'symcon/automations/response/editor'];
     public const MAX_PAYLOAD_BYTES = 1048576;
     // Valid JSON data-flow envelopes are never empty; no lookaround required.
     public const BLOCK_RECEIVE_FILTER = '^$';

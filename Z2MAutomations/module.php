@@ -6,11 +6,12 @@ require_once __DIR__ . '/../libs/helper/DataFlowHelper.php';
 require_once __DIR__ . '/../libs/helper/ParentConnectionHelper.php';
 require_once __DIR__ . '/../libs/helper/VariablePresentationHelper.php';
 require_once __DIR__ . '/../libs/helper/ConfigurationFormHelper.php';
-require_once __DIR__ . '/../libs/helper/DebugHelper.php';
+require_once __DIR__ . '/../libs/helper/DebugFlowHelper.php';
 require_once __DIR__ . '/../libs/ModuleDiagnostics.php';
 require_once __DIR__ . '/../libs/Z2MProtocol.php';
 require_once __DIR__ . '/../libs/ExtensionContract.php';
 require_once __DIR__ . '/../libs/ExtensionIntegration.php';
+require_once __DIR__ . '/../libs/AutomationEditor.php';
 
 use Z2MAutomations\Z2MProtocol;
 
@@ -20,9 +21,10 @@ class Z2MAutomations extends IPSModuleStrict
     use Burki24\SymconModuleHelper\ParentConnectionHelper;
     use Burki24\SymconModuleHelper\VariablePresentationHelper;
     use Burki24\SymconModuleHelper\ConfigurationFormHelper;
-    use Burki24\SymconModuleHelper\DebugHelper;
+    use Burki24\SymconModuleHelper\DebugFlowHelper;
     use Z2MAutomations\ModuleDiagnostics;
     use Z2MAutomations\ExtensionIntegration;
+    use Z2MAutomations\AutomationEditor;
 
     public function Create(): void
     {
@@ -34,6 +36,11 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterPropertyInteger('RequestTimeout', 10);
             $this->RegisterAttributeInteger('ObservedParentID', 0);
             $this->RegisterAttributeString('YamlDraft', '');
+            $this->RegisterAttributeString('EditorSnapshot', '');
+            $this->RegisterAttributeString('EditorDraft', '');
+            $this->RegisterAttributeString('EditorSource', '');
+            $this->RegisterAttributeString('EditorTarget', '');
+            $this->RegisterAttributeBoolean('ShowYaml', false);
             $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
             $this->RegisterMessage($this->InstanceID, FM_CONNECT);
             $this->RegisterMessage($this->InstanceID, FM_DISCONNECT);
@@ -47,6 +54,11 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterVariableInteger('StoredRevision', $this->Translate('Stored YAML revision'), $this->ValuePresentation(), 70);
             $this->RegisterVariableString('OperationStatus', $this->Translate('Extension operation'), $this->TextPresentation(), 80);
             $this->RegisterVariableString('LastError', $this->Translate('Last extension error'), $this->TextPresentation(), 90);
+            $this->RegisterVariableBoolean('ExecutionActive', $this->Translate('Execution confirmed active'), $this->BooleanPresentation($this->Translate('Active'), $this->Translate('Stopped or unknown')), 100);
+            $this->RegisterVariableInteger('ActiveRevision', $this->Translate('Active automation revision'), $this->ValuePresentation(), 110);
+            $this->RegisterVariableInteger('EnabledAutomations', $this->Translate('Enabled automations'), $this->ValuePresentation(), 120);
+            $this->RegisterVariableString('ExecutionStatus', $this->Translate('Automation execution'), $this->TextPresentation(), 130);
+            $this->RegisterVariableString('RuntimeError', $this->Translate('Last execution error'), $this->TextPresentation(), 140);
         });
     }
 
@@ -81,6 +93,17 @@ class Z2MAutomations extends IPSModuleStrict
             foreach ($form['actions'] as &$field) {
                 if (($field['name'] ?? '') === 'YamlInput') {
                     $field['value'] = $this->ReadAttributeString('YamlDraft');
+                    $field['visible'] = $this->ReadAttributeBoolean('ShowYaml');
+                } elseif (($field['name'] ?? '') === 'ShowYamlControl') {
+                    $field['value'] = $this->ReadAttributeBoolean('ShowYaml');
+                } elseif (($field['name'] ?? '') === 'ExecutionInfo') {
+                    $field['caption'] = $this->ExecutionText($state);
+                } elseif (($field['name'] ?? '') === 'RuntimeErrorInfo') {
+                    $field['caption'] = $this->Translate(\Z2MAutomations\ExtensionContract::ErrorText($state['extension']['runtimeError'] ?? ''));
+                } elseif (($field['name'] ?? '') === 'ActivateButton') {
+                    $field['enabled'] = $state['runtimeConfirmed'] && ($state['extension']['storedRevision'] ?? 0) > 0 && $state['workflow'] === null;
+                } elseif (($field['name'] ?? '') === 'StopButton') {
+                    $field['enabled'] = $state['mqttConnected'];
                 } elseif (($field['name'] ?? '') === 'ValidationInfo') {
                     $field['caption'] = $this->ValidationPreview($state);
                 } elseif (($field['name'] ?? '') === 'ErrorInfo') {
@@ -90,6 +113,7 @@ class Z2MAutomations extends IPSModuleStrict
                 }
             }
             unset($field);
+            $this->FillEditorForm($form, $state);
             return $this->EncodeConfigurationForm($form);
         });
     }

@@ -27,10 +27,25 @@
             "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
         },
         "DebugHelper": {
-            "version": "1.0.2",
-            "sha256": "3612b6ba1371d07846e09f8485bcece000cea3fec604a3c497a15b154ff904ff",
+            "version": "1.0.3",
+            "sha256": "b58cd75c9c2c01fc0a6e2610b3f41d817e9799400f08179d380eaa81791864e3",
             "path": "libs/helper/DebugHelper.php",
-            "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
+            "source_sha": "a80c7b9fc1d943651a37128d174ee56be0cb275f"
+        },
+        "DebugFlowHelper": {
+            "version": "1.1.0",
+            "sha256": "ee763d210b8883c5e8a483e51f6a87e9cefeee73a89f6ef7bc7b4cfd61e28005",
+            "path": "libs/helper/DebugFlowHelper.php",
+            "source_sha": "a80c7b9fc1d943651a37128d174ee56be0cb275f",
+            "dependencies": [
+                {
+                    "name": "DebugHelper",
+                    "version": "1.0.3",
+                    "sha256": "b58cd75c9c2c01fc0a6e2610b3f41d817e9799400f08179d380eaa81791864e3",
+                    "path": "libs/helper/DebugHelper.php",
+                    "source_sha": "a80c7b9fc1d943651a37128d174ee56be0cb275f"
+                }
+            ]
         }
     }
 }

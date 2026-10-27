@@ -23,6 +23,30 @@ $library = json_decode(file_get_contents($root . '/library.json'), true, 512, JS
 IPS\ModuleLoader::loadSingleModule($root . '/Z2MAutomations', $library['id']);
 IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/MQTTClient', $library['id']);
 $metadata = json_decode(file_get_contents($root . '/Z2MAutomations/module.json'), true, 512, JSON_THROW_ON_ERROR);
+class ObservedAutomationModule extends Z2MAutomations
+{
+    public array $debugMessages = [];
+    public bool $debugFails = false;
+
+    // The test subclass lives outside the module directory; keep the real form as its fixture.
+    protected function LoadConfigurationForm(): array
+    {
+        return json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/form.json'), true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    protected function SendDebug(string $Message, string $Data, int $Format): bool
+    {
+        if ($this->debugFails) {
+            throw new RuntimeException('Synthetic debug sink failure');
+        }
+        $this->debugMessages[] = [$Message, $Data];
+        return true;
+    }
+}
+$initialRegistry = new ReflectionProperty(IPS\ModuleLoader::class, 'modules');
+$initialModules = $initialRegistry->getValue();
+$initialModules[$metadata['id']]['Class'] = ObservedAutomationModule::class;
+$initialRegistry->setValue(null, $initialModules);
 $id = IPS_CreateInstance($metadata['id']);
 $parentID = IPS_CreateInstance('{F7A0DD2E-7684-95C0-64C2-D2A9DC47577B}');
 IPS_ApplyChanges($parentID);
@@ -99,6 +123,63 @@ try {
     $check($fields['YamlInput']['value'] === $second && isset($fields['ValidationInfo']), 'Last submitted draft survives form reopen');
     $check(!empty($fields['InstallButton']['confirm']) && !empty($fields['StoreButton']['confirm']), 'Mutating form actions require explicit confirmation');
     $check($module->RequestExtensionStatus() !== '' && $state()['operation']['status'] === 'status_received', 'Explicit receiver refresh works');
+    $check($module->LoadAutomationEditor() !== '' && $state()['operation']['status'] === 'editor_loaded', 'Editor loads real receiver catalog and stored configuration');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check(count($fields['EditorSource']['options']) >= 2 && count($fields['EditorTarget']['options']) >= 2, 'Real Exposes populate device selectors');
+    $module->SelectEditorDevice('Source', '0x0000000000000001');
+    $module->SelectEditorDevice('Target', '0x0000000000000002');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $trigger = $fields['EditorSourceChoice']['options'][1]['value'];
+    $action = $fields['EditorTargetChoice']['options'][1]['value'];
+    $check(!$module->CreateSimpleAutomation('Invalid selection', '0x0000000000000001', 'forged-choice', '0x0000000000000002', $action)
+        && $state()['lastError'] === 'editor_invalid', 'The builder rejects arbitrary properties or values outside the offered catalog');
+    $check($module->CreateSimpleAutomation('Synthetic click automation', '0x0000000000000001', $trigger, '0x0000000000000002', $action), 'Automation created only from offered choices, without handwritten YAML');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $createdYaml = $fields['YamlInput']['value'];
+    $created = json_decode($createdYaml, true, 512, JSON_THROW_ON_ERROR);
+    $check($created['revision'] === 3 && count($created['automations']) === 1 && $fields['YamlInput']['visible'] === false, 'Advanced YAML remains hidden while draft is generated');
+    $check($module->ValidateAutomationDraft() !== '' && $state()['operation']['status'] === 'validated', 'Generated JSON/YAML validates without exposing or reading a hidden form field');
+    $check($module->StoreAutomationDraft() !== '' && $state()['operation']['status'] === 'stored', 'Generated rule persists without handwritten YAML');
+    $check($module->ActivateAutomations() !== '' && $state()['operation']['status'] === 'activated', 'Activation waits for native command acknowledgement and an additional fresh status');
+    $check(GetValue(IPS_GetObjectIDByIdent('ExecutionActive', $id)) && GetValue(IPS_GetObjectIDByIdent('ActiveRevision', $id)) === 3
+        && GetValue(IPS_GetObjectIDByIdent('EnabledAutomations', $id)) === 1, 'Confirmed execution has visible status variables');
+    IPS_DisconnectInstance($id);
+    $messages = $exchange(['control' => 'event', 'device' => '0x0000000000000001', 'payload' => ['action' => 'single']]);
+    $commands = array_values(array_filter($messages, static fn (object $message): bool => $message->topic === 'synthetic/z2m/synthetic/light/set'));
+    $check(count($commands) === 1 && $commands[0]->payload->state === 'ON', 'Z2M executes the stored rule after Symcon data flow is disconnected');
+    IPS_ConnectInstance($id, $parentID);
+    $parent->publish('synthetic/z2m/bridge/state', ['state' => 'online']);
+    $check($module->StopAutomations() !== '' && $state()['operation']['status'] === 'stopped'
+        && !GetValue(IPS_GetObjectIDByIdent('ExecutionActive', $id)), 'Stop is confirmed through the real receiver');
+    $module->LoadAutomationEditor();
+    $module->SelectEditorDevice('Source', '0x0000000000000001');
+    $module->SelectEditorDevice('Target', '0x0000000000000002');
+    $check($module->CreateSimpleAutomation('Second synthetic rule', '0x0000000000000001', $trigger, '0x0000000000000002', $action), 'Existing stored rules can be extended in the editor');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $extended = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $check(count($extended['automations']) === 2 && $extended['automations'][0] === $created['automations'][0], 'Adding a rule preserves the complete existing automation');
+    $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
+    $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
+        && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');
+    $module->debugFails = true;
+    $check($module->ActivateAutomations() !== '' && $state()['operation']['status'] === 'activated', 'A failing diagnostic channel cannot suppress activation');
+    $check($module->StopAutomations() !== '' && $state()['operation']['status'] === 'stopped', 'A failing diagnostic channel cannot suppress stop');
+    $module->debugFails = false;
+    $stack = [];
+    $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
+    $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'activation_token')
+        && !str_contains($captured, 'automations: []'), 'Debug must not include draft bodies, names or activation tokens');
+    foreach ($module->debugMessages as [$category, $body]) {
+        $entry = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        $check(strlen($body) <= 4096 && isset($entry['Instanz'], $entry['Vorgang'], $entry['Aufruf'], $entry['Meldung'], $entry['Bezug']), 'New actions use the central structured debug contract');
+        if (str_contains($category, ' | START | ')) {
+            $stack[] = [$entry['Vorgang'], $entry['Aufruf']];
+        } elseif (str_contains($category, ' | ENDE | ')) {
+            $check(array_pop($stack) === [$entry['Vorgang'], $entry['Aufruf']], 'Nested action/debug scopes are balanced');
+        }
+    }
+    $check($stack === [] && str_contains($captured, 'ActivateAutomations') && str_contains($captured, 'StopAutomations')
+        && str_contains($captured, 'CreateSimpleAutomation') && str_contains($captured, 'FEHLER'), 'Activation, stop, editor and rejection all remain human-observable');
 } finally {
     fclose($pipes[0]);
     fclose($pipes[1]);
@@ -151,7 +232,7 @@ $remote = ['protocol_version' => 1, 'schema_version' => 1, 'extension_version' =
     'session'                 => '11111111-1111-4111-8111-111111111111', 'state' => 'ready', 'stored_revision' => 2,
     'checksum'                => hash('sha256', str_replace('revision: 3', 'revision: 2', $source)),
     'automation_count'        => 0, 'storage' => 'ok', 'executing' => false];
-$runningRemote = (object) ($remote + ['runtime_version' => 1, 'active_revision' => 2]);
+$runningRemote = (object) ($remote + ['runtime_version' => 1, 'active_revision' => 2, 'active_checksum' => $remote['checksum'], 'enabled_count' => 0, 'runtime_error' => '']);
 $runningRemote->executing = true;
 $check(Z2MAutomations\ExtensionContract::Status($runningRemote)['executing'] === true, 'Running receiver status remains compatible with Symcon normalization');
 $runningRemote->executing = 'true';
@@ -261,5 +342,67 @@ $validate();
 IPS_SetProperty($controlledID, 'BaseTopic', 'synthetic/other');
 IPS_ApplyChanges($controlledID);
 $check($controlledState()['validation'] === null && !$controlledState()['extensionConfirmed'], 'Changing target revokes approval');
+
+// Activation acknowledgements and the final verification must both match the probed revision/session.
+$parent->publish('synthetic/other/bridge/state', ['state' => 'online']);
+$inactive = $remote + ['runtime_version' => 1, 'active_revision' => null, 'active_checksum' => null, 'enabled_count' => 0, 'runtime_error' => ''];
+$active = $inactive;
+$active['executing'] = true;
+$active['active_revision'] = $active['stored_revision'];
+$active['active_checksum'] = $active['checksum'];
+$token = '33333333-3333-4333-8333-333333333333';
+$probeActivation = static function () use ($controlled, $replyStatus, $inactive, $token, $last, $controlledState, $check): void
+{
+    $check($controlled->ActivateAutomations() !== '', 'Start activation with a fresh status request');
+    $replyStatus($inactive + ['activation_token' => $token]);
+    $packet = $last();
+    $check(str_ends_with($packet['Topic'], '/request/activate') && $packet['Payload']['activation_token'] === $token
+        && $packet['Payload']['expected_revision'] === $inactive['stored_revision'] && $packet['Payload']['checksum'] === $inactive['checksum'], 'Activation sends only the exact fresh snapshot');
+    $check(!$controlledState()['runtimeConfirmed'] && !str_contains(json_encode($controlledState()), $token), 'Sending is not activation confirmation and tokens never enter exported state');
+};
+$controlled->ActivateAutomations();
+$replyStatus($remote);
+$check($controlledState()['lastError'] === 'runtime_unavailable', 'Legacy receivers cannot silently authorize activation');
+$probeActivation();
+$wrongRevision = $active;
+$wrongRevision['stored_revision']++;
+$wrongRevision['active_revision']++;
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $wrongRevision]);
+$check($controlledState()['lastError'] === 'runtime_mismatch' && !$controlledState()['runtimeConfirmed'], 'Wrong active revision is never shown as success');
+$probeActivation();
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $active], true);
+$check($controlledState()['operation']['status'] === 'pending', 'Retained activation acknowledgement cannot complete the operation');
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $active]);
+$check(str_ends_with($last()['Topic'], '/request/status') && !$controlledState()['runtimeConfirmed'], 'Acknowledgement is followed by an independent status verification');
+$replyStatus($inactive);
+$check($controlledState()['lastError'] === 'runtime_mismatch', 'Final stopped state cannot confirm an activation');
+$probeActivation();
+$controlled->clock += 11;
+$controlled->ExpireRequest();
+$check($controlledState()['operation']['status'] === 'timeout' && !$controlledState()['runtimeConfirmed'], 'Activation timeout leaves the state unknown');
+$probeActivation();
+$controlled->StopAutomations();
+$replyStatus($active);
+$check(str_ends_with($last()['Topic'], '/request/deactivate'), 'Stop supersedes pending activation and uses a fresh session');
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $inactive]);
+$replyStatus($inactive);
+$check($controlledState()['operation']['status'] === 'stopped' && $controlledState()['runtimeConfirmed'], 'Only the confirmed inactive state completes stop');
+$parent->publish('synthetic/other/bridge/state', ['state' => 'offline']);
+$check($controlled->StopAutomations() !== '', 'A stop attempt is permitted on active MQTT even with unknown/offline bridge state');
+$replyStatus($active);
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $inactive]);
+$replyStatus($inactive);
+$check($controlledState()['operation']['status'] === 'stopped', 'Stop can establish reachability through the receiver');
+$probeActivation();
+$controlled->StopAutomations();
+$restartedInactive = $inactive;
+$restartedInactive['session'] = '44444444-4444-4444-8444-444444444444';
+$parent->publish('synthetic/other/symcon/automations/status', (object) $restartedInactive, true);
+$check(!array_key_exists('workflow', $controlledState()), 'Export never exposes a pending workflow');
+$replyStatus($restartedInactive);
+$check(str_ends_with($last()['Topic'], '/request/deactivate'), 'A stop probe may learn a new receiver session after a concurrent restart');
+$answer(['protocol_version' => 1, 'status' => 'ok', 'data' => (object) $restartedInactive]);
+$replyStatus($restartedInactive);
+$check($controlledState()['operation']['status'] === 'stopped', 'Stop is confirmed against the new session');
 
 echo "PHP-to-JavaScript installation, validation and persistence integration passed.\n";

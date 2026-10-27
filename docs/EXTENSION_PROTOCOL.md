@@ -27,6 +27,7 @@ Der Präfix symcon/automations ist unser eigener Vertrag.
 | symcon/automations/request/get | Geladene gültige YAML und Metadaten zurückgeben |
 | symcon/automations/request/activate | Gespeicherte Revision ausdrücklich aktivieren; [Vertrag](RUNTIME.md) |
 | symcon/automations/request/deactivate | Ausführung und ausstehende Verzögerungen stoppen |
+| symcon/automations/request/editor | Begrenzte diskrete Geräte-Exposes und die unveränderte gespeicherte Konfiguration für den Klick-Editor lesen |
 | symcon/automations/response/OPERATION | Antwort auf die jeweilige Anfrage |
 | symcon/automations/status | Zustand bei Start, erfolgreicher Speicherung und Stop; retained |
 
@@ -38,8 +39,18 @@ neuen Präfix nicht ab.
 Jede Anfrage ist ein JSON-Objekt mit protocol_version: 1 und transaction als
 String mit 1–64 ASCII-Zeichen aus A–Z, a–z, 0–9, _ und -.
 Unbekannte Felder werden abgewiesen. validate benötigt zusätzlich yaml.
-status und get haben keine weiteren Felder. Die zusätzlichen Felder für
+status, get und editor haben keine weiteren Felder. Die zusätzlichen Felder für
 activate/deactivate stehen in [RUNTIME.md](RUNTIME.md).
+
+`editor` antwortet mit den normalen Statusfeldern, `editor_version: 1`, `devices`,
+`configuration` und `yaml`. Die Konfiguration stammt aus der bereits validierten
+Speicherung; `yaml` enthält deren exakte Quelle (bei leerem Speicher null).
+Bei leerem Speicher hat `configuration` vor der ersten Ergänzung Revision 0.
+Geräte enthalten nur IEEE-ID, Anzeigename und diskrete `triggers`/`actions`
+mit `property` und skalarem `value`. Rohdefinitionen, Netzwerkadressen und
+Gerätesitzungen werden nicht an Symcon übertragen. Begrenzung: 256 gelesene Geräte,
+128 Exposes-Knoten je Gerät, 64 Auswahlwerte pro Richtung/Gerät und 1024 insgesamt.
+Numerische Exposes ohne diskrete Werteliste sind im ersten Klick-Editor nicht enthalten.
 
 Beispiel für store; SESSION stammt aus der aktuellen Statusmeldung:
 

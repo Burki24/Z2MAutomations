@@ -5,6 +5,10 @@ Schema und speichert die letzte gültige Fassung im persistenten Z2M-Datenordner
 Eine gespeicherte Revision kann anschließend ausdrücklich aktiviert werden.
 Die Engine unterstützt das bestehende Schema mit Geräte-/Zeittriggern,
 Bedingungen und geordneten Set-Aktionen. Speichern allein aktiviert nichts.
+Das Symcon-Modul bietet Aktivierungs-/Stoppbuttons und einen ersten Klick-Editor.
+Die Erweiterung stellt dafür einen begrenzten Gerätekatalog aus diskreten Exposes
+und die bereits gespeicherte Konfiguration bereit. Nach der Aktivierung laufen
+Regeln ohne Symcon weiter; ein Z2M-Neustart erfordert weiterhin erneutes Aktivieren.
 
 - Hochladbare Einzeldatei: z2m-automations.mjs.
 - Eigener Quellcode: src/extension.mjs und src/runtime.mjs.
