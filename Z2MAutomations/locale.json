@@ -1,7 +1,35 @@
 {
     "translations": {
         "de": {
-            "Development scaffold: automation editing, transfer and execution are not available yet.": "Entwicklungsgrundgerüst: Bearbeitung, Übertragung und Ausführung von Automationen sind noch nicht verfügbar."
+            "Enable MQTT connection": "MQTT-Anbindung aktivieren",
+            "Zigbee2MQTT base topic": "Zigbee2MQTT-Basistopic",
+            "Response timeout (seconds)": "Antwortzeitlimit (Sekunden)",
+            "Connect this instance to the existing MQTT Client or MQTT Server. Subscribe to the base topic followed by /bridge/# in the MQTT Client.": "Diese Instanz mit dem vorhandenen MQTT Client oder MQTT Server verbinden. Im MQTT Client das Basistopic mit angehängtem /bridge/# abonnieren.",
+            "Automation editing, YAML transfer and extension installation are not available yet.": "Automationsbearbeitung, YAML-Übertragung und Erweiterungsinstallation sind noch nicht verfügbar.",
+            "Check Zigbee2MQTT connection": "Zigbee2MQTT-Verbindung prüfen",
+            "MQTT connected and Zigbee2MQTT online": "MQTT verbunden und Zigbee2MQTT online",
+            "MQTT connection disabled": "MQTT-Anbindung deaktiviert",
+            "Invalid base topic or response timeout": "Ungültiges Basistopic oder Antwortzeitlimit",
+            "No active compatible MQTT parent": "Keine aktive kompatible MQTT-Verbindung",
+            "Zigbee2MQTT offline or state not received": "Zigbee2MQTT offline oder Status noch nicht empfangen",
+            "MQTT connected": "MQTT verbunden",
+            "Connected": "Verbunden",
+            "Disconnected": "Getrennt",
+            "Zigbee2MQTT online": "Zigbee2MQTT online",
+            "Online": "Online",
+            "Offline or unknown": "Offline oder unbekannt",
+            "Zigbee2MQTT version": "Zigbee2MQTT-Version",
+            "Automation extension installed": "Automationserweiterung installiert",
+            "Installed": "Installiert",
+            "Not detected": "Nicht erkannt",
+            "Health check": "Verbindungsprüfung",
+            "Idle": "Noch nicht geprüft",
+            "Pending": "Antwort ausstehend",
+            "Healthy": "Funktionsfähig",
+            "Unhealthy": "Nicht funktionsfähig",
+            "Error": "Fehler",
+            "Timeout": "Zeitüberschreitung",
+            "Cancelled": "Abgebrochen"
         }
     }
 }

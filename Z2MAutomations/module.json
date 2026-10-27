@@ -6,9 +6,13 @@
     "aliases": [
         "Zigbee2MQTT Automationen"
     ],
-    "parentRequirements": [],
+    "parentRequirements": [
+        "{043EA491-0325-4ADD-8FC2-A30C8EEB4D3F}"
+    ],
     "childRequirements": [],
-    "implemented": [],
+    "implemented": [
+        "{7F7632D9-FA40-4F38-8DEA-C83CD4325A32}"
+    ],
     "prefix": "Z2MA",
     "url": "https://github.com/Burki24/Z2MAutomations/blob/dev/Z2MAutomations/README.md"
 }

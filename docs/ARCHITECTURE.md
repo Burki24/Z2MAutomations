@@ -7,25 +7,30 @@ Beide Teile erhalten eigenen Implementierungscode in diesem Repository:
 
 - Z2MAutomations/: Symcon-Modul mit Formularen und künftig MQTT-Übertragung.
 - libs/z2m/: eigener JavaScript-Erweiterungscode, sobald implementiert.
+- libs/Z2MProtocol.php: librarylokaler MQTT-/Z2M-Vertrag.
+- libs/helper/: unverändertes, manifestiertes Bundle aus Symcon_ModuleHelper.
 - libs/: librarylokale Logik, sobald benötigt.
 - tests/: Offline-Tests mit synthetischen Daten.
 
 Ein einzelnes Verwaltungsmodul ist der Einstieg. Weitere Module, Verbindungen
 und öffentliche Datenfluss-GUIDs werden erst bei konkretem Bedarf eingeführt.
-Das Grundgerüst legt keine künstliche MQTT-Verbindung und keine unfertigen
-Konfigurationsfelder an.
+Das Modul verbindet sich direkt mit einem vorhandenen nativen Symcon MQTT Client
+oder MQTT Server. Es gibt keinen eigenen Broker-Client und keinen Zwischenweg
+über die separate Zigbee2MQTT-Gerätelibrary. Siehe
+[ADR 0002](adr/0002-use-native-symcon-mqtt.md) und [MQTT-Vertrag](MQTT.md).
 
 ## Geplanter Übertragungsweg
 
 1. Z2M-Version und externe JavaScript-Freischaltung prüfen.
-2. Eigene .mjs über <base>/bridge/request/libs/z2m/save übertragen.
+2. Eigene .mjs über <base>/bridge/request/extension/save übertragen.
 3. Offizielle Antwort und eigene Bereitschaftsmeldung der Erweiterung auswerten.
 4. YAML als String in JSON über ein eigenes MQTT-Topic übertragen.
 5. Erweiterung validiert, speichert und aktiviert die Regeln.
 6. Symcon zeigt erst nach Bestätigung die aktive Revision an.
 
-Diese Schritte sind noch nicht implementiert. Der MQTT-Basistopic ist später
-konfigurierbar. Eigene Topics und YAML-Schema sind noch nicht veröffentlicht.
+Die MQTT-Grundlage mit konfigurierbarem Basistopic, Bridge-Status und manuellem
+health_check ist implementiert. Installation und YAML-Übertragung sind noch nicht
+implementiert. Eigene Erweiterungstopics und YAML-Schema sind nicht veröffentlicht.
 
 ## Persistenz und Fehlerfälle
 
@@ -47,7 +52,7 @@ Code-Upload und Konfigurationsänderungen auf berechtigte Clients begrenzen.
 - [Externe Erweiterungen](https://www.zigbee2mqtt.io/advanced/more/external_extensions.html)
 - [MQTT-API](https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html)
 - [JavaScript-Freischaltung](https://www.zigbee2mqtt.io/guide/configuration/all-settings.html#enable_external_js)
-- [Upload-Implementierung](https://github.com/Koenkk/zigbee2mqtt/blob/master/lib/libs/z2m/externalJS.ts)
+- [Upload-Implementierung](https://github.com/Koenkk/zigbee2mqtt/blob/master/lib/extension/externalJS.ts)
 
 Quellenprüfung: 27.10.2026. Bei neuen Installationen ab Z2M 2.11.0 sind externe
 Erweiterungen zunächst deaktiviert; die Freischaltung benötigt einen Neustart.

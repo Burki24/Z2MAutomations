@@ -2,12 +2,285 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../libs/helper/DataFlowHelper.php';
+require_once __DIR__ . '/../libs/helper/ParentConnectionHelper.php';
+require_once __DIR__ . '/../libs/helper/VariablePresentationHelper.php';
+require_once __DIR__ . '/../libs/Z2MProtocol.php';
+
+use Z2MAutomations\Z2MProtocol;
+
 class Z2MAutomations extends IPSModuleStrict
 {
+    use Burki24\SymconModuleHelper\DataFlowHelper;
+    use Burki24\SymconModuleHelper\ParentConnectionHelper;
+    use Burki24\SymconModuleHelper\VariablePresentationHelper;
+
+    public function Create(): void
+    {
+        parent::Create();
+        $this->RegisterPropertyBoolean('Active', false);
+        $this->RegisterPropertyString('BaseTopic', 'zigbee2mqtt');
+        $this->RegisterPropertyInteger('RequestTimeout', 10);
+        $this->RegisterAttributeInteger('ObservedParentID', 0);
+        $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
+        $this->RegisterMessage($this->InstanceID, FM_CONNECT);
+        $this->RegisterMessage($this->InstanceID, FM_DISCONNECT);
+        $this->RegisterMessage(0, IPS_KERNELSTARTED);
+        $this->RegisterVariableBoolean('MQTTConnected', $this->Translate('MQTT connected'), $this->BooleanPresentation($this->Translate('Connected'), $this->Translate('Disconnected')), 10);
+        $this->RegisterVariableBoolean('BridgeOnline', $this->Translate('Zigbee2MQTT online'), $this->BooleanPresentation($this->Translate('Online'), $this->Translate('Offline or unknown')), 20);
+        $this->RegisterVariableString('Z2MVersion', $this->Translate('Zigbee2MQTT version'), $this->TextPresentation(), 30);
+        $this->RegisterVariableBoolean('ExtensionInstalled', $this->Translate('Automation extension installed'), $this->BooleanPresentation($this->Translate('Installed'), $this->Translate('Not detected')), 40);
+        $this->RegisterVariableString('HealthStatus', $this->Translate('Health check'), $this->TextPresentation(), 50);
+    }
+
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+        $this->SetReceiveDataFilter($this->ReadPropertyBoolean('Active') ? Z2MProtocol::ReceiveFilter($this->ReadPropertyString('BaseTopic')) : '(?!)');
+        $this->WithTransportLock(function (): void
+        {
+            $this->ObserveParent();
+            $this->SaveState($this->RefreshState());
+        });
+    }
 
-        $this->SetStatus(104);
+    public function GetCompatibleParents(): string
+    {
+        return json_encode(['type' => 'connect', 'moduleIDs' => [Z2MProtocol::MQTT_CLIENT, Z2MProtocol::MQTT_SERVER]], JSON_THROW_ON_ERROR);
+    }
+
+    public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void
+    {
+        if (($SenderID === $this->InstanceID && in_array($Message, [FM_CONNECT, FM_DISCONNECT], true))
+            || ($SenderID === $this->ReadAttributeInteger('ObservedParentID') && $SenderID > 0 && in_array($Message, [IM_CHANGESTATUS, IM_DELETE], true))
+            || ($SenderID === 0 && $Message === IPS_KERNELSTARTED)) {
+            $this->WithTransportLock(function () use ($Message): void
+            {
+                if ($Message === IPS_KERNELSTARTED) {
+                    $this->SetBuffer('TransportState', '');
+                }
+                $this->ObserveParent();
+                $this->SaveState($this->RefreshState());
+            });
+        }
+    }
+
+    public function ReceiveData(string $JSONString): string
+    {
+        try {
+            if (strlen($JSONString) > Z2MProtocol::MAX_PAYLOAD_BYTES * 2 + 8192) {
+                return '';
+            }
+            $packet = $this->DecodeDataFlowMessage($JSONString, Z2MProtocol::MQTT_RX);
+            if (($packet['PacketType'] ?? null) !== 3 || !is_string($packet['Topic'] ?? null)
+                || !is_string($packet['Payload'] ?? null) || !is_bool($packet['Retain'] ?? null)) {
+                return '';
+            }
+            $base = $this->ReadPropertyString('BaseTopic');
+            $suffix = substr($packet['Topic'], strlen($base) + 1);
+            if (!str_starts_with($packet['Topic'], $base . '/') || !in_array($suffix, Z2MProtocol::TOPICS, true)) {
+                return '';
+            }
+            $payload = Z2MProtocol::DecodePayload($packet['Payload']);
+            $this->WithTransportLock(function () use ($suffix, $payload, $packet): void
+            {
+                $state = $this->RefreshState();
+                if (!$state['mqttConnected']) {
+                    $this->SaveState($state);
+                    return;
+                }
+                if ($suffix === 'bridge/state') {
+                    $bridge = is_object($payload) ? ($payload->state ?? null) : $payload;
+                    if (in_array($bridge, ['online', 'offline'], true)) {
+                        $state['bridgeState'] = $bridge;
+                        if ($bridge === 'offline' && $state['pending'] !== null) {
+                            $state['pending'] = null;
+                            $state['health'] = 'cancelled';
+                        }
+                    }
+                } elseif ($suffix === 'bridge/info' && $payload instanceof stdClass) {
+                    if (!is_string($payload->version ?? null) || $payload->version === '' || strlen($payload->version) > 128) {
+                        return;
+                    }
+                    $state['version'] = $payload->version;
+                    $externalJS = $payload->config->advanced->enable_external_js ?? null;
+                    $state['externalJS'] = is_bool($externalJS) ? $externalJS : null;
+                } elseif ($suffix === 'bridge/extensions' && is_array($payload)) {
+                    $installed = false;
+                    foreach ($payload as $extension) {
+                        if (!$extension instanceof stdClass || !is_string($extension->name ?? null)) {
+                            return;
+                        }
+                        $installed = $installed || $extension->name === 'z2m-automations.mjs';
+                    }
+                    $state['extensionInstalled'] = $installed;
+                } elseif ($suffix === 'bridge/response/health_check' && !$packet['Retain'] && $payload instanceof stdClass
+                    && $state['pending'] !== null && ($payload->transaction ?? null) === $state['pending']['transaction']) {
+                    if (($payload->status ?? null) === 'error') {
+                        $state['health'] = 'error';
+                        $state['pending'] = null;
+                    } elseif (($payload->status ?? null) === 'ok' && is_bool($payload->data->healthy ?? null)) {
+                        $state['health'] = $payload->data->healthy ? 'healthy' : 'unhealthy';
+                        $state['pending'] = null;
+                    }
+                }
+                $this->SaveState($state);
+            });
+        } catch (JsonException | InvalidArgumentException | UnexpectedValueException $exception) {
+            $this->SendDebug('MQTT', 'Invalid message ignored.', 0);
+        }
+        return '';
+    }
+
+    public function GetTransportState(): string
+    {
+        return $this->WithTransportLock(function (): string
+        {
+            $state = $this->RefreshState();
+            $this->SaveState($state);
+            unset($state['scope'], $state['pending']);
+            return json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        });
+    }
+
+    public function CheckHealth(): string
+    {
+        $request = $this->WithTransportLock(function (): array
+        {
+            $state = $this->RefreshState();
+            if (!$state['mqttConnected']) {
+                $this->SaveState($state);
+                return [];
+            }
+            if ($state['pending'] !== null) {
+                return ['transaction' => $state['pending']['transaction'], 'send' => false];
+            }
+            $transaction = bin2hex(random_bytes(16));
+            $state['pending'] = ['transaction' => $transaction, 'deadline' => $this->Now() + $this->ReadPropertyInteger('RequestTimeout')];
+            $state['transaction'] = $transaction;
+            $state['health'] = 'pending';
+            $this->SaveState($state);
+            return ['transaction' => $transaction, 'send' => true, 'scope' => $state['scope'], 'base' => $this->ReadPropertyString('BaseTopic')];
+        });
+        if ($request === []) {
+            return '';
+        }
+        if (!$request['send']) {
+            return $request['transaction'];
+        }
+        try {
+            $current = $this->WithTransportLock(fn (): array => $this->RefreshState());
+            if ($current['scope'] !== $request['scope'] || !$current['mqttConnected']
+                || ($current['pending']['transaction'] ?? null) !== $request['transaction']) {
+                return '';
+            }
+            // Publish outside the lock: a response can arrive during the parent call.
+            $this->SendDataToParent($this->EncodeDataFlowMessage(Z2MProtocol::MQTT_TX, [
+                'PacketType' => 3, 'QualityOfService' => 0, 'Retain' => false,
+                'Topic'      => $request['base'] . '/bridge/request/health_check',
+                'Payload'    => bin2hex(json_encode(['transaction' => $request['transaction']], JSON_THROW_ON_ERROR))
+            ]));
+        } catch (Throwable $exception) {
+            $this->WithTransportLock(function () use ($request): void
+            {
+                $state = $this->RefreshState();
+                if (($state['pending']['transaction'] ?? null) === $request['transaction']) {
+                    $state['pending'] = null;
+                    $state['health'] = 'error';
+                }
+                $this->SaveState($state);
+            });
+            $this->SendDebug('MQTT', 'Health request could not be sent.', 0);
+            return '';
+        }
+        return $request['transaction'];
+    }
+
+    public function ExpireRequest(): void
+    {
+        $this->WithTransportLock(function (): void
+        {
+            $this->SaveState($this->RefreshState());
+        });
+    }
+
+    protected function Now(): int
+    {
+        return time();
+    }
+
+    private function ObserveParent(): void
+    {
+        $previous = $this->ReadAttributeInteger('ObservedParentID');
+        $parent = $this->GetParentID();
+        if ($parent === $previous) {
+            return;
+        }
+        foreach ([IM_CHANGESTATUS, IM_DELETE] as $message) {
+            if ($previous > 0) {
+                $this->UnregisterMessage($previous, $message);
+            }
+            if ($parent > 0) {
+                $this->RegisterMessage($parent, $message);
+            }
+        }
+        $this->WriteAttributeInteger('ObservedParentID', $parent);
+    }
+
+    private function ValidConfiguration(): bool
+    {
+        return Z2MProtocol::IsValidBaseTopic($this->ReadPropertyString('BaseTopic'))
+            && $this->ReadPropertyInteger('RequestTimeout') >= 1 && $this->ReadPropertyInteger('RequestTimeout') <= 120;
+    }
+
+    private function RefreshState(): array
+    {
+        $parent = $this->GetParentID();
+        $scope = json_encode([$parent, $this->ReadPropertyString('BaseTopic'), $this->ReadPropertyBoolean('Active'), $this->ReadPropertyInteger('RequestTimeout')], JSON_THROW_ON_ERROR);
+        $connected = $this->ReadPropertyBoolean('Active') && $this->ValidConfiguration() && $this->HasParent()
+            && in_array(IPS_GetInstance($parent)['ModuleInfo']['ModuleID'], [Z2MProtocol::MQTT_CLIENT, Z2MProtocol::MQTT_SERVER], true)
+            && $this->HasActiveParent();
+        $cached = $this->GetBuffer('TransportState');
+        $state = $cached === '' ? [] : json_decode($cached, true, 32, JSON_THROW_ON_ERROR);
+        if (($state['scope'] ?? null) !== $scope || (($state['mqttConnected'] ?? false) && !$connected)) {
+            $cancelled = ($state['pending'] ?? null) !== null;
+            $state = ['scope' => $scope, 'mqttConnected' => false, 'bridgeState' => 'unknown', 'bridgeOnline' => false,
+                'version'     => '', 'externalJS' => null, 'extensionInstalled' => false, 'pending' => null,
+                'transaction' => '', 'health' => $cancelled ? 'cancelled' : 'idle'];
+        }
+        $state['mqttConnected'] = $connected;
+        $state['bridgeOnline'] = $connected && $state['bridgeState'] === 'online';
+        if ($state['pending'] !== null && $state['pending']['deadline'] <= $this->Now()) {
+            $state['pending'] = null;
+            $state['health'] = 'timeout';
+        }
+        return $state;
+    }
+
+    private function SaveState(array $state): void
+    {
+        $state['bridgeOnline'] = $state['mqttConnected'] && $state['bridgeState'] === 'online';
+        $this->SetBuffer('TransportState', json_encode($state, JSON_THROW_ON_ERROR));
+        $this->SetValue('MQTTConnected', $state['mqttConnected']);
+        $this->SetValue('BridgeOnline', $state['bridgeOnline']);
+        $this->SetValue('Z2MVersion', $state['version']);
+        $this->SetValue('ExtensionInstalled', $state['extensionInstalled']);
+        $this->SetValue('HealthStatus', $this->Translate(ucfirst($state['health'])));
+        $this->SetTimerInterval('RequestTimeout', $state['pending'] === null ? 0 : max(1, ($state['pending']['deadline'] - $this->Now()) * 1000));
+        $status = !$this->ReadPropertyBoolean('Active') ? 104 : (!$this->ValidConfiguration() ? 200 : (!$state['mqttConnected'] ? 201 : (!$state['bridgeOnline'] ? 202 : 102)));
+        $this->SetStatus($status);
+    }
+
+    private function WithTransportLock(callable $callback): mixed
+    {
+        $name = 'Z2MA.Transport.' . $this->InstanceID;
+        if (!IPS_SemaphoreEnter($name, 1000)) {
+            throw new RuntimeException('MQTT state is busy.');
+        }
+        try {
+            return $callback();
+        } finally {
+            IPS_SemaphoreLeave($name);
+        }
     }
 }

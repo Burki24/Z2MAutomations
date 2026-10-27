@@ -1,0 +1,24 @@
+{
+    "schema": 1,
+    "source_repository": "Burki24/Symcon_ModuleHelper",
+    "helpers": {
+        "DataFlowHelper": {
+            "version": "1.0.0",
+            "sha256": "4c25828b283367692d0db1631d2b7d71ba6012883798bc5ffddb8f2d551d6dfb",
+            "path": "libs/helper/DataFlowHelper.php",
+            "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
+        },
+        "ParentConnectionHelper": {
+            "version": "1.0.0",
+            "sha256": "d4f01dee721aa32e64410979ca15b2795a0fcc59c0232c0ad69e4702d9ff573c",
+            "path": "libs/helper/ParentConnectionHelper.php",
+            "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
+        },
+        "VariablePresentationHelper": {
+            "version": "2.1.0",
+            "sha256": "56f8b6c258db79b6f41e2f9930d88a37d719a599c3a2f317bc34b7f4746293fa",
+            "path": "libs/helper/VariablePresentationHelper.php",
+            "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
+        }
+    }
+}

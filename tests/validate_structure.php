@@ -26,7 +26,8 @@ foreach ($modules as $path) {
     $check(!in_array($module['id'], $ids, true), 'Duplicate GUID');
     $ids[] = $module['id'];
     $check($module['prefix'] === 'Z2MA' && $module['type'] === 3, 'Module identity and type');
-    $check($module['parentRequirements'] === [] && $module['childRequirements'] === [] && $module['implemented'] === [], 'Scaffold has no data flow');
+    $check($module['parentRequirements'] === ['{043EA491-0325-4ADD-8FC2-A30C8EEB4D3F}'] && $module['childRequirements'] === []
+        && $module['implemented'] === ['{7F7632D9-FA40-4F38-8DEA-C83CD4325A32}'], 'Official MQTT data flow');
     $folder = dirname($path);
     foreach (['module.php', 'form.json', 'locale.json', 'README.md'] as $file) {
         $check(is_file($folder . '/' . $file), 'Missing module file: ' . $file);
@@ -34,8 +35,17 @@ foreach ($modules as $path) {
     $check(str_contains(file_get_contents($folder . '/module.php'), 'class Z2MAutomations extends IPSModuleStrict'), 'Strict base class');
     $form = $readJson($folder . '/form.json');
     $translations = $readJson($folder . '/locale.json')['translations']['de'];
-    $check($form['actions'] === [] && count($form['elements']) === 1, 'Informational scaffold form');
-    $check(isset($translations[$form['elements'][0]['caption']]), 'German form translation');
+    foreach (array_merge($form['elements'], $form['actions'], $form['status']) as $field) {
+        $check(isset($translations[$field['caption']]), 'German form translation: ' . $field['caption']);
+    }
+}
+
+$subscription = $readJson($root . '/.helper-sync.json');
+$manifest = $readJson($root . '/libs/helper/manifest.json');
+foreach ($subscription['helpers'] as $name => $helper) {
+    $entry = $manifest['helpers'][$name];
+    $check($entry['path'] === $helper['target'], 'Helper target');
+    $check(hash_file('sha256', $root . '/' . $entry['path']) === $entry['sha256'], 'Helper integrity: ' . $name);
 }
 foreach ($ids as $id) {
     $check(preg_match('/\A\{[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\}\z/D', $id) === 1, 'Invalid GUID');
