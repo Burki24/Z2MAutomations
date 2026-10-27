@@ -55,7 +55,7 @@ class Z2MAutomations extends IPSModuleStrict
         $this->TraceModuleCall(__FUNCTION__, __LINE__, function (): void
         {
             parent::ApplyChanges();
-            $this->SetReceiveDataFilter($this->ReadPropertyBoolean('Active') ? Z2MProtocol::ReceiveFilter($this->ReadPropertyString('BaseTopic')) : '(?!)');
+            $this->SetReceiveDataFilter($this->ReadPropertyBoolean('Active') ? Z2MProtocol::ReceiveFilter($this->ReadPropertyString('BaseTopic')) : Z2MProtocol::BLOCK_RECEIVE_FILTER);
             $this->WithTransportLock(function (): void
             {
                 $this->ObserveParent();

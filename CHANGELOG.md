@@ -2,6 +2,9 @@
 
 ## Neu
 
+- MQTT-Empfangsfilter auf vollständige JSON-Umschläge angepasst; der Filter
+  für deaktivierte oder ungültige Konfigurationen benötigt keine Lookarounds.
+
 - Durchgängiges deutsches Moduldebug für Aufrufe, MQTT-Datenfluss, Status und
   Fehler ergänzt; sensible Nutzdaten bleiben ausgeschlossen.
 - Passende frische Health-Antworten bestätigen jetzt auch ohne vorherigen

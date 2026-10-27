@@ -30,3 +30,9 @@ diesen Nachweis nicht liefern. Eine spätere Offline-Meldung setzt ihn zurück.
 
 Keine Live-Installation oder Prüfung am echten Broker im Rahmen der Offline-Tests.
 Die Darstellung im nativen Debugfenster ist noch praktisch zu prüfen.
+
+Der native Empfangsfilter umfasst den vollständigen JSON-Umschlag (`.*….*`).
+Deaktivierte oder ungültige Konfigurationen verwenden `^$`, das keine gültige
+JSON-Nachricht annimmt. Lookarounds wie `(?!)` sind in der eingesetzten nativen
+Regex-Engine nicht unterstützt. Die Offline-Prüfung deckt vollständige
+Umschläge und JSON-Escaping ab; sie ersetzt keinen Test der nativen Engine.

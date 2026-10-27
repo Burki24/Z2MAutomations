@@ -191,7 +191,8 @@ $check(!$state()['bridgeOnline'], 'Disabled instance ignores incoming state');
 foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $baseTopic) {
     $filter = Z2MAutomations\Z2MProtocol::ReceiveFilter($baseTopic);
     foreach ([0, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE] as $flags) {
-        $packet = json_encode(['Topic' => $baseTopic . '/bridge/state'], $flags);
+        $packet = json_encode(['DataID' => Z2MAutomations\Z2MProtocol::MQTT_RX, 'Topic' => $baseTopic . '/bridge/state', 'Payload' => '6f6e6c696e65'], $flags);
+        $check(preg_match('/\A(?:' . $filter . ')\z/', $packet) === 1, 'Native receive filter must match the complete MQTT envelope');
         $check(preg_match('/' . $filter . '/', $packet) === 1, 'Filter accepts both standard JSON encodings');
     }
     $check(preg_match('/' . $filter . '/', json_encode(['Topic' => $baseTopic . '/bridge/state/extra'])) === 0, 'Topic filter must be exact');
@@ -199,6 +200,11 @@ foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $baseTopic) {
 
 IPS_SetProperty($id, 'Active', true);
 IPS_ApplyChanges($id);
+foreach (['', 'bad/#'] as $invalidBase) {
+    $blocked = Z2MAutomations\Z2MProtocol::ReceiveFilter($invalidBase);
+    $check(!str_contains($blocked, '(?') && preg_match('/' . $blocked . '/', '{"Topic":"test/new/bridge/state"}') === 0, 'Disabled filter needs no unsupported lookaround and rejects MQTT envelopes');
+}
+
 $secondID = IPS_CreateInstance($metadata['id']);
 IPS_ConnectInstance($secondID, $serverID);
 IPS_SetProperty($secondID, 'Active', true);

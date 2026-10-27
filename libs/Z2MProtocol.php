@@ -16,6 +16,8 @@ final class Z2MProtocol
         'bridge/response/extension/save', 'symcon/automations/status', 'symcon/automations/response/status',
         'symcon/automations/response/validate', 'symcon/automations/response/store'];
     public const MAX_PAYLOAD_BYTES = 1048576;
+    // Valid JSON data-flow envelopes are never empty; no lookaround required.
+    public const BLOCK_RECEIVE_FILTER = '^$';
 
     public static function IsValidBaseTopic(string $topic): bool
     {
@@ -40,7 +42,7 @@ final class Z2MProtocol
     public static function ReceiveFilter(string $baseTopic): string
     {
         if (!self::IsValidBaseTopic($baseTopic)) {
-            return '(?!)';
+            return self::BLOCK_RECEIVE_FILTER;
         }
         $topics = [];
         foreach (self::TOPICS as $suffix) {
@@ -48,6 +50,6 @@ final class Z2MProtocol
                 $topics[] = preg_quote(json_encode($baseTopic . '/' . $suffix, $flags | JSON_THROW_ON_ERROR), '/');
             }
         }
-        return '"Topic"\s*:\s*(?:' . implode('|', array_unique($topics)) . ')';
+        return '.*"Topic"\s*:\s*(?:' . implode('|', array_unique($topics)) . ').*';
     }
 }
