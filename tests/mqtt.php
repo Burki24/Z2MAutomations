@@ -28,6 +28,17 @@ $metadata = json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/mo
 class ClockedZ2MAutomations extends Z2MAutomations
 {
     public int $clock = 1000;
+    public array $debugMessages = [];
+    public bool $debugFails = false;
+
+    protected function SendDebug(string $Message, string $Data, int $Format): bool
+    {
+        if ($this->debugFails) {
+            throw new RuntimeException('Synthetic debug sink failure');
+        }
+        $this->debugMessages[] = [$Message, $Data];
+        return true;
+    }
 
     protected function Now(): int
     {
@@ -137,7 +148,7 @@ $check(!$state()['bridgeOnline'], 'Previous topic is no longer accepted');
 $parent->publish('test/new/bridge/state', ['state' => 'online']);
 $check($state()['bridgeOnline'], 'New topic is accepted');
 
-foreach (['test/a.b', 'test/ä', 'test/a"b'] as $validTopic) {
+foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $validTopic) {
     IPS_SetProperty($id, 'BaseTopic', $validTopic);
     IPS_ApplyChanges($id);
     $parent->publish($validTopic . '/bridge/state', ['state' => 'online']);
@@ -177,7 +188,7 @@ $check(!$state()['mqttConnected'] && $module->CheckHealth() === '' && IPS_GetIns
 $server->publish('test/new/bridge/state', ['state' => 'online']);
 $check(!$state()['bridgeOnline'], 'Disabled instance ignores incoming state');
 
-foreach (['test/a.b', 'test/ä', 'test/a"b'] as $baseTopic) {
+foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $baseTopic) {
     $filter = Z2MAutomations\Z2MProtocol::ReceiveFilter($baseTopic);
     foreach ([0, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE] as $flags) {
         $packet = json_encode(['Topic' => $baseTopic . '/bridge/state'], $flags);
@@ -199,5 +210,59 @@ $secondTransaction = $second->CheckHealth();
 $check($firstTransaction !== $secondTransaction, 'Instances use distinct transactions on a shared gateway');
 $server->publish('test/new/bridge/response/health_check', ['transaction' => $firstTransaction, 'status' => 'ok', 'data' => ['healthy' => true]]);
 $check($state()['health'] === 'healthy' && json_decode($second->GetTransportState(), true)['health'] === 'pending', 'A reply belongs only to its requesting instance');
+
+// A fresh correlated health reply bootstraps online without a retained bridge/state.
+$module->MessageSink(time(), 0, IPS_KERNELSTARTED, []);
+$check(!$state()['bridgeOnline'], 'Reset has no online evidence');
+$module->debugMessages = [];
+$transaction = $module->CheckHealth();
+$server->publish('test/new/bridge/response/health_check', ['transaction' => $transaction, 'status' => 'ok', 'data' => ['healthy' => true]], true);
+$check(!$state()['bridgeOnline'], 'Retained health response cannot bootstrap online');
+$server->publish('test/new/bridge/response/health_check', ['transaction' => $transaction, 'status' => 'ok', 'data' => ['healthy' => false]]);
+$check($state()['bridgeOnline'] && $state()['health'] === 'unhealthy', 'Reachability and coordinator health are distinct');
+$module->ValidateYaml('synthetic-private-yaml');
+$module->ReceiveData('synthetic-private-invalid-payload');
+$server->publish('test/new/bridge/info', ['version' => 'test', 'config' => ['password' => 'synthetic-private-password']]);
+$debug = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
+foreach (['synthetic-private-yaml', 'synthetic-private-invalid-payload', 'synthetic-private-password'] as $secret) {
+    $check(!str_contains($debug, $secret), 'Raw input must not enter debug');
+}
+$stack = [];
+foreach ($module->debugMessages as [$category, $data]) {
+    $entry = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+    $check(strlen($data) <= 4096 && isset($entry['Instanz'], $entry['Vorgang'], $entry['Aufruf'], $entry['Meldung'], $entry['Bezug']), 'Bounded structured human-readable debug');
+    if (str_contains($category, ' | START | ')) {
+        $stack[] = [$entry['Vorgang'], $entry['Aufruf']];
+    } elseif (str_contains($category, ' | ENDE | ')) {
+        $check(array_pop($stack) === [$entry['Vorgang'], $entry['Aufruf']], 'Balanced debug call boundaries');
+    }
+}
+$check($stack === [] && str_contains($debug, 'SENDEN') && str_contains($debug, 'EMPFANG') && str_contains($debug, 'FEHLER'), 'Success, receive and rejection are observable');
+$module->debugFails = true;
+$transaction = $module->CheckHealth();
+$check($transaction !== '', 'Broken debug sink cannot suppress a request');
+$server->publish('test/new/bridge/response/health_check', ['transaction' => $transaction, 'status' => 'ok', 'data' => ['healthy' => true]]);
+$check($state()['health'] === 'healthy', 'Broken debug sink cannot suppress state processing');
+$module->debugFails = false;
+$module->debugMessages = [];
+$module->MessageSink(time(), 0, IPS_KERNELSTARTED, []);
+$server->onPublish = static function (array $packet) use ($server): void
+{
+    $server->publish('test/new/bridge/response/health_check', ['transaction' => $packet['Payload']['transaction'], 'status' => 'ok', 'data' => ['healthy' => true]]);
+};
+$module->debugMessages = [];
+$module->CheckHealth();
+$server->onPublish = null;
+$starts = [];
+foreach ($module->debugMessages as [$category, $data]) {
+    if (str_contains($category, ' | START | ')) {
+        $starts[] = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+    }
+}
+$check(count($starts) === 2 && $starts[0]['Vorgang'] === $starts[1]['Vorgang'] && $starts[0]['Aufruf'] !== $starts[1]['Aufruf'], 'Nested synchronous receive shares operation with a distinct call');
+$module->GetTransportState();
+$lastStarts = array_values(array_filter($module->debugMessages, static fn (array $entry): bool => str_contains($entry[0], ' | START | ')));
+$last = json_decode($lastStarts[array_key_last($lastStarts)][1], true, 512, JSON_THROW_ON_ERROR);
+$check($last['Vorgang'] !== $starts[0]['Vorgang'], 'Independent public call gets a new operation');
 
 echo "MQTT integration, correlation, lifecycle and failure checks passed.\n";

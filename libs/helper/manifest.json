@@ -25,6 +25,12 @@
             "sha256": "bd45f15a1c2f6e2800eff51eefeb3094f5745a3469434d6a57b98d54f30d363f",
             "path": "libs/helper/ConfigurationFormHelper.php",
             "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
+        },
+        "DebugHelper": {
+            "version": "1.0.2",
+            "sha256": "3612b6ba1371d07846e09f8485bcece000cea3fec604a3c497a15b154ff904ff",
+            "path": "libs/helper/DebugHelper.php",
+            "source_sha": "adccaa7054c3a4e3330451f179acaccc0e64de58"
         }
     }
 }

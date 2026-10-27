@@ -11,24 +11,36 @@ trait ExtensionIntegration
 {
     public function InstallExtension(): string
     {
-        $code = @file_get_contents(__DIR__ . '/z2m/' . ExtensionContract::NAME, false, null, 0, Z2MProtocol::MAX_PAYLOAD_BYTES + 1);
-        $valid = is_string($code) && $code !== '' && strlen($code) <= Z2MProtocol::MAX_PAYLOAD_BYTES && preg_match('//u', $code) === 1;
-        return $this->StartExtensionWorkflow('install', '', $valid ? $code : '');
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function ()
+        {
+            $code = @file_get_contents(__DIR__ . '/z2m/' . ExtensionContract::NAME, false, null, 0, Z2MProtocol::MAX_PAYLOAD_BYTES + 1);
+            $valid = is_string($code) && $code !== '' && strlen($code) <= Z2MProtocol::MAX_PAYLOAD_BYTES && preg_match('//u', $code) === 1;
+            return $this->StartExtensionWorkflow('install', '', $valid ? $code : '');
+        });
     }
 
     public function RequestExtensionStatus(): string
     {
-        return $this->StartExtensionWorkflow('status');
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function ()
+        {
+            return $this->StartExtensionWorkflow('status');
+        });
     }
 
     public function ValidateYaml(string $Yaml): string
     {
-        return $this->StartExtensionWorkflow('validate', $Yaml);
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Yaml)
+        {
+            return $this->StartExtensionWorkflow('validate', $Yaml);
+        });
     }
 
     public function StoreYaml(string $Yaml): string
     {
-        return $this->StartExtensionWorkflow('store', $Yaml);
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Yaml)
+        {
+            return $this->StartExtensionWorkflow('store', $Yaml);
+        });
     }
 
     private function NewExtensionState(): array
@@ -39,6 +51,7 @@ trait ExtensionIntegration
 
     private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = ''): string
     {
+        $this->DebugEvent('AKTION', 'Erweiterungsauftrag prÃ¼fen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
         $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code): array
         {
             $state = $this->RefreshState();
@@ -72,6 +85,7 @@ trait ExtensionIntegration
                 $error = 'not_validated';
             }
             if ($error !== '') {
+                $this->DebugEvent('FEHLER', 'Erweiterungsauftrag abgelehnt.', ['Auftrag' => $kind, 'Grund' => $error]);
                 $state['operation'] = ['kind' => $kind, 'status' => 'error', 'transaction' => ''];
                 $state['lastError'] = $error;
                 $this->SaveState($state);
@@ -136,6 +150,7 @@ trait ExtensionIntegration
                 throw new \RuntimeException('Request too large');
             }
             // Never hold the state semaphore while the parent dispatches replies.
+            $this->DebugEvent('SENDEN', 'Erweiterungsanfrage an MQTT-Gateway Ã¼bergeben; BestÃ¤tigung steht aus.', ['Gateway' => $this->GetParentID(), 'Topic' => $frame['topic'], 'Nutzdatenbytes' => strlen($frame['payload']), 'Anfragebezug' => substr(hash('sha256', $frame['transaction']), 0, 16)]);
             $this->SendDataToParent($this->EncodeDataFlowMessage(Z2MProtocol::MQTT_TX, [
                 'PacketType' => 3, 'QualityOfService' => 0, 'Retain' => false,
                 'Topic'      => $frame['topic'], 'Payload' => bin2hex($frame['payload'])
@@ -156,6 +171,7 @@ trait ExtensionIntegration
 
     private function FinishExtensionWorkflow(array &$state, string $status, string $error = ''): void
     {
+        $this->DebugEvent($error === '' ? 'AKTION' : 'FEHLER', 'Erweiterungsauftrag abgeschlossen.', ['Auftrag' => $state['workflow']['kind'] ?? 'none', 'Ergebnis' => $status, 'Grund' => $error]);
         $state['operation']['status'] = $status;
         $state['lastError'] = $error;
         $state['workflow'] = null;
@@ -186,12 +202,15 @@ trait ExtensionIntegration
         }
         $workflow = $state['workflow'];
         if ($workflow === null || $retained || !$payload instanceof stdClass || ($payload->transaction ?? null) !== $workflow['transaction']) {
+            $this->DebugEvent('AKTION', 'Antwort ohne passenden laufenden Auftrag verworfen.', ['Retain' => $retained, 'AuftragVorhanden' => $workflow !== null]);
             return null;
         }
         $expected = $workflow['wire'] === 'install' ? 'bridge/response/extension/save' : ExtensionContract::PREFIX . 'response/' . $workflow['wire'];
         if ($suffix !== $expected) {
+            $this->DebugEvent('AKTION', 'Antworttopic passt nicht zur erwarteten Auftragsphase.');
             return null;
         }
+        $this->DebugEvent('AKTION', 'Antwort dem laufenden Auftrag zugeordnet.', ['Phase' => $workflow['wire'], 'Anfragebezug' => substr(hash('sha256', $workflow['transaction']), 0, 16)]);
         if ($workflow['wire'] !== 'install' && ($payload->protocol_version ?? null) !== 1) {
             $state['extensionConfirmed'] = false;
             $state['validation'] = null;

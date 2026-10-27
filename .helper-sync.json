@@ -15,6 +15,9 @@
         },
         "ConfigurationFormHelper": {
             "target": "libs/helper/ConfigurationFormHelper.php"
+        },
+        "DebugHelper": {
+            "target": "libs/helper/DebugHelper.php"
         }
     }
 }
