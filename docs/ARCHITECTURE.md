@@ -9,6 +9,8 @@ Beide Teile erhalten eigenen Implementierungscode in diesem Repository:
 - libs/z2m/: eigene Erweiterungsquellen, kanonisches YAML-Schema und hochladbare
   Einzeldatei mit eingebettetem Schema.
 - libs/Z2MProtocol.php: librarylokaler MQTT-/Z2M-Vertrag.
+- libs/ExtensionContract.php und ExtensionIntegration.php: normalisierte
+  Erweiterungsantworten und korrelierte Installations-/YAML-Workflows.
 - libs/helper/: unverändertes, manifestiertes Bundle aus Symcon_ModuleHelper.
 - libs/: librarylokale Logik, sobald benötigt.
 - tests/: Offline-Tests mit synthetischen Daten.
@@ -32,8 +34,10 @@ oder MQTT Server. Es gibt keinen eigenen Broker-Client und keinen Zwischenweg
 Die MQTT-Grundlage mit konfigurierbarem Basistopic, Bridge-Status und manuellem
 health_check ist implementiert. Die Z2M-Seite empfängt und speichert inzwischen
 versionierte YAML über eigene Topics; siehe [Erweiterungsprotokoll](EXTENSION_PROTOCOL.md)
-und [YAML-Vertrag](YAML_SCHEMA.md). Symcon-Upload, automatische Installation,
-Ausführungsengine und Aktivierung sind noch nicht implementiert.
+und [YAML-Vertrag](YAML_SCHEMA.md). Die Symcon-Seite installiert das feste Artefakt
+auf ausdrückliche Bedienung, prüft den Empfänger und überträgt nach Vorschau und
+Bestätigung validierte YAML. Ausführungsengine und Aktivierung sind noch nicht
+implementiert; siehe [ADR 0004](adr/0004-correlated-module-workflows.md).
 
 ## Persistenz und Fehlerfälle
 

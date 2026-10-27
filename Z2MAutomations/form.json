@@ -19,11 +19,11 @@
         },
         {
             "type": "Label",
-            "caption": "Connect this instance to the existing MQTT Client or MQTT Server. Subscribe to the base topic followed by /bridge/# in the MQTT Client."
+            "caption": "Use the existing MQTT gateway. Subscribe to BaseTopic/bridge/# and BaseTopic/symcon/automations/#."
         },
         {
             "type": "Label",
-            "caption": "Automation editing, YAML transfer and extension installation are not available yet."
+            "caption": "Installation requires external JavaScript already enabled in Z2M. Stored YAML is not executed."
         }
     ],
     "actions": [
@@ -31,6 +31,52 @@
             "type": "Button",
             "caption": "Check Zigbee2MQTT connection",
             "onClick": "Z2MA_CheckHealth($id);"
+        },
+        {
+            "caption": "Refresh extension status",
+            "type": "Button",
+            "onClick": "Z2MA_RequestExtensionStatus($id);"
+        },
+        {
+            "confirm": "Install the bundled z2m-automations.mjs in Z2M and replace an existing file with this name?",
+            "caption": "Install or update bundled extension",
+            "type": "Button",
+            "onClick": "Z2MA_InstallExtension($id);",
+            "name": "InstallButton"
+        },
+        {
+            "caption": "Idle",
+            "name": "OperationInfo",
+            "type": "Label"
+        },
+        {
+            "caption": "No extension error.",
+            "name": "ErrorInfo",
+            "type": "Label"
+        },
+        {
+            "value": "",
+            "caption": "Automation YAML draft",
+            "name": "YamlInput",
+            "rowCount": 18,
+            "type": "ScriptEditor"
+        },
+        {
+            "caption": "Validate YAML in Z2M",
+            "type": "Button",
+            "onClick": "Z2MA_ValidateYaml($id, $YamlInput);"
+        },
+        {
+            "caption": "No current YAML validation.",
+            "name": "ValidationInfo",
+            "type": "Label"
+        },
+        {
+            "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Automations will not be executed.",
+            "caption": "Store validated YAML in Z2M",
+            "type": "Button",
+            "onClick": "Z2MA_StoreYaml($id, $YamlInput);",
+            "name": "StoreButton"
         }
     ],
     "status": [

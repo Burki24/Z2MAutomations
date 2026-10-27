@@ -12,6 +12,9 @@
         },
         "VariablePresentationHelper": {
             "target": "libs/helper/VariablePresentationHelper.php"
+        },
+        "ConfigurationFormHelper": {
+            "target": "libs/helper/ConfigurationFormHelper.php"
         }
     }
 }

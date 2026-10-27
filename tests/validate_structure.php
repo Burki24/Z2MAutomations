@@ -42,6 +42,9 @@ foreach ($modules as $path) {
     $translations = $readJson($folder . '/locale.json')['translations']['de'];
     foreach (array_merge($form['elements'], $form['actions'], $form['status']) as $field) {
         $check(isset($translations[$field['caption']]), 'German form translation: ' . $field['caption']);
+        if (isset($field['confirm'])) {
+            $check(isset($translations[$field['confirm']]), 'German confirmation translation');
+        }
     }
 }
 

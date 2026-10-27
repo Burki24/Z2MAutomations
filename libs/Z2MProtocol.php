@@ -12,7 +12,9 @@ final class Z2MProtocol
     public const MQTT_SERVER = '{C6D2AEB3-6E1F-4B2E-8E69-3A1A00246850}';
     public const MQTT_TX = '{043EA491-0325-4ADD-8FC2-A30C8EEB4D3F}';
     public const MQTT_RX = '{7F7632D9-FA40-4F38-8DEA-C83CD4325A32}';
-    public const TOPICS = ['bridge/state', 'bridge/info', 'bridge/extensions', 'bridge/response/health_check'];
+    public const TOPICS = ['bridge/state', 'bridge/info', 'bridge/extensions', 'bridge/response/health_check',
+        'bridge/response/extension/save', 'symcon/automations/status', 'symcon/automations/response/status',
+        'symcon/automations/response/validate', 'symcon/automations/response/store'];
     public const MAX_PAYLOAD_BYTES = 1048576;
 
     public static function IsValidBaseTopic(string $topic): bool

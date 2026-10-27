@@ -3,9 +3,10 @@
 ## Umfang und Installation
 
 Diese Ausbaustufe implementiert die eigene Z2M-Seite: Empfang, Validierung,
-persistente Speicherung, Wiederanlauf und Rückmeldung. Der bestehende
-Symcon-Transport wurde nicht um Upload-Buttons oder diese neuen Befehle erweitert.
-Installation und Praxisprüfung auf einer realen Z2M-Instanz sind noch offen.
+persistente Speicherung, Wiederanlauf und Rückmeldung. Der Symcon-Transport
+integriert Installation, aktive Statusabfragen, validate und store;
+siehe [Modulanleitung](../Z2MAutomations/README.md). Eine tatsächlich ausgeführte
+Installation oder Praxisprüfung auf einer realen Z2M-Instanz steht noch aus.
 
 Für eine spätere Installation wird ausschließlich
 [z2m-automations.mjs](../libs/z2m/z2m-automations.mjs) mit der offiziellen
@@ -26,8 +27,8 @@ Der Präfix symcon/automations ist unser eigener Vertrag.
 | symcon/automations/response/OPERATION | Antwort auf die jeweilige Anfrage |
 | symcon/automations/status | Zustand bei Start, erfolgreicher Speicherung und Stop; retained |
 
-Ein MQTT Client in Symcon muss später zusätzlich BaseTopic/symcon/automations/#
-abonnieren und der Modul-Empfang entsprechend erweitert werden. Ein bestehendes
+Ein MQTT Client in Symcon muss zusätzlich BaseTopic/symcon/automations/#
+abonnieren. Der Modul-Empfang verarbeitet diesen Präfix bereits. Ein bestehendes
 Abonnement # genügt auf Gateway-Ebene. Die bisherigen bridge/#-Daten decken den
 neuen Präfix nicht ab.
 

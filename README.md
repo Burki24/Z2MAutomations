@@ -14,21 +14,24 @@ Die MQTT-Anbindung empfängt den Z2M-Status, Versionsinformationen und die Liste
 externer Erweiterungen. Eine Verbindungsprüfung sendet eine Gesundheitsanfrage
 und zeigt das Ergebnis nach der passenden Antwort an.
 
-Die eigene Z2M-Erweiterung kann inzwischen versionierte YAML empfangen,
-validieren und persistent speichern. Sie führt noch keine Automationen aus.
+Die eigene Z2M-Erweiterung lässt sich aus dem Modul über MQTT installieren.
+Das Modul prüft YAML über den Empfänger und überträgt sie nach Vorschau und
+Bestätigung in dessen persistenten Speicher. Es führt noch keine Automationen aus.
 Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
 eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.
 
-Regelerstellung, automatische Erweiterungsinstallation und YAML-Übertragung
-aus dem Symcon-Formular sind noch nicht verfügbar.
+Ein grafischer Regeleditor und die Ausführung der Automationen folgen später.
 
 ## Voraussetzungen
 
 - IP-Symcon ab Version 9.0 mit PHP 8.5.
 - Zigbee2MQTT und eine konfigurierte Symcon-Instanz vom Typ MQTT Client oder
   MQTT Server, über die dieselbe Z2M-Installation erreichbar ist.
-- Beim MQTT Client müssen die Z2M-Bridge-Topics abonniert sein, beispielsweise
-  zigbee2mqtt/bridge/#. Ein vorhandenes Abonnement # genügt ebenfalls.
+- Beim MQTT Client müssen die Z2M-Bridge- und Erweiterungstopics abonniert sein,
+  beispielsweise zigbee2mqtt/bridge/# und zigbee2mqtt/symcon/automations/#.
+  Ein vorhandenes Abonnement # genügt ebenfalls.
+- Für die Erweiterungsinstallation muss externes JavaScript in Z2M bereits
+  freigeschaltet sein. Das Modul ändert diese Einstellung nicht und startet Z2M nicht neu.
 
 ## Module
 
@@ -44,9 +47,10 @@ In einer Entwicklungsinstallation die Instanz mit dem vorhandenen MQTT-Gateway
 verbinden, das Basistopic einstellen und die MQTT-Anbindung aktivieren.
 Details stehen in der [Modulanleitung](Z2MAutomations/README.md).
 
-Die Anbindung ist zunächst deaktiviert. Aktivieren empfängt Daten, sendet aber
-keine automatischen Anfragen. Erst „Zigbee2MQTT-Verbindung prüfen“ sendet die
-Gesundheitsanfrage. Dafür wird keine externe Z2M-Erweiterung benötigt.
+Die Anbindung ist zunächst deaktiviert. Aktivieren oder Öffnen des Formulars
+sendet keine automatischen Anfragen. Bedienaktionen werden ausdrücklich über
+die jeweiligen Schaltflächen gestartet. Details zum Ablauf für Installation,
+YAML-Prüfung und Speicherung stehen in der Modulanleitung.
 
 ## Lizenz und Änderungen
 

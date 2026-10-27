@@ -20,7 +20,13 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Sitzungskennung, Revisionskontrolle, SHA-256 und serialisierter Verarbeitung.
 - Persistente YAML mit Vorversion und temporärem, gespültem Schreiben vor rename.
   Beschädigte Hauptdateien führen mit gültiger Sicherung zu recovered_read_only.
-- Noch keine Ausführung, Aktivierung oder Übertragung aus dem Symcon-Formular.
+- Installation über die offizielle MQTT-API mit anschließender korrelierter
+  Empfängerprüfung im Modul integriert.
+- YAML-Editor, Prüfung, Vorschau und bestätigte Speicherung aus dem Formular
+  implementiert. Vor Store erneute Prüfung von Sitzung und Revision; kein
+  blindes Überschreiben, keine automatischen Wiederholungen oder Revisionsänderungen.
+- Zusätzliche lesbare Statusvariablen für Empfängerbereitschaft, Speicherrevision,
+  Aktionsstatus und Fehler. Noch keine Ausführung oder Aktivierung.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
   Host-Abhängigkeiten js-yaml 5.4.2 und Ajv 8.20.0 lokal mit Lockfile geprüft;
   Referenzvertrag Z2M 2.14.2. Keine reale Z2M-Abnahme.
@@ -30,7 +36,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
   .helper-sync.json deklariert die Consumer-Subscription. Zentrale Freischaltung
   des Consumers und App-Berechtigungen für automatischen Sync sind noch zu prüfen;
   andere Repositories wurden für diese Implementierung nicht geändert.
-- Das Formular bleibt statisch; ConfigurationFormHelper ist noch nicht erforderlich.
+- Das dynamische Formular verwendet den kanonisch eingebundenen
+  ConfigurationFormHelper. Öffnen löst keine Netzwerkanfrage aus.
 - GitHub-Identität in Metadaten und Badges: Burki24/Z2MAutomations.
 - Lizenz gemäß Projektkonvention: PolyForm Noncommercial License 1.0.0.
 - Initiale Metadaten 0.1 / Build 0 / Datum 0 bezeichnen keinen Release.
@@ -40,9 +47,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 1. MQTT-Anbindung nach ausdrücklichem Auftrag mit realem Gateway und Z2M prüfen.
 2. Erweiterung nach ausdrücklichem Praxisauftrag in Z2M prüfen und kompatible
    Versionen anhand realer Nachweise festlegen.
-3. Neue Erweiterungstopics und Speicheraufträge in Symcon integrieren.
-4. Regel-Formulare, Vorschau und bewusstes Übertragen implementieren.
-5. Ausführungsengine und getrennte Aktivierungsbestätigung entwickeln.
+3. Grafischen Regeleditor auf Basis des bestehenden YAML-Vertrags entwickeln.
+4. Ausführungsengine und getrennte Aktivierungsbestätigung entwickeln.
 
 ## Dokumentation
 
@@ -53,6 +59,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - [YAML-Schema](docs/YAML_SCHEMA.md)
 - [Erweiterungsprotokoll und Persistenz](docs/EXTENSION_PROTOCOL.md)
 - [ADR 0003](docs/adr/0003-versioned-yaml-storage.md)
+- [ADR 0004](docs/adr/0004-correlated-module-workflows.md)
 - [Entwicklung und Prüfungen](docs/DEVELOPMENT.md)
 
 Keine Installation in Symcon oder Z2M und keine Praxisabnahme erfolgt.

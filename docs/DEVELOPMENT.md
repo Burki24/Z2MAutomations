@@ -8,7 +8,7 @@ Zielplattform: IP-Symcon 9.0 / PHP 8.5. Branch: dev.
 Nach dem Klonen: git submodule update --init --recursive.
 .style stammt unverändert aus symcon/StylePHP, tests/stubs unverändert aus
 symcon/SymconStubs. Die Gitlinks pinnen den jeweiligen Stand.
-DataFlowHelper, ParentConnectionHelper und VariablePresentationHelper sind
+DataFlowHelper, ParentConnectionHelper, VariablePresentationHelper und ConfigurationFormHelper sind
 unverändert aus dem kanonischen Consumer-Bundle eingebunden; Herkunft und Hashes
 stehen in libs/helper/manifest.json. .helper-sync.json deklariert die Auswahl.
 Der zentrale Consumer-Eintrag und GitHub-App-Zugriff wurden hier nicht eingerichtet.
@@ -40,6 +40,36 @@ Die PHP-Tests laden das produktive Modul gezielt über loadSingleModule, weil
 der offizielle Stub-Lader node_modules sonst fälschlich als Modul behandelt.
 Library-Metadaten prüft weiterhin tests/validate_structure.php.
 Diese Nachweise ersetzen keine Symcon-Laufzeitprüfung.
+
+tests/module-extension.php testet die produktive PHP-Integration gegen das echte
+Erweiterungsartefakt in einem Node-Teilprozess. Der Peer simuliert ausschließlich
+nativen MQTT-/extension-save-Rahmen in einem temporären Z2M-Verzeichnis. Geprüft
+werden Installation mit Bereitschaftsprobe, Draft-Prüfung, Persistenz und
+idempotentes Speichern. Weitere deterministische Fälle decken falsche/retained
+und verspätete Antworten, Prüfsummen, Versionen, Revisionskonflikte, Sitzungs-
+wechsel, Speicherlesemodus, Größen-/UTF-8-Grenzen, Kontextwechsel und Fehler ab.
+Das Formular wird über den echten ConfigurationFormHelper geprüft; seine
+Bestätigungsfelder und Übersetzungen sind Teil der Strukturprüfung.
+
+## Symcon-Integration: Nachweis am 27.10.2026
+
+Vor Implementierung scheiterte der neue Test an der fehlenden InstallExtension-
+Methode. Der integrierte PHP-/JavaScript-Pfad besteht nun mit echten temporären
+Dateien und der produktiven Erweiterung: Upload des exakten Artefakts, frische
+Bereitschaftsprobe, Draft-Prüfung, Vorschau, bestätigte Speicherung, idempotente
+Wiederholung und Neustart mit erneut erforderlicher Prüfung.
+
+Die gesamte tests/run.php-Suite einschließlich der 13 Erweiterungstests besteht
+unter PHP 8.5.10 mit Node 24.20.0 und zusätzlich über Node 22.2.0. Fehlerfalltests
+prüfen auch das Widerrufen einer vorherigen Bereitschaft bei Protokollfehlern.
+Struktur-/Helper-Integritätsprüfung, offizieller StylePHP-JSON-Check und
+php-cs-fixer 3.95.27 im Prüfmodus sind erfolgreich. Der JSON-Check läuft wie
+dokumentiert vorübergehend ohne node_modules im Quellbaum; diese Abhängigkeiten
+werden anschließend wiederhergestellt. Keine Änderungen an offiziellen Quellen.
+
+Nicht ausgeführt: GitHub-CI, native MQTT-/Z2M-Installation und Bedienprüfung des
+Formulars in der echten Konsole. Das JSON-/Callback-/Bestätigungsformat wurde
+gegen die offizielle Dokumentation und die Integrationstests geprüft.
 
 ## Erweiterungsartefakt
 

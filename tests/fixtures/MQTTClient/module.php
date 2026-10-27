@@ -7,6 +7,7 @@ class SyntheticMQTTClient extends IPSModuleStrict
     public array $sent = [];
     public bool $fail = false;
     public bool $replyImmediately = false;
+    public $onPublish = null;
 
     public function ApplyChanges(): void
     {
@@ -27,6 +28,9 @@ class SyntheticMQTTClient extends IPSModuleStrict
         }
         $packet['Payload'] = json_decode(hex2bin($packet['Payload']), true, 512, JSON_THROW_ON_ERROR);
         $this->sent[] = $packet;
+        if ($this->onPublish !== null) {
+            ($this->onPublish)($packet);
+        }
         if ($this->replyImmediately) {
             $this->publish(str_replace('/request/', '/response/', $packet['Topic']), [
                 'transaction' => $packet['Payload']['transaction'], 'status' => 'ok', 'data' => ['healthy' => true]

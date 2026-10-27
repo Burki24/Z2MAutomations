@@ -1,8 +1,7 @@
 # MQTT-Vertrag und Nachweise
 
-Diese Datei beschreibt den vorhandenen Symcon-Transport. Der getrennte
-[Empfängervertrag der Z2M-Erweiterung](EXTENSION_PROTOCOL.md) ist implementiert,
-aber noch nicht in die PHP-Upload-/Empfangsfunktionen integriert.
+Diese Datei beschreibt den Symcon-Transport einschließlich der Installation und
+des [Empfängervertrags der Z2M-Erweiterung](EXTENSION_PROTOCOL.md).
 
 ## Symcon-Verbindung
 
@@ -25,6 +24,11 @@ Nur folgende exakte Topics unter BaseTopic werden verarbeitet:
 | bridge/info | version und config.advanced.enable_external_js |
 | bridge/extensions | Nur Erkennung des eigenen Namens z2m-automations.mjs |
 | bridge/response/health_check | status, transaction und data.healthy |
+| bridge/response/extension/save | Korrelierte Bestätigung des festen Erweiterungsuploads |
+| symcon/automations/status | Beobachteter Empfängerzustand; keine Schreibfreigabe |
+| symcon/automations/response/status | Frische Empfänger-/Speicherbestätigung |
+| symcon/automations/response/validate | Schema-Prüfung mit exakter Entwurfs-Prüfsumme |
+| symcon/automations/response/store | Bestätigung von Revision, Prüfsumme und Anzahl |
 
 Der Empfangsfilter unterstützt JSON mit oder ohne maskierte Schrägstriche und
 Unicode. Der Handler prüft Topic und DataID unabhängig vom Filter erneut.
@@ -45,6 +49,28 @@ unhealthy oder error; andernfalls bleibt pending bis timeout. Der Timer prüft d
 Deadline; ReceiveData prüft sie zusätzlich vor der Antwortauswertung.
 Ein MQTT-/Topic-Wechsel, Deaktivieren oder Offline-Meldung beendet eine offene
 Anfrage als cancelled. Beim Kernelstart wird der volatile Cache verworfen.
+
+## Erweiterungsworkflow
+
+Pro Instanz läuft zusätzlich höchstens ein Workflow für install/status/validate/store.
+Jede Phase hat eine eigene Wire-Transaktion und Deadline; die öffentliche
+Aktions-ID bleibt über alle Phasen gleich. Der vorhandene Timer wählt die nächste
+Deadline beider Kanäle. Folgerequests werden erst nach Freigabe der Semaphore
+versendet. Eine sofortige Antwort aus dem Parent kann den Zustand nicht überholen.
+
+Install sendet ausschließlich das lokale feste Einzeldatei-Artefakt und startet
+nach der offiziellen Bestätigung eine status-Anfrage. Bei bekannter vorheriger
+Sitzung muss der neu installierte Empfänger eine andere Sitzung melden.
+validate fragt ebenfalls zuerst status ab und prüft dann die exakten YAML-Bytes.
+store benötigt die so erzeugte Prüffreigabe und einen erneut passenden status.
+Der Empfänger selbst setzt expected_revision weiterhin als letzte Konfliktsperre durch.
+
+Das lokale Formular speichert nur den zuletzt eingereichten begrenzten Entwurf
+als String-Attribut. Der volatile Workflow enthält während der Übertragung den
+Entwurf; GetTransportState gibt ihn und interne Sitzungskennungen nicht aus.
+Native Uploadfehler und Erweiterungsfehler werden auf feste lokalisierte Codes
+abgebildet. Ein Timeout ist ein unbekanntes Ergebnis, keine Zusicherung, dass
+kein Schreibzugriff stattgefunden hat. Keine automatischen Wiederholungen.
 
 ## Quellenprüfung am 27.10.2026
 
@@ -68,3 +94,10 @@ IM_CHANGESTATUS und FM_CONNECT werden im Test ausdrücklich zugestellt.
 Die Offline-Tests bestätigen Kodierung, Routing, Korrelation, Zeitlimits,
 Fehlerfälle und Zustandswechsel. Native MQTT-Gateways, Broker-Subscriptions,
 Konsolenformular und eine echte Z2M-Installation benötigen noch Praxisnachweise.
+
+tests/module-extension.php betreibt zusätzlich das produktive PHP-Modul gegen
+die echte JavaScript-Erweiterung in einem Node-Teilprozess. tests/extension-peer.mjs
+ersetzt nur den nativen MQTT-/extension-save-Rahmen, installiert ausschließlich
+das erwartete eigene Artefakt in einem temporären synthetischen Datenordner und
+nutzt dessen echte Schema- und Speicherlogik. Ein solcher Test ersetzt weder den
+nativen Broker noch Z2M selbst.

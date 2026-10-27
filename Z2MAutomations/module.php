@@ -5,7 +5,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/helper/DataFlowHelper.php';
 require_once __DIR__ . '/../libs/helper/ParentConnectionHelper.php';
 require_once __DIR__ . '/../libs/helper/VariablePresentationHelper.php';
+require_once __DIR__ . '/../libs/helper/ConfigurationFormHelper.php';
 require_once __DIR__ . '/../libs/Z2MProtocol.php';
+require_once __DIR__ . '/../libs/ExtensionContract.php';
+require_once __DIR__ . '/../libs/ExtensionIntegration.php';
 
 use Z2MAutomations\Z2MProtocol;
 
@@ -14,6 +17,8 @@ class Z2MAutomations extends IPSModuleStrict
     use Burki24\SymconModuleHelper\DataFlowHelper;
     use Burki24\SymconModuleHelper\ParentConnectionHelper;
     use Burki24\SymconModuleHelper\VariablePresentationHelper;
+    use Burki24\SymconModuleHelper\ConfigurationFormHelper;
+    use Z2MAutomations\ExtensionIntegration;
 
     public function Create(): void
     {
@@ -22,6 +27,7 @@ class Z2MAutomations extends IPSModuleStrict
         $this->RegisterPropertyString('BaseTopic', 'zigbee2mqtt');
         $this->RegisterPropertyInteger('RequestTimeout', 10);
         $this->RegisterAttributeInteger('ObservedParentID', 0);
+        $this->RegisterAttributeString('YamlDraft', '');
         $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
         $this->RegisterMessage($this->InstanceID, FM_CONNECT);
         $this->RegisterMessage($this->InstanceID, FM_DISCONNECT);
@@ -31,6 +37,10 @@ class Z2MAutomations extends IPSModuleStrict
         $this->RegisterVariableString('Z2MVersion', $this->Translate('Zigbee2MQTT version'), $this->TextPresentation(), 30);
         $this->RegisterVariableBoolean('ExtensionInstalled', $this->Translate('Automation extension installed'), $this->BooleanPresentation($this->Translate('Installed'), $this->Translate('Not detected')), 40);
         $this->RegisterVariableString('HealthStatus', $this->Translate('Health check'), $this->TextPresentation(), 50);
+        $this->RegisterVariableBoolean('ExtensionReady', $this->Translate('Extension receiver confirmed'), $this->BooleanPresentation($this->Translate('Ready'), $this->Translate('Not confirmed')), 60);
+        $this->RegisterVariableInteger('StoredRevision', $this->Translate('Stored YAML revision'), $this->ValuePresentation(), 70);
+        $this->RegisterVariableString('OperationStatus', $this->Translate('Extension operation'), $this->TextPresentation(), 80);
+        $this->RegisterVariableString('LastError', $this->Translate('Last extension error'), $this->TextPresentation(), 90);
     }
 
     public function ApplyChanges(): void
@@ -47,6 +57,25 @@ class Z2MAutomations extends IPSModuleStrict
     public function GetCompatibleParents(): string
     {
         return json_encode(['type' => 'connect', 'moduleIDs' => [Z2MProtocol::MQTT_CLIENT, Z2MProtocol::MQTT_SERVER]], JSON_THROW_ON_ERROR);
+    }
+
+    public function GetConfigurationForm(): string
+    {
+        $form = $this->LoadConfigurationForm();
+        $state = $this->WithTransportLock(fn (): array => $this->RefreshState());
+        foreach ($form['actions'] as &$field) {
+            if (($field['name'] ?? '') === 'YamlInput') {
+                $field['value'] = $this->ReadAttributeString('YamlDraft');
+            } elseif (($field['name'] ?? '') === 'ValidationInfo') {
+                $field['caption'] = $this->ValidationPreview($state);
+            } elseif (($field['name'] ?? '') === 'ErrorInfo') {
+                $field['caption'] = $this->Translate(\Z2MAutomations\ExtensionContract::ErrorText($state['lastError']));
+            } elseif (($field['name'] ?? '') === 'OperationInfo') {
+                $field['caption'] = $this->OperationText($state);
+            }
+        }
+        unset($field);
+        return $this->EncodeConfigurationForm($form);
     }
 
     public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void
@@ -82,7 +111,8 @@ class Z2MAutomations extends IPSModuleStrict
                 return '';
             }
             $payload = Z2MProtocol::DecodePayload($packet['Payload']);
-            $this->WithTransportLock(function () use ($suffix, $payload, $packet): void
+            $next = null;
+            $this->WithTransportLock(function () use ($suffix, $payload, $packet, &$next): void
             {
                 $state = $this->RefreshState();
                 if (!$state['mqttConnected']) {
@@ -96,6 +126,14 @@ class Z2MAutomations extends IPSModuleStrict
                         if ($bridge === 'offline' && $state['pending'] !== null) {
                             $state['pending'] = null;
                             $state['health'] = 'cancelled';
+                        }
+                        if ($bridge === 'offline') {
+                            $state['validation'] = null;
+                            $state['extensionConfirmed'] = false;
+                            $state['extension'] = null;
+                            if ($state['workflow'] !== null) {
+                                $this->FinishExtensionWorkflow($state, 'cancelled', 'cancelled');
+                            }
                         }
                     }
                 } elseif ($suffix === 'bridge/info' && $payload instanceof stdClass) {
@@ -114,6 +152,14 @@ class Z2MAutomations extends IPSModuleStrict
                         $installed = $installed || $extension->name === 'z2m-automations.mjs';
                     }
                     $state['extensionInstalled'] = $installed;
+                    if (!$installed) {
+                        $state['extensionConfirmed'] = false;
+                        $state['validation'] = null;
+                        $state['extension'] = null;
+                        if ($state['workflow'] !== null && $state['workflow']['kind'] !== 'install') {
+                            $this->FinishExtensionWorkflow($state, 'cancelled', 'not_ready');
+                        }
+                    }
                 } elseif ($suffix === 'bridge/response/health_check' && !$packet['Retain'] && $payload instanceof stdClass
                     && $state['pending'] !== null && ($payload->transaction ?? null) === $state['pending']['transaction']) {
                     if (($payload->status ?? null) === 'error') {
@@ -123,9 +169,14 @@ class Z2MAutomations extends IPSModuleStrict
                         $state['health'] = $payload->data->healthy ? 'healthy' : 'unhealthy';
                         $state['pending'] = null;
                     }
+                } else {
+                    $next = $this->ReceiveExtensionMessage($state, $suffix, $payload, $packet['Retain']);
                 }
                 $this->SaveState($state);
             });
+            if ($next !== null) {
+                $this->DispatchExtensionFrame($next);
+            }
         } catch (JsonException | InvalidArgumentException | UnexpectedValueException $exception) {
             $this->SendDebug('MQTT', 'Invalid message ignored.', 0);
         }
@@ -138,7 +189,13 @@ class Z2MAutomations extends IPSModuleStrict
         {
             $state = $this->RefreshState();
             $this->SaveState($state);
-            unset($state['scope'], $state['pending']);
+            unset($state['scope'], $state['pending'], $state['workflow']);
+            if ($state['extension'] !== null) {
+                unset($state['extension']['session']);
+            }
+            if ($state['validation'] !== null) {
+                unset($state['validation']['session'], $state['validation']['previousChecksum']);
+            }
             return json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         });
     }
@@ -244,9 +301,14 @@ class Z2MAutomations extends IPSModuleStrict
         $state = $cached === '' ? [] : json_decode($cached, true, 32, JSON_THROW_ON_ERROR);
         if (($state['scope'] ?? null) !== $scope || (($state['mqttConnected'] ?? false) && !$connected)) {
             $cancelled = ($state['pending'] ?? null) !== null;
+            $extensionCancelled = ($state['workflow'] ?? null) !== null;
             $state = ['scope' => $scope, 'mqttConnected' => false, 'bridgeState' => 'unknown', 'bridgeOnline' => false,
                 'version'     => '', 'externalJS' => null, 'extensionInstalled' => false, 'pending' => null,
-                'transaction' => '', 'health' => $cancelled ? 'cancelled' : 'idle'];
+                'transaction' => '', 'health' => $cancelled ? 'cancelled' : 'idle'] + $this->NewExtensionState();
+            if ($extensionCancelled) {
+                $state['operation']['status'] = 'cancelled';
+                $state['lastError'] = 'cancelled';
+            }
         }
         $state['mqttConnected'] = $connected;
         $state['bridgeOnline'] = $connected && $state['bridgeState'] === 'online';
@@ -254,7 +316,7 @@ class Z2MAutomations extends IPSModuleStrict
             $state['pending'] = null;
             $state['health'] = 'timeout';
         }
-        return $state;
+        return $this->RefreshExtensionWorkflow($state);
     }
 
     private function SaveState(array $state): void
@@ -266,7 +328,14 @@ class Z2MAutomations extends IPSModuleStrict
         $this->SetValue('Z2MVersion', $state['version']);
         $this->SetValue('ExtensionInstalled', $state['extensionInstalled']);
         $this->SetValue('HealthStatus', $this->Translate(ucfirst($state['health'])));
-        $this->SetTimerInterval('RequestTimeout', $state['pending'] === null ? 0 : max(1, ($state['pending']['deadline'] - $this->Now()) * 1000));
+        $this->SaveExtensionState($state);
+        $deadlines = [];
+        foreach ([$state['pending'], $state['workflow']] as $request) {
+            if ($request !== null) {
+                $deadlines[] = $request['deadline'];
+            }
+        }
+        $this->SetTimerInterval('RequestTimeout', $deadlines === [] ? 0 : max(1, (min($deadlines) - $this->Now()) * 1000));
         $status = !$this->ReadPropertyBoolean('Active') ? 104 : (!$this->ValidConfiguration() ? 200 : (!$state['mqttConnected'] ? 201 : (!$state['bridgeOnline'] ? 202 : 102)));
         $this->SetStatus($status);
     }
