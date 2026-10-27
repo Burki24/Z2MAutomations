@@ -175,12 +175,12 @@ trait AutomationEditorManagement
         $index = $this->EditorRuleIndex($draft, $id);
         $selected = $index !== null && ($selection['checksum'] ?? null) === ($draft['draftChecksum'] ?? null);
         $rule = $selected ? $draft['configuration']['automations'][$index] : null;
-        $simple = $rule === null ? null : $this->SimpleEditorFields($rule);
+        $simple = $rule === null ? null : $this->ScheduledEditorFields($rule);
         return ['EditorRule' => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
             'EditorName'     => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
             'EditorSource'   => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
             'EditorTarget'   => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
-            'selected'       => $selected, 'simple' => $simple !== null || !$selected];
+            'selected'       => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
     }
 
     private function SetEditorSelection(array $draft, string $id): void
@@ -192,6 +192,7 @@ trait AutomationEditorManagement
             $this->WriteAttributeString('Editor' . $side, $fields['Editor' . $side]);
             $this->UpdateFormField('Editor' . $side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $fields['Editor' . $side], $side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         }
+        $this->ApplyScheduleFields($fields);
         foreach ($fields as $field => $value) {
             if (!in_array($field, ['selected', 'simple'], true)) {
                 $this->UpdateFormField($field, 'value', $value);
@@ -224,7 +225,7 @@ trait AutomationEditorManagement
     private function RejectEditorChange(array $state, string $error): bool
     {
         $state['lastError'] = $error;
-        $this->DebugEvent('FEHLER', 'Regeländerung im lokalen Entwurf abgelehnt.', ['Grund' => $error]);
+        $this->DebugEvent('FEHLER', 'Regeländerung im lokalen Entwurf abgelehnt.', ['Grund' => $error, 'Hinweis' => $this->Translate(ExtensionContract::ErrorText($error))]);
         $this->SaveState($state);
         return false;
     }

@@ -27,7 +27,7 @@ trait AutomationEditor
     {
         $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Side, $Device): void
         {
-            if (!in_array($Side, ['Source', 'Target'], true)) {
+            if (!in_array($Side, ['Source', 'Target', 'Condition'], true)) {
                 $this->DebugEvent('FEHLER', 'Unbekannte Geräteauswahl verworfen.');
                 return;
             }
@@ -38,6 +38,10 @@ trait AutomationEditor
             $this->WriteAttributeString('Editor' . $Side, $Device);
             $this->UpdateFormField('Editor' . $Side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $Device, $Side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
             $this->UpdateFormField('Editor' . $Side . 'Choice', 'value', '');
+            if ($Side === 'Condition') {
+                $this->UpdateFormField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $Device), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+                $this->UpdateFormField('EditorNumericProperty', 'value', '');
+            }
             $this->DebugEvent('AKTION', 'Geräteauswahl im Editor aktualisiert.', ['Bereich' => $Side, 'GerätGefunden' => $Device !== '']);
         });
     }
@@ -141,6 +145,19 @@ trait AutomationEditor
                 }
             }
             $devices[$device->id] = $entry;
+            $devices[$device->id]['numeric'] = [];
+            if (!is_array($device->numeric ?? []) || count($device->numeric ?? []) > 64) {
+                $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
+                return;
+            }
+            foreach ($device->numeric ?? [] as $number) {
+                if (!$number instanceof stdClass || !is_string($number->property ?? null) || preg_match('/\A[A-Za-z][A-Za-z0-9_]{0,63}\z/D', $number->property) !== 1
+                    || in_array($number->property, ['constructor', 'prototype', '__proto__'], true) || !is_string($number->unit ?? null) || strlen($number->unit) > 96) {
+                    $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
+                    return;
+                }
+                $devices[$device->id]['numeric'][$number->property] = $number->unit;
+            }
         }
         // JSON is a valid YAML document; the authoritative schema check stays in Z2M.
         $yaml = $metadata['storedRevision'] === 0
@@ -161,6 +178,7 @@ trait AutomationEditor
         $state['validation'] = null;
         $this->UpdateFormField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateFormField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateFormField('EditorCondition', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
             $this->UpdateFormField($field, 'value', '');
         }
@@ -193,7 +211,7 @@ trait AutomationEditor
     {
         $options = [['caption' => $this->Translate('Choose device'), 'value' => '']];
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
-            if ($device[$side === 'Source' ? 'triggers' : 'actions'] !== []) {
+            if (($device[$side === 'Target' ? 'actions' : 'triggers'] ?? []) !== [] || ($side === 'Condition' && ($device['numeric'] ?? []) !== [])) {
                 $options[] = ['caption' => $device['name'] . ' (' . $id . ')', 'value' => $id];
             }
         }
@@ -203,7 +221,7 @@ trait AutomationEditor
     private function EditorChoices(array $snapshot, string $id, string $side): array
     {
         $options = [['caption' => $this->Translate('Choose event or action'), 'value' => '']];
-        foreach ($snapshot['devices'][$id][$side === 'Source' ? 'triggers' : 'actions'] ?? [] as $key => $choice) {
+        foreach ($snapshot['devices'][$id][$side === 'Target' ? 'actions' : 'triggers'] ?? [] as $key => $choice) {
             $property = match ($choice['property']) {
                 'action' => 'Button event', 'state' => 'State', 'occupancy' => 'Motion', 'contact' => 'Contact', default => $choice['property']
             };
@@ -274,6 +292,7 @@ trait AutomationEditor
             }
         }
         unset($field);
+        $this->FillScheduleForm($form, $draft, $selection);
     }
 
     private function EditorRuleRows(array $draft): array
@@ -286,7 +305,10 @@ trait AutomationEditor
             }
             $source = is_array($rule['triggers'][0] ?? null) && is_string($rule['triggers'][0]['device'] ?? null) ? $rule['triggers'][0]['device'] : '';
             $target = is_array($rule['actions'][0]['target'] ?? null) && is_string($rule['actions'][0]['target']['id'] ?? null) ? $rule['actions'][0]['target']['id'] : '';
-            $rows[] = ['Name' => $rule['name'], 'Source' => $snapshot['devices'][$source]['name'] ?? $this->Translate('Advanced rule'),
+            $sourceLabel = ($rule['triggers'][0]['type'] ?? '') === 'time'
+                ? sprintf($this->Translate('Daily at %s (%s)'), $rule['triggers'][0]['at'], $rule['triggers'][0]['timezone'])
+                : ($snapshot['devices'][$source]['name'] ?? $this->Translate('Advanced rule'));
+            $rows[] = ['Name' => $rule['name'], 'Source' => $sourceLabel,
                 'Target'      => $snapshot['devices'][$target]['name'] ?? $this->Translate('Advanced rule'),
                 'Enabled'     => $this->Translate(($rule['enabled'] ?? false) === true ? 'Yes' : 'No')];
         }

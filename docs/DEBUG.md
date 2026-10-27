@@ -1,5 +1,12 @@
 # Debug und MQTT-Diagnose
 
+`ConfigureEditorSchedule` protokolliert die gewählte Auslöser-/Bedingungsart und
+das Ein-/Ausschalten des Zeitfensters. `SaveScheduledAutomation` protokolliert
+Start/Ende, feste Ablehnungsgründe, Auslöserart und Anzahl der Bedingungen.
+Regelnamen, Gerätekennungen, Zeitpläne, Vergleichswerte und Options-JSON bleiben
+aus dem Debug ausgeschlossen. Die eigentliche Auswertung läuft unverändert in
+Z2M und verwendet dessen bereits instrumentierte Engine.
+
 Regelauswahl, Bearbeiten und Löschen (`SelectAutomation`, `UpdateAutomation`,
 `DeleteAutomation`) verwenden ebenfalls zentrale Start-/Ende-Abläufe. Debug
 enthält nur feste Fehlercodes, Änderungsart und Regelanzahl; keine Namen,

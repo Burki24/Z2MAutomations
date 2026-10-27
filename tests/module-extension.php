@@ -207,6 +207,7 @@ try {
     $advanced = $created['automations'][0];
     $advanced['triggers'][0]['for_seconds'] = 5;
     $advanced['actions'][0]['delay_seconds'] = 2;
+    $advanced['actions'][] = $advanced['actions'][0];
     $advanced['conditions'] = [['type' => 'device_value', 'device' => '0x0000000000000002', 'property' => 'state', 'operator' => 'eq', 'value' => 'OFF']];
     $advancedYaml = json_encode(['schema_version' => 1, 'revision' => 6, 'automations' => [$advanced]], JSON_THROW_ON_ERROR);
     $module->ValidateYaml($advancedYaml);
@@ -239,6 +240,50 @@ try {
     $check(!$module->DeleteAutomation($ruleID, $firstWindowToken), 'Remote revision changes invalidate editor selections');
     $module->LoadAutomationEditor();
     $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $schedule = ['EditorTriggerType' => 'time', 'EditorAt' => '07:15', 'EditorTimezone' => 'Europe/Berlin',
+        'EditorWindow'               => true, 'EditorAfter' => '22:00', 'EditorBefore' => '08:00', 'EditorWindowTimezone' => 'Europe/Berlin',
+        'EditorMonday'               => true, 'EditorTuesday' => false, 'EditorWednesday' => false, 'EditorThursday' => false, 'EditorFriday' => false, 'EditorSaturday' => false, 'EditorSunday' => false,
+        'EditorConditionType'        => 'numeric', 'EditorCondition' => '0x0000000000000002', 'EditorNumericProperty' => 'temperature', 'EditorCompare' => 'lt', 'EditorNumber' => 18.5];
+    $module->ConfigureEditorSchedule('time', true, 'numeric');
+    $module->SelectEditorDevice('Condition', '0x0000000000000002');
+    $modeFields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check($modeFields['EditorAt']['visible'] && $modeFields['EditorNumber']['visible'] && $modeFields['EditorNumericProperty']['options'][1]['value'] === 'temperature', 'Mode changes expose the correct time and numeric condition fields');
+    $module->ConfigureEditorSchedule('invalid', true, 'numeric');
+    $check($module->SaveScheduledAutomation('', '', 'Synthetic timed rule', true, '', '', '0x0000000000000002', $action, json_encode($schedule)), 'A time rule with overnight weekdays and a numeric condition can be created without YAML');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $scheduledDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $scheduled = $scheduledDocument['automations'][array_key_last($scheduledDocument['automations'])];
+    $check($scheduled['triggers'] === [['type' => 'time', 'at' => '07:15:00', 'timezone' => 'Europe/Berlin']]
+        && $scheduled['conditions'][0]['weekdays'] === [1] && $scheduled['conditions'][0]['after'] === '22:00:00'
+        && $scheduled['conditions'][1]['value'] === 18.5 && $scheduled['conditions'][1]['operator'] === 'lt', 'The editor generates typed native time/condition clauses');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Time and numeric condition draft validates and persists in the real receiver');
+    $module->LoadAutomationEditor();
+    $check($module->SelectAutomation($scheduled['id']), 'Stored time/condition rule can be reopened');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check($fields['EditorAt']['value'] === '07:15:00' && $fields['EditorAt']['visible'] && !$fields['EditorSource']['visible']
+        && $fields['EditorConditionType']['value'] === 'numeric' && $fields['EditorNumber']['value'] === 18.5
+        && $fields['EditorMonday']['value'] && !$fields['EditorTuesday']['value'], 'Reopen restores time zone, weekdays and typed condition values');
+    $timeToken = $fields['EditorEditToken']['value'];
+    $unchangedScheduledYaml = $fields['YamlInput']['value'];
+    foreach ([['EditorAt' => '25:00'], ['EditorTimezone'        => 'invalid-zone'], ['EditorBefore' => '22:00'], ['EditorMonday' => false],
+        ['EditorNumericProperty' => 'forged'], ['EditorCompare' => 'unknown'], ['EditorHold' => -1], ['EditorConditionType' => 'numeric', 'EditorNumber' => '18.5']] as $invalid) {
+        $check(!$module->SaveScheduledAutomation($scheduled['id'], $timeToken, 'Invalid time rule', true, '', '', '0x0000000000000002', $action, json_encode(array_replace($schedule, $invalid))), 'Invalid schedule inputs must be rejected');
+        $formAfterRejection = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $check($formAfterRejection['YamlInput']['value'] === $unchangedScheduledYaml, 'Rejected schedule never changes the draft');
+    }
+    $conditionOff = $fields['EditorConditionChoice']['options'][2]['value'];
+    $changedSchedule = array_replace($schedule, ['EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorHold' => 4, 'EditorDelay' => 3,
+        'EditorConditionType'                                        => 'state', 'EditorConditionChoice' => $conditionOff, 'EditorCompare' => 'eq']);
+    $check($module->SaveScheduledAutomation($scheduled['id'], $timeToken, 'Synthetic event rule', false, '0x0000000000000001', $changedTrigger, '0x0000000000000002', $action, json_encode($changedSchedule)), 'Time trigger can change to device event with a state condition');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $changedDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $changedRule = $changedDocument['automations'][array_key_last($changedDocument['automations'])];
+    $check($changedRule['id'] === $scheduled['id'] && $changedRule['triggers'][0]['for_seconds'] === 4 && $changedRule['actions'][0]['delay_seconds'] === 3
+        && count($changedRule['conditions']) === 1 && $changedRule['conditions'][0]['type'] === 'device_value'
+        && $changedRule['conditions'][0]['value'] === 'OFF', 'Replacing clauses keeps identity and removes obsolete time/numeric conditions');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited event/condition rule validates and stores in Z2M');
+    $module->LoadAutomationEditor();
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');
@@ -248,7 +293,7 @@ try {
     $module->debugFails = false;
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
-    $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'activation_token')
+    $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'EditorAt') && !str_contains($captured, 'activation_token')
         && !str_contains($captured, $firstWindowToken) && !str_contains($captured, 'automations: []'), 'Debug must not include draft bodies, names or selection/activation tokens');
     foreach ($module->debugMessages as [$category, $body]) {
         $entry = json_decode($body, true, 512, JSON_THROW_ON_ERROR);

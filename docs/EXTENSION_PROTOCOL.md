@@ -1,5 +1,13 @@
 # Erweiterungsprotokoll Version 1
 
+Der additive Gerätekatalog enthält optional `numeric`: bis zu 64 lesbare
+numerische Eigenschaften je Gerät mit `property` und einer auf 24 Unicode-Zeichen
+begrenzten `unit`. Sie zählen zur gemeinsamen Grenze von 1024 Auswahlwerten.
+Auch reine Messgeräte werden geliefert. Roh-Exposes und schreibbare Zahlenwerte
+werden nicht übertragen; das Schema und `editor_version: 1` bleiben unverändert.
+Ältere Empfänger ohne `numeric` unterstützen weiter Uhrzeiten/Zeitfenster und
+diskrete Zustandsbedingungen. Für Messwertbedingungen ist das neue Artefakt nötig.
+
 ## Umfang und Installation
 
 Diese Ausbaustufe implementiert die eigene Z2M-Seite: Empfang, Validierung,

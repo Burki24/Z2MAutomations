@@ -1,5 +1,26 @@
 # Entwicklung
 
+## Zeitsteuerungen und Bedingungen im Klick-Editor
+
+Neue Formularfelder und die eigene Schedule-Logik erzeugen das unveränderte Schema 1:
+ein Geräte- oder täglicher Uhrzeit-Auslöser, eine Geräteaktion, optional ein
+Zeitfenster und eine Gerätebedingung. Mindestdauer und Aktionsverzögerung bleiben
+auf 86400 Sekunden begrenzt. Mehrere gleichartige Bedingungen, mehrere Auslöser,
+Gruppen und Aktionsfolgen werden nicht vereinfacht; ihre Metadaten bleiben bearbeitbar.
+Der additive numerische Katalog enthält nur lesbare Eigenschaften und kurze Einheiten.
+
+Offline-Nachweise verwenden den echten JavaScript-Empfänger: Uhrzeit-/Zahlenregel
+mit Nachtfenster und Wochentag erzeugen, prüfen, speichern, neu laden und bearbeiten;
+danach Wechsel zu Geräteereignis mit Zustandsbedingung, Dauer und Verzögerung.
+Ungültige Uhrzeiten, Zeitzonen, leere Tagesauswahl, identische Fenstergrenzen,
+unbekannte Eigenschaften und untypisierte Zahlen lassen den Entwurf unverändert.
+Die vorhandenen Engine-Tests sichern strikte Vergleiche, unbekannte Zustände,
+UND-Bedingungen, Mitternacht, Sommerzeit und verpasste Zeitpunkte ab.
+
+Die neue Bedienung und der numerische Katalog wurden noch nicht live aktualisiert
+oder in der nativen Konsole geprüft. Dafür müssen Modul und mitgeliefertes
+Erweiterungsartefakt aktualisiert werden; anschließend den Editor neu laden.
+
 ## Bearbeiten und Löschen im Klick-Editor
 
 Die Erweiterung des Editors wurde offline gegen denselben echten JavaScript-
@@ -10,9 +31,26 @@ Konfiguration. Erweiterte Regeln erlauben Metadatenänderungen ohne Verlust ihre
 Bedingungen und Schritte. Auswahlkennungen binden Aktionen an den Entwurf;
 veraltete Formulare, fehlende IDs und ungespeicherte Expertentexte werden abgewiesen.
 Alle dynamischen Optionen und Listenwerte bleiben SDK-konform JSON-codiert.
-Die nativen neuen Auswahl-/Ändern-/Löschbuttons wurden noch nicht live installiert
-oder bedient; die folgenden früheren Praxisnachweise gelten für den vorherigen
-Editorstand mit Erstellen, Aktivieren und Stoppen.
+
+Die neuen Auswahl-/Ändern-/Löschbuttons wurden anschließend auf ausdrücklichen
+Auftrag in der nativen Testkonsole praktisch geprüft. Die geladenen Modul-,
+Formular- und Editorquellen stimmen per Hash mit dem lokalen Stand überein;
+der Modul-Reload meldete keine Warnungen oder Fehler. Eine vorhandene gestoppte
+Testregel wurde ausgewählt, umbenannt und deaktiviert. „Änderungen in den Entwurf
+übernehmen“ erhielt ihre ID, Auslöser und Aktionen. Die Änderung wurde über die
+Formularbuttons in Z2M geprüft, bestätigt gespeichert und erneut unverändert geladen.
+
+Beim Löschen blieb nach Abbruch des Bestätigungsdialogs der Entwurf unverändert.
+Nach Bestätigung verschwand die ausgewählte letzte Regel zunächst nur lokal;
+Z2M behielt bis zum Speichern seine vorige Revision. Der leere Entwurf wurde
+über die Formularbuttons erfolgreich geprüft und gespeichert. Eine zusätzliche
+frische Editorabfrage lieferte null Regeln zurück; Liste und Auswahl sind leer,
+der Löschbutton ist deaktiviert. Die Konfiguration bleibt gestoppt. Geräte wurden
+nicht geschaltet, die Z2M-Erweiterung benötigte kein Update oder Neustart.
+Nativer Debug belegt Auswahl, Änderung, Löschung und die abgeschlossenen Prüf-/
+Speicheraufträge ohne Fehlermeldungen. Die Debug-Dateisitzung wurde beendet.
+Native Änderungen an erweiterten Regeln oder weiteren Gerätefeldern waren nicht
+Teil dieses Laufs; dafür bleiben die beschriebenen Offline-Nachweise maßgeblich.
 
 ## Native Praxisprüfung: Klick-Editor und Steuerung
 

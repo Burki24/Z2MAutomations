@@ -34,11 +34,17 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Engine-Fehler besitzen eigene lesbare Statusvariablen.
 - Erster Klick-Editor für diskrete Geräteereignisse und Set-Aktionen aus Z2M-Exposes.
   Vorhandene Regeln werden beim Ergänzen erhalten; YAML bleibt optional sichtbar.
-  Numerische-/Zeit-/Gruppenregeln benötigen derzeit die erweiterte YAML-Ansicht.
+  Gruppen und mehrschrittige Regeln benötigen weiterhin die erweiterte YAML-Ansicht.
+- Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
+  oder Zahlenbedingung sind grafisch erstell- und bearbeitbar. Mindestdauer und
+  Verzögerung werden übernommen. Die Erweiterung liefert dafür lesbare numerische
+  Exposes. Dieser neue Stand ist offline geprüft, noch nicht live aktualisiert.
 - Bearbeiten einfacher Regeln und bestätigtes Löschen beliebiger vorhandener
   Regeln im lokalen Entwurf implementiert. Bei erweiterten Regeln sind Name und
   Aktivierung änderbar, ohne die Bedingungen oder Schritte zu ersetzen. Die neue
-  Bedienung ist offline geprüft, noch nicht in der nativen Testkonsole installiert.
+  Bedienung ist offline und in der nativen Testkonsole geprüft: Name/Aktivierung
+  ändern, speichern, erneut laden sowie Löschen abbrechen/bestätigen und die leere
+  Konfiguration speichern. Keine Geräteaktionen in diesem Prüflauf.
 - DebugFlowHelper und dessen DebugHelper-Abhängigkeit sind kanonisch eingebunden.
   Die bestehende Fachinstrumentierung delegiert ihre Abläufe an den zentralen Helper.
 - Einzeldatei-Artefakt reproduzierbar aus eigenen Quellen und Schema erzeugt.
@@ -58,7 +64,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Nächste Schritte
 
-1. Klick-Editor um weitere Regeltypen und die Bearbeitung ihrer Schritte erweitern.
+1. Neue Zeit-/Bedingungsbedienung nach Praxisauftrag in der Konsole prüfen.
+2. Klick-Editor bei Bedarf um Gruppen und mehrschrittige Regeln erweitern.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 
@@ -78,5 +85,6 @@ Installation, Klick-Editor, YAML-Prüfung und Speicherung sowie Aktivierungs- un
 Stoppbuttons wurden in der freigegebenen Testinstallation praktisch bestätigt.
 Die gespeicherte Geräteautomation wurde real ausgelöst und ausgeführt; nach
 Stopp blieb die erneute Geräteaktion unbeeinflusst. Die Engine übergibt Aktionen
-direkt an Z2Ms native Befehlsverarbeitung (ADR 0007). Die Testregel bleibt
-gespeichert und gestoppt; siehe den aktuellen Nachweis in docs/DEVELOPMENT.md.
+direkt an Z2Ms native Befehlsverarbeitung (ADR 0007). Beim anschließenden
+Bearbeiten-/Löschen-Test wurde die Testregel entfernt; die bestätigte leere
+Konfiguration ist gestoppt. Siehe den aktuellen Nachweis in docs/DEVELOPMENT.md.

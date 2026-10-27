@@ -2,6 +2,12 @@
 
 ## Neu
 
+- Klick-Editor um tägliche Uhrzeit-Auslöser, Zeitzonen, Zeitfenster mit Wochentagen
+  und eine zusätzliche Zustands- oder Zahlenbedingung erweitert. Mindestdauer und
+  Aktionsverzögerung sind auswählbar; Regeln werden zum Bearbeiten wieder vorbelegt.
+  Der begrenzte Z2M-Katalog liefert lesbare Messgrößen und Einheiten. Neue Abläufe
+  verwenden bereinigte deutsche Debug-Ausgaben.
+
 - Klick-Editor um Auswahl, Bearbeitung und bestätigtes Löschen bestehender Regeln
   erweitert. Einfache Regeln behalten ihre ID; andere Regeln bleiben unverändert.
   Name und Aktivierung erweiterter Regeln können ohne Verlust ihrer Schritte

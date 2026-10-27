@@ -127,6 +127,43 @@
         },
         {
             "type": "Select",
+            "name": "EditorTriggerType",
+            "caption": "Trigger type",
+            "options": [
+                {
+                    "caption": "Device event",
+                    "value": "device"
+                },
+                {
+                    "caption": "Daily time",
+                    "value": "time"
+                }
+            ],
+            "value": "device",
+            "onChange": "Z2MA_ConfigureEditorSchedule($id, $EditorTriggerType, $EditorWindow, $EditorConditionType);"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EditorAt",
+            "caption": "Time (HH:MM or HH:MM:SS)",
+            "value": "18:00:00",
+            "visible": false
+        },
+        {
+            "type": "Select",
+            "name": "EditorTimezone",
+            "caption": "Time zone",
+            "options": [
+                {
+                    "caption": "Europe/Berlin",
+                    "value": "Europe/Berlin"
+                }
+            ],
+            "value": "Europe/Berlin",
+            "visible": false
+        },
+        {
+            "type": "Select",
             "name": "EditorSource",
             "caption": "Source device",
             "options": [
@@ -149,6 +186,14 @@
                 }
             ],
             "value": ""
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EditorHold",
+            "caption": "Event must remain true for seconds",
+            "value": 0,
+            "minimum": 0,
+            "maximum": 86400
         },
         {
             "type": "Select",
@@ -176,9 +221,218 @@
             "value": ""
         },
         {
+            "type": "NumberSpinner",
+            "name": "EditorDelay",
+            "caption": "Wait before action (seconds)",
+            "value": 0,
+            "minimum": 0,
+            "maximum": 86400
+        },
+        {
+            "type": "Label",
+            "name": "ScheduleHelp",
+            "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match."
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorWindow",
+            "caption": "Only within a time window",
+            "value": false,
+            "onChange": "Z2MA_ConfigureEditorSchedule($id, $EditorTriggerType, $EditorWindow, $EditorConditionType);"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EditorAfter",
+            "caption": "Window starts at (inclusive)",
+            "value": "18:00:00",
+            "visible": false
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EditorBefore",
+            "caption": "Window ends at (exclusive)",
+            "value": "06:00:00",
+            "visible": false
+        },
+        {
+            "type": "Select",
+            "name": "EditorWindowTimezone",
+            "caption": "Time window zone",
+            "options": [
+                {
+                    "caption": "Europe/Berlin",
+                    "value": "Europe/Berlin"
+                }
+            ],
+            "value": "Europe/Berlin",
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorMonday",
+            "caption": "Monday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorTuesday",
+            "caption": "Tuesday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorWednesday",
+            "caption": "Wednesday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorThursday",
+            "caption": "Thursday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorFriday",
+            "caption": "Friday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorSaturday",
+            "caption": "Saturday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "CheckBox",
+            "name": "EditorSunday",
+            "caption": "Sunday",
+            "value": true,
+            "visible": false
+        },
+        {
+            "type": "Label",
+            "name": "WindowHelp",
+            "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00."
+        },
+        {
+            "type": "Select",
+            "name": "EditorConditionType",
+            "caption": "Additional device condition",
+            "options": [
+                {
+                    "caption": "No device condition",
+                    "value": "none"
+                },
+                {
+                    "caption": "Device state",
+                    "value": "state"
+                },
+                {
+                    "caption": "Measured value",
+                    "value": "numeric"
+                }
+            ],
+            "value": "none",
+            "onChange": "Z2MA_ConfigureEditorSchedule($id, $EditorTriggerType, $EditorWindow, $EditorConditionType);"
+        },
+        {
+            "type": "Select",
+            "name": "EditorCondition",
+            "caption": "Condition device",
+            "options": [
+                {
+                    "caption": "Choose device",
+                    "value": ""
+                }
+            ],
+            "value": "",
+            "onChange": "Z2MA_SelectEditorDevice($id, 'Condition', $EditorCondition);",
+            "visible": false
+        },
+        {
+            "type": "Select",
+            "name": "EditorConditionChoice",
+            "caption": "Required state",
+            "options": [
+                {
+                    "caption": "Choose event or action",
+                    "value": ""
+                }
+            ],
+            "value": "",
+            "visible": false
+        },
+        {
+            "type": "Select",
+            "name": "EditorNumericProperty",
+            "caption": "Measured property",
+            "options": [
+                {
+                    "caption": "Choose a measured value",
+                    "value": ""
+                }
+            ],
+            "value": "",
+            "visible": false
+        },
+        {
+            "type": "Select",
+            "name": "EditorCompare",
+            "caption": "Comparison",
+            "options": [
+                {
+                    "caption": "Equals",
+                    "value": "eq"
+                },
+                {
+                    "caption": "Does not equal",
+                    "value": "ne"
+                },
+                {
+                    "caption": "Greater than",
+                    "value": "gt"
+                },
+                {
+                    "caption": "At least",
+                    "value": "gte"
+                },
+                {
+                    "caption": "Less than",
+                    "value": "lt"
+                },
+                {
+                    "caption": "At most",
+                    "value": "lte"
+                }
+            ],
+            "value": "eq",
+            "visible": false
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EditorNumber",
+            "caption": "Comparison value",
+            "value": 0,
+            "digits": 6,
+            "moreDigits": true,
+            "visible": false
+        },
+        {
+            "type": "Label",
+            "name": "ConditionHelp",
+            "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition."
+        },
+        {
             "type": "Button",
             "caption": "Add automation to draft",
-            "onClick": "Z2MA_CreateSimpleAutomation($id, $EditorName, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, $EditorEnabled);",
+            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);",
             "name": "CreateRuleButton"
         },
         {
@@ -186,7 +440,7 @@
             "name": "UpdateRuleButton",
             "caption": "Apply changes to draft",
             "visible": false,
-            "onClick": "Z2MA_UpdateAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
         },
         {
             "type": "Button",

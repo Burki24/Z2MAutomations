@@ -96,7 +96,7 @@ export function buildEditorCatalog(zigbee) {
     for (const device of zigbee?.devicesIterator?.() ?? []) {
         if (++devicesSeen > 256) break;
         if (!device?.isDevice?.() || device.zh?.type === 'Coordinator' || !/^0x[0-9a-f]{16}$/.test(device.ieeeAddr)) continue;
-        const triggers = [], actions = [];
+        const triggers = [], actions = [], numeric = [];
         let visited = 0;
         const walk = (features, depth = 0) => {
             if (!Array.isArray(features) || depth > 6) return;
@@ -106,6 +106,10 @@ export function buildEditorCatalog(zigbee) {
                 walk(feature.features, depth + 1);
                 if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
                     || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
+                if (feature.type === 'numeric' && (feature.access & 1) !== 0 && numeric.length < 64 && optionCount < 1024) {
+                    numeric.push({property: feature.property, unit: typeof feature.unit === 'string' ? [...feature.unit].slice(0, 24).join('') : ''});
+                    optionCount++;
+                }
                 const values = feature.type === 'binary' ? [feature.value_on, feature.value_off]
                     : feature.type === 'enum' && Array.isArray(feature.values) ? feature.values.slice(0, 32) : [];
                 for (const value of values) {
@@ -117,8 +121,8 @@ export function buildEditorCatalog(zigbee) {
             }
         };
         try { walk(device.exposes()); } catch { continue; }
-        if (triggers.length || actions.length) result.push({id: device.ieeeAddr,
-            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions});
+        if (triggers.length || actions.length || numeric.length) result.push({id: device.ieeeAddr,
+            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric});
     }
     return result;
 }

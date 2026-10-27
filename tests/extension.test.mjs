@@ -27,6 +27,19 @@ test('click editor reads bounded discrete Exposes and ignores unsupported values
     assert.ok(seen <= 257);
 });
 
+test('click editor exposes bounded readable numeric properties without copying raw metadata', () => {
+    const features = [{property: 'temperature', type: 'numeric', access: 1, unit: '°C', private: 'raw-secret'},
+        {property: 'write_only', type: 'numeric', access: 2}, {property: '__proto__', type: 'numeric', access: 1},
+        ...Array.from({length: 100}, (_, i) => ({property: 'value_' + i, type: 'numeric', access: 1, unit: 'x'.repeat(100)}))];
+    const [device] = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000003', name: 'Synthetic sensor', isDevice: () => true, exposes: () => features}]});
+    assert.equal(device.numeric.length, 64);
+    assert.deepEqual(device.numeric[0], {property: 'temperature', unit: '°C'});
+    assert.equal(device.triggers.length, 0);
+    assert.equal(device.actions.length, 0);
+    assert.ok(device.numeric.every(item => item.unit.length <= 24 && item.property !== 'write_only' && item.property !== '__proto__'));
+    assert.equal(JSON.stringify(device).includes('raw-secret'), false);
+});
+
 async function harness(options = {}) {
     const directory = options.directory ?? await mkdtemp(join(tmpdir(), 'z2ma-test-'));
     const messages = [];

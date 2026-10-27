@@ -67,10 +67,41 @@ Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die erste
 256 Geräte und insgesamt 1024 Auswahlwerte werden geladen; unpassende Exposes
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
-Grenzwerte, Zeittrigger und Bedingungen bleiben vorerst der erweiterten YAML-Ansicht
-vorbehalten. Bestehende erweiterte Regeln können umbenannt, deaktiviert oder
-gelöscht werden; ihre Bedingungen und einzelnen Schritte lassen sich hier noch
-nicht grafisch ändern.
+Gruppen, mehrere Auslöser oder mehrschrittige Aktionsfolgen bleiben der erweiterten
+YAML-Ansicht vorbehalten. Bestehende Regeln außerhalb des Formularumfangs können
+umbenannt, deaktiviert oder gelöscht werden; ihre zusätzlichen Schritte bleiben erhalten.
+
+## Zeitsteuerungen und Bedingungen per Klick
+
+Zuerst die aktualisierte mitgelieferte Erweiterung installieren und die Geräte
+erneut laden. Ihr Katalog liefert auch lesbare Messgrößen für Zahlenbedingungen.
+
+- Unter „Auslöser“ zwischen „Geräteereignis“ und „Tägliche Uhrzeit“ wählen. Bei
+  einer Uhrzeit den Zeitpunkt als HH:MM oder HH:MM:SS und die Zeitzone auswählen.
+  Ohne Bedingungen läuft die Regel täglich. Verpasste Zeitpunkte werden nicht
+  nachgeholt; bei der Zeitumstellung wird ein Zeitpunkt höchstens einmal am Tag
+  ausgelöst. Geräteereignisse können eine Mindestdauer in Sekunden erhalten.
+- „Nur in einem Zeitfenster“ erlaubt eine zusätzliche Begrenzung nach Uhrzeit,
+  Zeitzone und Wochentagen. Der Beginn zählt mit, das Ende nicht. Ein Fenster
+  Montag 22:00 bis 06:00 gilt bis Dienstagmorgen; maßgeblich ist der Starttag.
+  Mindestens ein Tag muss gewählt sein. Gleiche Start-/Endzeiten sind ungültig.
+- „Zusätzliche Gerätebedingung“ erlaubt einen Zustand oder Messwert. Gerät und
+  Zustand bzw. Messgröße auswählen, dann Vergleich und gegebenenfalls Zahlenwert.
+  Zustände unterstützen gleich/ungleich, Messwerte zusätzlich größer, kleiner,
+  mindestens und höchstens. Die Einheit steht neben der Messgröße. Beispiel:
+  täglich 07:15 Uhr, nur wenn die Temperatur kleiner als 18,5 °C ist.
+- Bei Bedarf eine Wartezeit vor der Aktion angeben. Alle eingeschalteten
+  Bedingungen müssen erfüllt sein; sie werden vor der Aktion erneut geprüft.
+
+Zeitfenster und eine Gerätebedingung können gemeinsam verwendet werden. Eine
+Gerätebedingung verwendet nur Werte, die Z2M seit der Aktivierung beobachtet hat.
+Ein unbekannter Wert erfüllt auch „ungleich“ nicht. Es werden keine zusätzlichen
+Geräteabfragen erzeugt.
+
+Neue Regeln zum Entwurf hinzufügen, bestehende Regeln auswählen und Änderungen
+in den Entwurf übernehmen. Zeiten, Wochentage, Bedingungen und Verzögerungen werden
+beim Bearbeiten wieder vorbelegt. Danach wie gewohnt prüfen, speichern und bei
+Bedarf aktivieren. Erstellen oder Bearbeiten führt noch keine Aktion aus.
 
 ## Vorhandene Automationen bearbeiten oder löschen
 
