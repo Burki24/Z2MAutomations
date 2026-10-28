@@ -8,6 +8,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Native Formularbereiche trennen geräteausgelöste und zeitgesteuerte Regeln.
+  Jede Übersicht bietet eine gefilterte Auswahl und einen Neu-Button; mehrere
+  oder andere Auslöser bleiben unter weiteren Automationen erreichbar. Bearbeitung
+  ist in Wenn/Nur wenn/Dann/Übernehmen gegliedert, Einrichtung und YAML eingeklappt.
+  Dynamische Feldbefüllung berücksichtigt verschachtelte Bereiche. Offline wurden
+  die echten Formularskripte, Typwechsel, Zuordnung, Persistenz und Debug geprüft;
+  Installation und schmale/breite Konsolenabnahme dieses Formularstands stehen aus.
+
 - Entwicklung auf dev; kein Release. Installation und Schaltprüfung nur im
   ausdrücklich freigegebenen Testsystem durchgeführt.
 - IPSModuleStrict-Verwaltungsmodul mit optional aktivierter MQTT-Anbindung.

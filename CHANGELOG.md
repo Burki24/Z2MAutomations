@@ -13,6 +13,12 @@
 
 ## Neu
 
+- Natives Formular in geräteausgelöste und zeitgesteuerte Automationen aufgeteilt,
+  jeweils mit eigener Übersicht, Regelauswahl und Neu-Button. Gemeinsame Bearbeitung
+  führt durch Auslöser, optionale Bedingungen, Aktionen und Entwurfsübernahme.
+  Einrichtung und YAML sind eingeklappt; Status und Stopp bleiben erreichbar.
+  Deutsche Debug-Ausgaben erklären Bereichsauswahl und Ablehnungen.
+
 - Klick-Editor um Aktionsfolgen mit bis zu 16 Schritten erweitert. Schritte lassen
   sich hinzufügen, bearbeiten, löschen und durch Ziehen umsortieren. Jeder Schritt
   besitzt eine Wartezeit; gespeicherte Folgen werden vollständig wieder geladen.

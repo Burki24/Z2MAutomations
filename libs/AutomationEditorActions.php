@@ -116,7 +116,7 @@ trait AutomationEditorActions
 
     private function FillActionSequenceForm(array &$form, array $selection, array $snapshot): void
     {
-        foreach ($form['actions'] as &$field) {
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
             if (($field['name'] ?? '') === 'EditorActions') {
                 $field['columns'] = $this->EditorActionColumns($snapshot);
                 $field['values'] = $selection['EditorActionRows'];

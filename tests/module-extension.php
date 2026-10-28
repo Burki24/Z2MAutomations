@@ -17,6 +17,18 @@ $check = static function (bool $condition, string $message): void
         throw new RuntimeException($message);
     }
 };
+function formFields(array $items): array
+{
+    $fields = [];
+    foreach ($items as $item) {
+        if (isset($item['name'])) {
+            $fields[$item['name']] = $item;
+        }
+        $fields += formFields($item['items'] ?? []);
+    }
+    return $fields;
+}
+
 IPS\Kernel::reset();
 $root = dirname(__DIR__);
 $library = json_decode(file_get_contents($root . '/library.json'), true, 512, JSON_THROW_ON_ERROR);
@@ -27,6 +39,7 @@ class ObservedAutomationModule extends Z2MAutomations
 {
     public array $debugMessages = [];
     public bool $debugFails = false;
+    public array $formUpdates = [];
 
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
@@ -35,6 +48,7 @@ class ObservedAutomationModule extends Z2MAutomations
                 throw new RuntimeException('Complex live form updates must be JSON encoded.');
             }
         }
+        $this->formUpdates[$Field][$Parameter] = $Value;
         return true;
     }
 
@@ -129,22 +143,51 @@ try {
     $check($module->StoreYaml($second) !== '' && $state()['operation']['status'] === 'stored'
         && $state()['extension']['storedRevision'] === 2, 'Module supports an explicitly revalidated idempotent store');
     $draft = json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
-    $fields = array_column($draft['actions'], null, 'name');
+    $check(count(array_filter($draft['actions'], static fn (array $item): bool => ($item['type'] ?? '') === 'ExpansionPanel')) >= 5, 'Automation sections contain native nested form fields');
+    $fields = formFields($draft['actions']);
     $check($fields['YamlInput']['value'] === $second && isset($fields['ValidationInfo']), 'Last submitted draft survives form reopen');
     $check(!empty($fields['InstallButton']['confirm']) && !empty($fields['StoreButton']['confirm']), 'Mutating form actions require explicit confirmation');
     $check($module->RequestExtensionStatus() !== '' && $state()['operation']['status'] === 'status_received', 'Explicit receiver refresh works');
     $check($module->LoadAutomationEditor() !== '' && $state()['operation']['status'] === 'editor_loaded', 'Editor loads real receiver catalog and stored configuration');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $sentBeforeSections = count($parent->sent);
+    $runSectionScript = static function (string $script, array $fields, array $overrides = []) use ($id): void
+    {
+        $values = ['id' => $id];
+        foreach ($fields as $name => $field) {
+            if (array_key_exists('value', $field)) {
+                $values[$name] = $field['value'];
+            }
+        }
+        extract(array_replace($values, $overrides), EXTR_SKIP);
+        eval($script);
+    };
+    foreach (['Time' => 'time', 'Device' => 'device'] as $stem => $type) {
+        $runSectionScript($fields['New' . $stem . 'RuleButton']['onClick'], $fields);
+        $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+        $check($fields['EditorTriggerType']['value'] === $type && $fields['EditorTimeTrigger']['visible'] === ($type === 'time')
+            && $fields['EditorDeviceTrigger']['visible'] === ($type === 'device') && $fields['EditorRule']['value'] === ''
+            && $fields['EditorEditToken']['value'] === '' && $fields['EditorActions']['values'] === [], 'New buttons initialize the right trigger, empty selection and action list');
+        $check($module->formUpdates['EditorDetails']['expanded'] === true, 'New buttons open the common editing area');
+    }
+    $check(count($parent->sent) === $sentBeforeSections && $fields['YamlInput']['value'] === $second, 'Changing editing sections does not transmit or change the draft');
+    $check(!$module->SelectAutomation('', '', false, 'invalid'), 'Unknown automation sections are rejected');
+    $sectionDebug = array_map(static fn (array $entry): array => json_decode($entry[1], true, 512, JSON_THROW_ON_ERROR), $module->debugMessages);
+    $check(
+        count(array_filter($sectionDebug, static fn (array $entry): bool => ($entry['Bezug']['Bereich'] ?? '') === 'Zeitgesteuert')) > 0
+        && count(array_filter($sectionDebug, static fn (array $entry): bool => ($entry['Bezug']['Bereich'] ?? '') === 'Geräteausgelöst')) > 0,
+        'German debug explains both editing sections without rule content'
+    );
     $check(count($fields['EditorSource']['options']) >= 2 && count($fields['EditorTarget']['options']) >= 2, 'Real Exposes populate device selectors');
     $module->SelectEditorDevice('Source', '0x0000000000000001');
     $module->SelectEditorDevice('Target', '0x0000000000000002');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $trigger = $fields['EditorSourceChoice']['options'][1]['value'];
     $action = $fields['EditorTargetChoice']['options'][1]['value'];
     $check(!$module->CreateSimpleAutomation('Invalid selection', '0x0000000000000001', 'forged-choice', '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_invalid', 'The builder rejects arbitrary properties or values outside the offered catalog');
     $check($module->CreateSimpleAutomation('Synthetic click automation', '0x0000000000000001', $trigger, '0x0000000000000002', $action), 'Automation created only from offered choices, without handwritten YAML');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $createdYaml = $fields['YamlInput']['value'];
     $created = json_decode($createdYaml, true, 512, JSON_THROW_ON_ERROR);
     $check($created['revision'] === 3 && count($created['automations']) === 1 && $fields['YamlInput']['visible'] === false, 'Advanced YAML remains hidden while draft is generated');
@@ -165,14 +208,14 @@ try {
     $module->SelectEditorDevice('Source', '0x0000000000000001');
     $module->SelectEditorDevice('Target', '0x0000000000000002');
     $check($module->CreateSimpleAutomation('Synthetic click automation', '0x0000000000000001', $trigger, '0x0000000000000002', $action, '', false, false), 'A second rule may share a name and be created disabled');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $extended = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $check(count($extended['automations']) === 2 && $extended['automations'][0] === $created['automations'][0]
         && !$extended['automations'][1]['enabled'], 'Adding a disabled rule preserves the complete existing automation');
     $ruleID = $extended['automations'][0]['id'];
     $sentBeforeEditing = count($parent->sent);
     $check($module->SelectAutomation($ruleID), 'Existing rule can be selected by stable ID');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $token = $fields['EditorEditToken']['value'];
     $check($fields['EditorRule']['options'][1]['value'] !== $fields['EditorRule']['options'][2]['value']
         && $fields['EditorRule']['options'][1]['caption'] !== $fields['EditorRule']['options'][2]['caption'], 'Duplicate names remain distinguishable and use different stable IDs');
@@ -181,7 +224,7 @@ try {
     $check($fields['EditorName']['value'] === $created['automations'][0]['name']
         && $fields['EditorSourceChoice']['value'] === $trigger && $fields['EditorTargetChoice']['value'] === $action, 'Selecting an existing rule restores all simple fields');
     $check($module->UpdateAutomation($ruleID, $token, 'Renamed synthetic rule', false, '0x0000000000000001', $changedTrigger, '0x0000000000000002', $changedAction), 'Existing rule can be edited and disabled locally');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $edited = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $check($edited['automations'][0]['id'] === $ruleID && $edited['automations'][0]['name'] === 'Renamed synthetic rule'
         && !$edited['automations'][0]['enabled'] && $edited['automations'][1] === $extended['automations'][1]
@@ -192,14 +235,14 @@ try {
     $module->LoadAutomationEditor();
     foreach ([$ruleID, $extended['automations'][1]['id']] as $deleteID) {
         $check($module->SelectAutomation($deleteID), 'Select the precise rule to delete');
-        $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
         $check($module->DeleteAutomation($deleteID, $fields['EditorEditToken']['value']), 'Delete selected rule from local draft');
         if ($deleteID === $ruleID) {
-            $remainingForm = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+            $remainingForm = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
             $check(json_decode($remainingForm['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === [$extended['automations'][1]], 'Deleting one rule preserves the exact other rule');
         }
     }
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check(json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === []
         && $state()['extension']['storedRevision'] === 4, 'Deleting the last rule creates an empty local draft without touching Z2M');
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Deleting all rules persists as a valid empty configuration');
@@ -215,8 +258,11 @@ try {
     $check($module->StoreYaml($advancedYaml) !== '', 'Prepare a real stored advanced rule');
     $module->LoadAutomationEditor();
     $check($module->SelectAutomation($ruleID), 'Advanced rules remain selectable');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $token = $fields['EditorEditToken']['value'];
+    $check($fields['EditorAdvancedSection']['visible'] && count($fields['EditorAdvancedRules']['values']) === 1
+        && $fields['EditorDeviceRules']['values'] === [] && $fields['EditorTimeRules']['values'] === []
+        && $fields['EditorAdvancedRule']['value'] === $ruleID, 'Multi-trigger rules remain accessible in their own advanced section');
     $check(!$fields['EditorSource']['enabled'] && !$fields['EditorActions']['enabled'] && $fields['EditorActions']['values'] === []
         && $fields['EditorName']['value'] === $advanced['name'], 'Advanced rules expose metadata editing without flattening their clauses');
     $check(!$module->DeleteAutomation($ruleID, $token, '', true) && $state()['lastError'] === 'editor_changed', 'An empty unsaved expert draft cannot be overwritten');
@@ -224,7 +270,7 @@ try {
     $check(!$module->UpdateAutomation($ruleID, $token, 'Unsafe simplification', true, '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_advanced', 'Advanced clauses cannot be silently replaced with simple fields');
     $check($module->UpdateAutomation($ruleID, $token, 'Advanced renamed', false, '', '', '', ''), 'Advanced rules allow safe name and enabled state changes');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $advancedEdited = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'][0];
     $expectedAdvanced = $advanced;
     $expectedAdvanced['name'] = 'Advanced renamed';
@@ -234,25 +280,25 @@ try {
     $module->SelectAutomation('');
     $check(!$module->DeleteAutomation($ruleID, $token), 'Switching to a new rule invalidates the previous selection');
     $module->SelectAutomation($ruleID);
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $firstWindowToken = $fields['EditorEditToken']['value'];
     $module->SelectAutomation($ruleID);
     $check(!$module->DeleteAutomation($ruleID, $firstWindowToken), 'A second form selection invalidates the first form token even for the same ID');
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Advanced metadata edits persist through the authoritative receiver');
     $check(!$module->DeleteAutomation($ruleID, $firstWindowToken), 'Remote revision changes invalidate editor selections');
     $module->LoadAutomationEditor();
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $schedule = ['EditorTriggerType' => 'time', 'EditorAt' => '07:15', 'EditorTimezone' => 'Europe/Berlin',
         'EditorWindow'               => true, 'EditorAfter' => '22:00', 'EditorBefore' => '08:00', 'EditorWindowTimezone' => 'Europe/Berlin',
         'EditorMonday'               => true, 'EditorTuesday' => false, 'EditorWednesday' => false, 'EditorThursday' => false, 'EditorFriday' => false, 'EditorSaturday' => false, 'EditorSunday' => false,
         'EditorConditionType'        => 'numeric', 'EditorCondition' => '0x0000000000000002', 'EditorNumericProperty' => 'temperature', 'EditorCompare' => 'lt', 'EditorNumber' => 18.5];
     $module->ConfigureEditorSchedule('time', true, 'numeric');
     $module->SelectEditorDevice('Condition', '0x0000000000000002');
-    $modeFields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $modeFields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check($modeFields['EditorAt']['visible'] && $modeFields['EditorNumber']['visible'] && $modeFields['EditorNumericProperty']['options'][1]['value'] === 'temperature', 'Mode changes expose the correct time and numeric condition fields');
     $module->ConfigureEditorSchedule('invalid', true, 'numeric');
     $check($module->SaveScheduledAutomation('', '', 'Synthetic timed rule', true, '', '', '0x0000000000000002', $action, json_encode($schedule)), 'A time rule with overnight weekdays and a numeric condition can be created without YAML');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $scheduledDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $scheduled = $scheduledDocument['automations'][array_key_last($scheduledDocument['automations'])];
     $check($scheduled['triggers'] === [['type' => 'time', 'at' => '07:15:00', 'timezone' => 'Europe/Berlin']]
@@ -261,23 +307,37 @@ try {
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Time and numeric condition draft validates and persists in the real receiver');
     $module->LoadAutomationEditor();
     $check($module->SelectAutomation($scheduled['id']), 'Stored time/condition rule can be reopened');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check($fields['EditorAt']['value'] === '07:15:00' && $fields['EditorAt']['visible'] && !$fields['EditorSource']['visible']
         && $fields['EditorConditionType']['value'] === 'numeric' && $fields['EditorNumber']['value'] === 18.5
         && $fields['EditorMonday']['value'] && !$fields['EditorTuesday']['value'], 'Reopen restores time zone, weekdays and typed condition values');
+    $check(
+        count($fields['EditorTimeRules']['values']) === 1 && $fields['EditorTimeRule']['value'] === $scheduled['id']
+        && $fields['EditorDeviceRule']['value'] === '' && $fields['EditorDetails']['expanded'] && $fields['EditorConditions']['expanded'],
+        'Time rules appear in their own section and reopen their existing conditions'
+    );
+    $check(
+        count(array_filter($fields['EditorDeviceRule']['options'], static fn (array $option): bool => $option['value'] === $scheduled['id'])) === 0,
+        'Time rules are excluded from the device selection'
+    );
+    $runSectionScript($fields['EditorTimeRule']['onChange'], $fields, ['EditorTimeRule' => $scheduled['id']]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $timeToken = $fields['EditorEditToken']['value'];
     $unchangedScheduledYaml = $fields['YamlInput']['value'];
     foreach ([['EditorAt' => '25:00'], ['EditorTimezone'        => 'invalid-zone'], ['EditorBefore' => '22:00'], ['EditorMonday' => false],
         ['EditorNumericProperty' => 'forged'], ['EditorCompare' => 'unknown'], ['EditorHold' => -1], ['EditorConditionType' => 'numeric', 'EditorNumber' => '18.5']] as $invalid) {
         $check(!$module->SaveScheduledAutomation($scheduled['id'], $timeToken, 'Invalid time rule', true, '', '', '0x0000000000000002', $action, json_encode(array_replace($schedule, $invalid))), 'Invalid schedule inputs must be rejected');
-        $formAfterRejection = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $formAfterRejection = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
         $check($formAfterRejection['YamlInput']['value'] === $unchangedScheduledYaml, 'Rejected schedule never changes the draft');
     }
     $conditionOff = $fields['EditorConditionChoice']['options'][2]['value'];
     $changedSchedule = array_replace($schedule, ['EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorHold' => 4, 'EditorDelay' => 3,
         'EditorConditionType'                                        => 'state', 'EditorConditionChoice' => $conditionOff, 'EditorCompare' => 'eq']);
     $check($module->SaveScheduledAutomation($scheduled['id'], $timeToken, 'Synthetic event rule', false, '0x0000000000000001', $changedTrigger, '0x0000000000000002', $action, json_encode($changedSchedule)), 'Time trigger can change to device event with a state condition');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['EditorTimeRules']['values'] === [] && $fields['EditorDeviceRule']['value'] === $scheduled['id']
+        && !$fields['EditorTimeTrigger']['visible'] && $fields['EditorDeviceTrigger']['visible'], 'Changing the trigger moves the existing rule to its new section');
+    $check(json_decode($module->formUpdates['EditorTimeRules']['values'], true, 512, JSON_THROW_ON_ERROR) === [], 'Live category lists update immediately after changing a rule');
     $changedDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $changedRule = $changedDocument['automations'][array_key_last($changedDocument['automations'])];
     $check($changedRule['id'] === $scheduled['id'] && $changedRule['triggers'][0]['for_seconds'] === 4 && $changedRule['actions'][0]['delay_seconds'] === 3
@@ -299,7 +359,7 @@ try {
             'Deletion diagnostics label the supplied pre-delete count and never present removed rows as remaining prepared steps'
         );
     }
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $runEditorScript = static function (string $script, array $fields, array $overrides) use ($id): void
     {
         $values = ['id' => $id];
@@ -315,7 +375,7 @@ try {
         'EditorEnabled'                                                             => true, 'EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorConditionType' => 'none',
         'EditorSource'                                                              => '0x0000000000000001', 'EditorSourceChoice' => $trigger, 'EditorActions' => new ArrayIterator($steps)]);
     $check($state()['operation']['status'] === 'draft_created', 'The actual form button serializes all list rows and creates the sequence');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $sequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $sequence = $sequenceDocument['automations'][array_key_last($sequenceDocument['automations'])];
     $check(count($sequence['actions']) === 2 && $sequence['actions'][0]['values'] === ['state' => 'ON']
@@ -332,7 +392,7 @@ try {
     $check($module->StopAutomations() !== '', 'Stop generated sequence after execution');
     $module->LoadAutomationEditor();
     $check($module->SelectAutomation($sequence['id']), 'Reopen stored sequence');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check($fields['EditorActions']['values'] === $steps && $fields['EditorActions']['enabled'], 'All stored actions are editable and restored in order');
     $sequenceToken = $fields['EditorEditToken']['value'];
     $baseline = $fields['YamlInput']['value'];
@@ -360,7 +420,7 @@ try {
         json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => -1]]), json_encode([['Choice'   => $steps[0]['Choice'], 'Delay' => 86401]]),
         json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => '12']]), json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => 0, 'extra' => true]])] as $invalidSteps) {
         $check(!$module->SaveScheduledAutomation($sequence['id'], $sequenceToken, 'Invalid sequence', true, '0x0000000000000001', $trigger, '', '', '{}', '', false, $invalidSteps), 'Invalid sequences are rejected');
-        $invalidFields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $invalidFields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
         $check($invalidFields['YamlInput']['value'] === $baseline, 'Rejected action edits leave the exact draft unchanged');
     }
     $steps = array_reverse($steps);
@@ -369,7 +429,7 @@ try {
     $runEditorScript($fields['UpdateRuleButton']['onClick'], $fields, ['EditorName' => 'Reordered sequence', 'EditorEnabled' => false,
         'EditorTriggerType'                                                         => 'time', 'EditorAt' => '12:34', 'EditorActions' => new ArrayIterator($steps)]);
     $check($state()['operation']['status'] === 'draft_updated', 'The actual update button applies the complete reordered sequence');
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $editedSequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $editedSequence = $editedSequenceDocument['automations'][array_key_last($editedSequenceDocument['automations'])];
     $check($editedSequence['id'] === $sequence['id'] && count($editedSequence['actions']) === 3
@@ -382,7 +442,7 @@ try {
     $module->debugFails = false;
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited sequence validates and stores');
     $module->LoadAutomationEditor();
-    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');

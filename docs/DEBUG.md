@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+`SelectAutomation` protokolliert beim Öffnen der Bearbeitung den festen deutschen
+Bereich „Geräteausgelöst“, „Zeitgesteuert“ oder „Weitere Auslöser“ sowie die
+Unterscheidung zwischen neuer und bestehender Regel. `ConfigureEditorSchedule`
+nennt den gewählten Bereich und die optionalen Bedingungsarten. Beide verwenden
+den zentralen Start-/Ende-Ablauf; Auswahl, Namen, Zeitwerte und Regeln bleiben
+geschützt. Bereichswechsel bearbeiten nur den lokalen Editor und senden nichts
+an Z2M. Ungültige Bereiche und veraltete Entwürfe werden nachvollziehbar abgelehnt.
+
 `InspectEditorActions` erklärt Hinzufügen, Bearbeiten, Löschen und Umordnen der
 Aktionsliste. Beim nativen Löschen enthält der Callback noch den Vorbestand:
 Die Meldung kennzeichnet deshalb ausschließlich `AktionenVorLöschen` und gibt

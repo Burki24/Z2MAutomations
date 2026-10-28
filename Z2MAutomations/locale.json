@@ -208,7 +208,31 @@
             "Wait before this step (seconds)": "Wartezeit vor diesem Schritt (Sekunden)",
             "Action sequence (maximum 16 steps)": "Aktionsfolge (höchstens 16 Schritte)",
             "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards.": "Aktionen laufen von oben nach unten. Schritte hinzufügen, bearbeiten und durch Ziehen umsortieren. Jede Wartezeit gilt vor ihrem Schritt; 0 bedeutet sofort. Anschließend die Automation in den Entwurf übernehmen.",
-            "Use 1 to 16 actions from the device catalog and waits from 0 to 86400 seconds.": "1 bis 16 Aktionen aus der Geräteauswahl und Wartezeiten von 0 bis 86400 Sekunden verwenden."
+            "Use 1 to 16 actions from the device catalog and waits from 0 to 86400 seconds.": "1 bis 16 Aktionen aus der Geräteauswahl und Wartezeiten von 0 bis 86400 Sekunden verwenden.",
+            "MQTT settings": "MQTT-Einstellungen",
+            "Device-triggered automations": "Durch ein Gerät ausgelöste Automationen",
+            "Time-controlled automations": "Zeitgesteuerte Automationen",
+            "Other automations": "Weitere Automationen",
+            "New device-triggered automation": "Neue geräteausgelöste Automation",
+            "New time-controlled automation": "Neue zeitgesteuerte Automation",
+            "A device reports an event or changes its state.": "Ein Gerät meldet ein Ereignis oder ändert seinen Zustand.",
+            "The automation starts at the selected time.": "Die Automation startet zur eingestellten Uhrzeit.",
+            "Rules with multiple or advanced triggers remain available here.": "Regeln mit mehreren oder erweiterten Auslösern bleiben hier erreichbar.",
+            "Edit automation": "Automation bearbeiten",
+            "1. When a device reports an event": "1. Wenn ein Gerät ein Ereignis meldet",
+            "1. When the time is reached": "1. Wenn die Uhrzeit erreicht ist",
+            "2. Only if ... (optional)": "2. Nur wenn … (optional)",
+            "3. Then perform these actions": "3. Dann diese Aktionen ausführen",
+            "4. Apply to local draft": "4. In den lokalen Entwurf übernehmen",
+            "Validate and transfer to Z2M": "Prüfen und an Z2M übertragen",
+            "Setup and diagnostics": "Einrichtung und Diagnose",
+            "Advanced YAML editor": "Erweiterter YAML-Editor",
+            "Automation type": "Art der Automation",
+            "Load devices and stored automations first. Choose a section to create or edit a rule.": "Zuerst Geräte und gespeicherte Automationen laden. Danach im passenden Bereich eine Regel erstellen oder bearbeiten.",
+            "Storing transfers the draft. Activation starts all enabled stored rules; stopping stops all rules.": "Speichern überträgt den Entwurf. Aktivieren startet alle aktivierten gespeicherten Regeln; Stoppen stoppt alle Regeln.",
+            "Scheduled time": "Zeitpunkt",
+            "Trigger": "Auslöser",
+            "First target device": "Erstes Zielgerät"
         }
     }
 }

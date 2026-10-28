@@ -1,5 +1,34 @@
 # Entwicklung
 
+## Native Formularbereiche
+
+Geräte- und Zeitregeln erhalten gefilterte native ExpansionPanels mit eigenen
+Übersichten, Auswahl und Neu-Buttons. Der gemeinsame Editor besitzt getrennte
+Auslöserbereiche sowie optionale Bedingungen, Aktionen und Entwurfsübernahme.
+Einrichtung und YAML sind eingeklappt; Ausführungsstatus und Stopp stehen oben.
+Mehrere/andere Auslöser bleiben in einem bedarfsweise sichtbaren Bereich.
+
+`SelectAutomation` erhält den optionalen letzten Parameter `NewType` (device/time);
+alte Aufrufe bleiben kompatibel. Eine neue Auswahl setzt den Editor zurück,
+bestehende Regeln behalten ID und Auswahlkonfliktschutz. Formularfelder werden
+über Referenzen auf die statischen verschachtelten Items befüllt; Namen und
+Property-Verträge bleiben stabil. ConfigurationFormHelper bleibt unverändert.
+
+Offline-Integration prüft die echten Neu-/Auswahlskripte, getrennte Listen,
+Zeit-/Gerätewechsel einschließlich sofortiger Listenaktualisierung, Wiederladen
+von Bedingungen, Erhalt erweiterter Regeln und sichere deutsche Debug-Meldungen.
+Bestehende Bearbeitungs-/Lösch-/Persistenz- und Aktionsfolgenprüfungen laufen
+weiter über dieselben verschachtelten Felder. Keine Änderung an Erweiterung,
+Schema oder Laufzeit und keine Live-Installation in diesem Arbeitsschritt.
+Visuelle Prüfung auf schmaler/breiter nativer Konsole steht noch aus.
+
+Abschlussprüfung: `php tests/run.php` (PHP-/MQTT-/Formularintegration und
+37 Node-Tests), `php tests/validate_structure.php`, offizieller StylePHP-JSON-Check
+und php-cs-fixer im Prüfmodus erfolgreich. Fremde node_modules wurden für den
+StylePHP-Check vorübergehend aus dem Quellbaum gehalten und wiederhergestellt.
+Verschachtelte Felder werden zusätzlich auf eindeutige Namen, Übersetzungen
+und flexible Panelbreiten geprüft.
+
 ## Reale Aktionsfolge aus dem Klick-Editor
 
 Beim Praxisauftrag am 28.10.2026 fehlte das freigegebene Testlicht im bisherigen

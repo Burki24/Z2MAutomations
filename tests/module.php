@@ -30,9 +30,21 @@ foreach ($children as $child) {
     }
 }
 
+function formFields(array $items): array
+{
+    $fields = [];
+    foreach ($items as $item) {
+        if (isset($item['name'])) {
+            $fields[$item['name']] = $item;
+        }
+        $fields += formFields($item['items'] ?? []);
+    }
+    return $fields;
+}
+
 $form = json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/form.json'), true, 512, JSON_THROW_ON_ERROR);
-foreach ($form['elements'] as $field) {
-    if (isset($field['name'])) {
+foreach (formFields($form['elements']) as $field) {
+    if (isset($field['name']) && $field['type'] !== 'ExpansionPanel') {
         IPS_GetProperty($id, $field['name']);
     }
 }
@@ -43,7 +55,7 @@ if ($module->ValidateYaml($draft) !== '') {
     throw new RuntimeException('Disabled module cannot send validation requests.');
 }
 $form = json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
-$actions = array_column($form['actions'], null, 'name');
+$actions = formFields($form['actions']);
 if ($actions['YamlInput']['value'] !== $draft) {
     throw new RuntimeException('A valid local draft must survive an offline validation attempt.');
 }

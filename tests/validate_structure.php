@@ -40,7 +40,18 @@ foreach ($modules as $path) {
     $check(str_contains(file_get_contents($folder . '/module.php'), 'class Z2MAutomations extends IPSModuleStrict'), 'Strict base class');
     $form = $readJson($folder . '/form.json');
     $translations = $readJson($folder . '/locale.json')['translations']['de'];
-    foreach (array_merge($form['elements'], $form['actions'], $form['status']) as $field) {
+    $pending = array_merge($form['elements'], $form['actions'], $form['status']);
+    $fieldNames = [];
+    while ($pending !== []) {
+        $field = array_shift($pending);
+        array_push($pending, ...($field['items'] ?? []));
+        if (isset($field['name'])) {
+            $check(!isset($fieldNames[$field['name']]), 'Unique nested form name: ' . $field['name']);
+            $fieldNames[$field['name']] = true;
+        }
+        if (($field['type'] ?? '') === 'ExpansionPanel') {
+            $check(!isset($field['width']), 'Panels must use the available console width');
+        }
         $check(isset($translations[$field['caption']]), 'German form translation: ' . $field['caption']);
         if (isset($field['confirm'])) {
             $check(isset($translations[$field['confirm']]), 'German confirmation translation');

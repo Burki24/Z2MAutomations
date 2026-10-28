@@ -28,11 +28,11 @@ trait AutomationEditorSchedule
             $selection = $this->EditorSelectionFields($this->ReadEditorDraft());
             foreach ($this->ScheduleVisibility($modes) as $name => $visible) {
                 $this->UpdateFormField($name, 'visible', $visible);
-                if (!in_array($name, ['WindowHelp', 'ConditionHelp'], true)) {
+                if (!in_array($name, ['WindowHelp', 'ConditionHelp', 'EditorDeviceTrigger', 'EditorTimeTrigger'], true)) {
                     $this->UpdateFormField($name, 'enabled', $selection['simple']);
                 }
             }
-            $this->DebugEvent('AKTION', 'Editor für Auslöser und Bedingungen angepasst.', ['Auslöserart' => $TriggerType, 'Zeitfenster' => $Window, 'Bedingungsart' => $ConditionType]);
+            $this->DebugEvent('AKTION', 'Editor für Auslöser und Bedingungen angepasst.', ['Bereich' => $this->EditorTypeLabel($TriggerType), 'Zeitfenster' => $Window, 'Bedingungsart' => $ConditionType]);
         });
     }
 
@@ -285,11 +285,11 @@ trait AutomationEditorSchedule
         $device = $v['EditorTriggerType'] === 'device';
         $window = $v['EditorWindow'];
         $condition = $v['EditorConditionType'];
-        $fields = ['EditorSource'   => $device, 'EditorSourceChoice' => $device, 'EditorHold' => $device, 'EditorAt' => !$device, 'EditorTimezone' => !$device,
-            'EditorAfter'           => $window, 'EditorBefore' => $window, 'EditorWindowTimezone' => $window,
-            'EditorCondition'       => $condition !== 'none', 'EditorConditionChoice' => $condition === 'state',
-            'EditorNumericProperty' => $condition === 'numeric', 'EditorNumber' => $condition === 'numeric', 'EditorCompare' => $condition !== 'none',
-            'WindowHelp'            => $window, 'ConditionHelp' => $condition !== 'none'];
+        $fields = ['EditorDeviceTrigger' => $device, 'EditorTimeTrigger' => !$device, 'EditorSource'   => $device, 'EditorSourceChoice' => $device, 'EditorHold' => $device, 'EditorAt' => !$device, 'EditorTimezone' => !$device,
+            'EditorAfter'                => $window, 'EditorBefore' => $window, 'EditorWindowTimezone' => $window,
+            'EditorCondition'            => $condition !== 'none', 'EditorConditionChoice' => $condition === 'state',
+            'EditorNumericProperty'      => $condition === 'numeric', 'EditorNumber' => $condition === 'numeric', 'EditorCompare' => $condition !== 'none',
+            'WindowHelp'                 => $window, 'ConditionHelp' => $condition !== 'none'];
         foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day) {
             $fields['Editor' . $day] = $window;
         }
@@ -342,7 +342,7 @@ trait AutomationEditorSchedule
         $v['EditorCondition'] = $selection['selected'] ? $selection['EditorCondition'] : $this->ReadAttributeString('EditorCondition');
         $visibility = $this->ScheduleVisibility($v);
         $snapshot = $this->EditorSnapshot();
-        foreach ($form['actions'] as &$field) {
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
             $name = $field['name'] ?? '';
             if (array_key_exists($name, $this->ScheduleDefaults())) {
                 $field['value'] = $v[$name];

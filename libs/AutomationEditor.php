@@ -199,6 +199,7 @@ trait AutomationEditor
         $this->UpdateFormField('EditorPreview', 'caption', sprintf($this->Translate('Draft contains %d automations. Z2M is unchanged until storing.'), count($draft['configuration']['automations'])));
         $this->UpdateFormField('EditorRules', 'values', json_encode($this->EditorRuleRows($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateFormField('EditorRule', 'options', json_encode($this->EditorRuleOptions($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->RefreshAutomationSections($draft);
     }
 
     private function EditorSnapshot(): array
@@ -239,13 +240,30 @@ trait AutomationEditor
         return $snapshot['devices'][$id][$side === 'Source' ? 'triggers' : 'actions'][$key] ?? null;
     }
 
+    private function EditorFormFields(array &$items): array
+    {
+        $fields = [];
+        foreach ($items as &$item) {
+            $fields[] = &$item;
+            if (isset($item['items'])) {
+                $children = $this->EditorFormFields($item['items']);
+                foreach ($children as &$child) {
+                    $fields[] = &$child;
+                }
+                unset($child);
+            }
+        }
+        unset($item);
+        return $fields;
+    }
+
     private function FillEditorForm(array &$form, array $state): void
     {
         $snapshot = $this->EditorSnapshot();
         if (($snapshot['scope'] ?? null) !== $state['scope']) {
             $snapshot = [];
         }
-        foreach ($form['actions'] as &$field) {
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
             if (($field['name'] ?? '') === 'EditorRules' && $snapshot !== []) {
                 $draft = $this->ReadAttributeString('EditorDraft');
                 $field['values'] = $draft === '' ? [] : $this->EditorRuleRows(json_decode($draft, true, 32, JSON_THROW_ON_ERROR));
@@ -270,7 +288,7 @@ trait AutomationEditor
         unset($field);
         $draft = $snapshot === [] ? null : $this->ReadEditorDraft();
         $selection = $this->EditorSelectionFields($draft);
-        foreach ($form['actions'] as &$field) {
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
             $name = $field['name'] ?? '';
             if ($name === 'EditorRule') {
                 $field['options'] = $this->EditorRuleOptions($draft ?? ['configuration' => ['automations' => []]]);
@@ -294,14 +312,15 @@ trait AutomationEditor
         unset($field);
         $this->FillScheduleForm($form, $draft, $selection);
         $this->FillActionSequenceForm($form, $selection, $snapshot);
+        $this->FillAutomationSections($form, $draft, $selection);
     }
 
-    private function EditorRuleRows(array $draft): array
+    private function EditorRuleRows(array $draft, string $type = ''): array
     {
         $snapshot = $this->EditorSnapshot();
         $rows = [];
         foreach ($draft['configuration']['automations'] ?? [] as $rule) {
-            if (!is_array($rule) || !is_string($rule['name'] ?? null)) {
+            if (!is_array($rule) || !is_string($rule['name'] ?? null) || ($type !== '' && $this->EditorRuleType($rule) !== $type)) {
                 continue;
             }
             $source = is_array($rule['triggers'][0] ?? null) && is_string($rule['triggers'][0]['device'] ?? null) ? $rule['triggers'][0]['device'] : '';

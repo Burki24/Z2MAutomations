@@ -99,7 +99,7 @@ class Z2MAutomations extends IPSModuleStrict
         {
             $form = $this->LoadConfigurationForm();
             $state = $this->WithTransportLock(fn (): array => $this->RefreshState());
-            foreach ($form['actions'] as &$field) {
+            foreach ($this->EditorFormFields($form['actions']) as &$field) {
                 if (($field['name'] ?? '') === 'YamlInput') {
                     $field['value'] = $this->ReadAttributeString('YamlDraft');
                     $field['visible'] = $this->ReadAttributeBoolean('ShowYaml');

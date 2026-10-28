@@ -48,10 +48,14 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
    Erweiterungsstatus abfragen.
 2. „Geräte und gespeicherte Automationen laden“ bestätigen. Damit wird der lokale
    Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
-3. Unter „Automation bearbeiten“ die Auswahl „Neue Automation erstellen“ wählen.
-   Namen eingeben, ein Quellgerät und dessen Ereignis auswählen, beispielsweise
-   „Tasterereignis: Einfach drücken“.
-4. Unter „Aktionsfolge“ einen Schritt hinzufügen, Gerät und Aktion auswählen,
+3. Den Bereich „Durch ein Gerät ausgelöste Automationen“ öffnen und „Neue
+   geräteausgelöste Automation“ wählen. Die gemeinsame Bearbeitung öffnet sich.
+   Namen eingeben und unter „Wenn ein Gerät ein Ereignis meldet“ Quellgerät
+   und Ereignis wählen, beispielsweise „Tasterereignis: Einfach drücken“.
+   Für eine Uhrzeitregel stattdessen im Bereich „Zeitgesteuerte Automationen“
+   auf „Neue zeitgesteuerte Automation“ klicken und Uhrzeit/Zeitzone einstellen.
+4. Bei Bedarf „Nur wenn … (optional)“ öffnen und Bedingungen hinzufügen.
+   Unter „Dann diese Aktionen ausführen“ einen Schritt hinzufügen, Gerät und Aktion auswählen,
    beispielsweise „Zustand: Ein“, und die Wartezeit vor diesem Schritt eingeben.
 5. „Automation zum Entwurf hinzufügen“ betätigen. Weitere einfache Regeln können
    vor der Übertragung ergänzt werden. Vorhandene gespeicherte Regeln bleiben
@@ -73,6 +77,22 @@ die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numeris
 Geräteaktionen und mehrere Auslöser bleiben der erweiterten
 YAML-Ansicht vorbehalten. Bestehende Regeln außerhalb des Formularumfangs können
 umbenannt, deaktiviert oder gelöscht werden; ihre zusätzlichen Schritte bleiben erhalten.
+
+## Übersicht und Bearbeitung
+
+Geräteausgelöste und zeitgesteuerte Automationen besitzen jeweils eine eigene
+Übersicht und die Auswahl „Automation bearbeiten“. Die Auswahl lädt die Regel
+in die gemeinsame Bearbeitung. Dort erscheinen nur die passenden Auslöserfelder;
+bestehende Bedingungen werden aufgeklappt. Wird die Auslöserart geändert und in
+den Entwurf übernommen, wechselt die Regel in die entsprechende Übersicht.
+Regeln mit mehreren oder anderen Auslösern bleiben unter „Weitere Automationen“
+erreichbar. Unterstützte Bearbeitung und der Schutz erweiterter Regeln gelten weiter.
+
+„Prüfen und an Z2M übertragen“ enthält Prüfung, Speicherung und Aktivierung.
+Aktivieren und Stoppen beziehen sich auf die gesamte gespeicherte Konfiguration.
+Ausführungsstatus und Stopp stehen oben. MQTT-Einstellungen, Einrichtung/Diagnose
+und der erweiterte YAML-Editor sind normalerweise eingeklappt. Die Bearbeitung
+ändert zuerst den lokalen Entwurf; Z2M ändert sich erst beim Speichern.
 
 ## Mehrere Aktionen per Klick
 

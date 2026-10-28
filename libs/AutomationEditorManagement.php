@@ -6,13 +6,16 @@ namespace Z2MAutomations;
 
 trait AutomationEditorManagement
 {
-    public function SelectAutomation(string $RuleID, string $CurrentDraft = '', bool $CheckDraft = false): bool
+    public function SelectAutomation(string $RuleID, string $CurrentDraft = '', bool $CheckDraft = false, string $NewType = 'device'): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $CurrentDraft, $CheckDraft): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $CurrentDraft, $CheckDraft, $NewType): bool
         {
             $state = $this->RefreshState();
             $draft = $this->ReadEditorDraft();
             $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft);
+            if ($error === '' && !in_array($NewType, ['device', 'time'], true)) {
+                $error = 'editor_invalid';
+            }
             $index = $this->EditorRuleIndex($draft, $RuleID);
             if ($error === '' && $RuleID !== '' && $index === null) {
                 $error = 'editor_missing';
@@ -21,6 +24,13 @@ trait AutomationEditorManagement
                 return $this->RejectEditorChange($state, $error);
             }
             $this->SetEditorSelection($draft, $RuleID);
+            if ($RuleID === '') {
+                $this->ConfigureEditorSchedule($NewType, false, 'none');
+                $this->UpdateFormField('EditorTriggerType', 'value', $NewType);
+            }
+            $this->UpdateFormField('EditorDetails', 'expanded', true);
+            $type = $index === null ? $NewType : $this->EditorRuleType($draft['configuration']['automations'][$index]);
+            $this->DebugEvent('AKTION', 'Bearbeitung im passenden Automationsbereich geöffnet; Z2M bleibt unverändert.', ['Bereich' => $this->EditorTypeLabel($type), 'NeueAutomation' => $index === null]);
             $state['lastError'] = '';
             $state['operation'] = ['kind' => 'editor', 'status' => 'rule_selected', 'transaction' => ''];
             $this->DebugEvent('AKTION', 'Regelauswahl im lokalen Editor geladen.', ['VorhandeneRegel' => $index !== null]);
@@ -209,6 +219,8 @@ trait AutomationEditorManagement
             $this->UpdateFormField($field, 'enabled', $fields['simple']);
         }
         $this->UpdateFormField('EditorEditInfo', 'caption', $this->EditorEditInfo($fields));
+        $this->RefreshAutomationSections($draft);
+        $this->UpdateFormField('EditorConditions', 'expanded', $fields['EditorWindow'] || $fields['EditorConditionType'] !== 'none');
     }
 
     private function EditorEditInfo(array $fields): string
@@ -217,13 +229,66 @@ trait AutomationEditorManagement
             : 'Advanced rule: name and enabled state can be changed. Conditions and actions are preserved.');
     }
 
-    private function EditorRuleOptions(array $draft): array
+    private function EditorRuleOptions(array $draft, string $type = ''): array
     {
         $options = [['caption' => $this->Translate('Create a new automation'), 'value' => '']];
         foreach ($draft['configuration']['automations'] as $index => $rule) {
+            if ($type !== '' && $this->EditorRuleType($rule) !== $type) {
+                continue;
+            }
             $options[] = ['caption' => $rule['name'] . ' (' . ($index + 1) . ')', 'value' => $rule['id']];
         }
         return $options;
+    }
+
+    private function EditorRuleType(array $rule): string
+    {
+        $type = $rule['triggers'][0]['type'] ?? '';
+        return count($rule['triggers'] ?? []) === 1 && in_array($type, ['device', 'time'], true) ? $type : 'advanced';
+    }
+
+    private function EditorTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'device' => 'Geräteausgelöst', 'time' => 'Zeitgesteuert', default => 'Weitere Auslöser'
+        };
+    }
+
+    private function AutomationSectionFields(?array $draft, array $selection): array
+    {
+        $draft ??= ['configuration' => ['automations' => []]];
+        $selectedIndex = $this->EditorRuleIndex($draft, $selection['EditorRule']);
+        $selectedType = $selectedIndex === null ? '' : $this->EditorRuleType($draft['configuration']['automations'][$selectedIndex]);
+        $fields = [];
+        foreach (['device' => 'Device', 'time' => 'Time', 'advanced' => 'Advanced'] as $type => $stem) {
+            $rows = $this->EditorRuleRows($draft, $type);
+            $fields['Editor' . $stem . 'Rules'] = ['values' => $rows];
+            $fields['Editor' . $stem . 'Rule'] = ['options' => $this->EditorRuleOptions($draft, $type), 'value' => $selectedType === $type ? $selection['EditorRule'] : ''];
+            if ($type === 'advanced') {
+                $fields['EditorAdvancedSection'] = ['visible' => $rows !== []];
+            }
+        }
+        return $fields;
+    }
+
+    private function FillAutomationSections(array &$form, ?array $draft, array $selection): void
+    {
+        $updates = $this->AutomationSectionFields($draft, $selection);
+        $updates['EditorDetails'] = ['expanded' => $selection['selected']];
+        $updates['EditorConditions'] = ['expanded' => $selection['EditorWindow'] || $selection['EditorConditionType'] !== 'none'];
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
+            $field = array_replace($field, $updates[$field['name'] ?? ''] ?? []);
+        }
+        unset($field);
+    }
+
+    private function RefreshAutomationSections(array $draft): void
+    {
+        foreach ($this->AutomationSectionFields($draft, $this->EditorSelectionFields($draft)) as $name => $changes) {
+            foreach ($changes as $parameter => $value) {
+                $this->UpdateFormField($name, $parameter, is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $value);
+            }
+        }
     }
 
     private function RejectEditorChange(array $state, string $error): bool
