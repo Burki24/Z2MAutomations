@@ -2,6 +2,9 @@
 
 ## Fixes
 
+- Die Liste „Geprüfte Ereignisse“ zeigt 15 statt 5 Zeilen gleichzeitig,
+  damit sich größere Ereignisbestände übersichtlicher durchsuchen lassen.
+
 - Der Import löst native Ereignisziele aus dem Elternobjekt auf und unterstützt
   Instanzaktionen mit einer über IDENT ausgewählten Statusvariable und eingebetteter
   nativer Aktion. Ein gespeichertes TARGET ist dafür nicht erforderlich.

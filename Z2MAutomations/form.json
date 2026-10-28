@@ -134,7 +134,7 @@
                     "name": "ImportEvents",
                     "caption": "Checked events",
                     "width": "100%",
-                    "rowCount": 5,
+                    "rowCount": 15,
                     "columns": [
                         {
                             "name": "Name",

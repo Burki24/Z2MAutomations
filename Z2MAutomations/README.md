@@ -27,7 +27,8 @@ weiter angeboten. Es sind keine konkreten Instanz-IDs im Modul hinterlegt.
 ## Vorhandene Symcon-Ereignisse importieren
 
 Die Übersicht zeigt Ereignisname, **auslösendes Gerät** und dessen
-**Symcon-Instanz-ID**. Auch in der Ereignisauswahl stehen diese Angaben, damit
+**Symcon-Instanz-ID**. Die Liste bietet Platz für 15 sichtbare Einträge;
+weitere Einträge sind durch Scrollen erreichbar. Auch in der Ereignisauswahl stehen diese Angaben, damit
 sich gleichnamige Ereignisse unterscheiden lassen.
 
 Fehlt die Gerätezuordnung aus Z2M für die gewählte Verbindung, steht in der
