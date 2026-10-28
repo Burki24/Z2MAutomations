@@ -871,3 +871,30 @@ Ereignisse bleiben unverändert. Synthetische Integrationstests prüfen diese
 Fälle einschließlich nativer verschachtelter Tasteraktionen, fehlender
 Eigenschaften am richtigen Gateway und tatsächlich fremder Verbindungen.
 Keine produktiven Änderungen oder Schaltbefehle gehören zu diesem Nachweis.
+
+## Gerätedaten ohne Entwurfsverlust nachladen
+
+LoadImportDevices verwendet den vorhandenen Editor-Workflow mit preserveDraft.
+Die vollständig validierte Antwort aktualisiert den Katalog nur, wenn Kontext,
+gespeicherte Ausgangsrevision/-prüfsumme und die lokale Entwurfsprüfsumme noch
+zusammenpassen. Bei erhaltenem Entwurf wird nur die Empfängersitzung erneuert;
+YamlDraft, Regeln, Aktivierungsflags und Auswahl bleiben erhalten. Ein fehlender
+Entwurf wird wie bisher initialisiert. LoadAutomationEditor behält ausdrücklich
+seine nach Bestätigung ersetzende Funktion. Fehler geben keine Importfreigabe.
+
+Der Katalog reserviert unter denselben Grenzen erst binäre Schaltkanäle, dann
+enumerierte state-/action-Eigenschaften für Rollläden und Taster, erst danach
+Sonderoptionen. Synthetische Tests reproduzieren späte Geräte hinter sehr
+umfangreichen Sonderoptionen und prüfen bytegleichen Entwurfserhalt sowie die
+Ablehnung widersprüchlicher manueller YAML-Änderungen. Die gebaute Erweiterung
+bleibt aus den lokalen Quellen erzeugt und enthält keine fremde Implementierung.
+
+Freigegebene Live-Prüfung: Modul und Erweiterung aktualisiert, Gerätedaten über
+LoadImportDevices neu gelesen und der lokale Entwurf unmittelbar danach bytegleich
+mit der Sicherung verglichen. Alle drei vorhandenen Regeln blieben unverändert.
+Zuvor fehlende Taster- und Markisenfunktionen wurden anschließend erkannt und
+vier weitere Regeln als deaktivierte Entwürfe übernommen. Die ursprünglichen
+Symcon-Ereigniskonfigurationen blieben unverändert. Native Debug-Ausgaben belegten
+Entwurfserhalt und jede Übernahme. Gespeicherte Z2M-Prüfsumme und Revision blieben
+unverändert; die Ausführung blieb gestoppt. Private Geräte- und Ereignisdaten
+wurden nicht in diesen Nachweis oder in Testfixtures übernommen.

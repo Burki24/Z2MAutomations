@@ -59,10 +59,10 @@ trait ExtensionIntegration
             'operation'     => ['kind' => 'none', 'status' => 'idle', 'transaction' => ''], 'lastError' => ''];
     }
 
-    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false, bool $automatic = false, ?int $importEvent = null): string
+    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false, bool $automatic = false, ?int $importEvent = null, bool $preserveDraft = false): string
     {
         $this->DebugEvent('AKTION', 'Erweiterungsauftrag prüfen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
-        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify, $automatic, $importEvent): array
+        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify, $automatic, $importEvent, $preserveDraft): array
         {
             $state = $this->RefreshState();
             if ($kind === 'deactivate' && $state['workflow'] !== null && $state['workflow']['kind'] !== 'deactivate') {
@@ -79,7 +79,8 @@ trait ExtensionIntegration
                 return [];
             }
             if ($state['workflow'] !== null) {
-                if ($state['workflow']['kind'] === $kind && $state['workflow']['checksum'] === $checksum) {
+                if ($state['workflow']['kind'] === $kind && $state['workflow']['checksum'] === $checksum
+                    && ($state['workflow']['preserveDraft'] ?? false) === $preserveDraft) {
                     if ($notify) {
                         $state['workflow']['notify'] = true;
                         $this->SaveState($state);
@@ -133,6 +134,7 @@ trait ExtensionIntegration
                 'notify'               => $notify, 'previousSession'      => $state['extension']['session'] ?? null, 'target' => null, 'verifyRuntime' => false];
             if ($kind === 'editor' && $importEvent !== null) {
                 $state['workflow']['importEvent'] = $importEvent;
+                $state['workflow']['preserveDraft'] = $preserveDraft;
             }
             if (in_array($kind, ['activate', 'deactivate'], true)) {
                 $state['runtimeConfirmed'] = false;

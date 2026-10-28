@@ -134,7 +134,7 @@
                     "type": "Button",
                     "name": "ImportLoadButton",
                     "caption": "Load device data for import",
-                    "confirm": "Load devices and stored rules from Z2M for this connection? This replaces the local automation draft, including unsaved changes. Original Symcon events and Z2M automations are not changed.",
+                    "confirm": "Load current device data for this connection? Existing automation drafts are kept. If no draft exists, the stored Z2M automations are loaded. Original events and Z2M automations are not changed.",
                     "onClick": "Z2MA_LoadImportDevices($id, $ImportEventID, true);"
                 },
                 {

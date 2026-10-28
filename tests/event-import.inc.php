@@ -14,6 +14,7 @@ $sourceRecord = ['name' => 'Synthetic private import event', 'event' => [
     'TriggerSubsequentExecution' => true, 'EventLimit' => 0, 'EventConditions' => [], 'EventScript' => '', 'EventActive' => true,
     'EventActionID'              => '{EF078D00-FBD5-8857-F5DC-F5B54B107DD3}', 'EventActionParameters' => ['TARGET' => $targetVariable]]];
 $module->importEvents = [900001 => $sourceRecord];
+$module->LoadAutomationEditor();
 $module->ClearSyntheticImportCatalog();
 $importFields = static fn (): array => formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
 $fields = $importFields();
@@ -259,3 +260,18 @@ $importDebug = json_encode($module->debugMessages, JSON_THROW_ON_ERROR | JSON_UN
 $check(!str_contains($importDebug, 'Synthetic private import event') && !str_contains($importDebug, 'synthetic-private-script')
     && !str_contains($importDebug, 'synthetic-private-parameter') && !str_contains($importDebug, $staleToken)
     && str_contains($importDebug, 'deaktivierte Regel'), 'German import diagnostics explain decisions without names, values, scripts or tokens');
+
+// Import device refresh must preserve unsaved imported rules byte for byte.
+$refreshBefore = $importFields()['YamlInput']['value'];
+$refreshConfiguration = json_decode($refreshBefore, true, 512, JSON_THROW_ON_ERROR);
+$module->LoadImportDevices(900001, true);
+$check($importFields()['YamlInput']['value'] === $refreshBefore, 'Refreshing import device data never replaces an existing local draft');
+$check(json_decode($importFields()['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === $refreshConfiguration['automations'], 'Every rule, activation flag and action survives a device-only refresh');
+$check($module->ValidateAutomationDraft() !== '', 'A preserved local draft remains valid against the refreshed receiver session');
+
+$manualRefreshDraft = $refreshBefore . '# synthetic unsaved expert edit';
+$module->ValidateYaml($manualRefreshDraft);
+$module->LoadImportDevices(900001, true);
+$check($importFields()['YamlInput']['value'] === $manualRefreshDraft, 'An expert edit is never replaced by device loading');
+$check($state()['lastError'] === 'editor_changed', 'A conflicting expert edit is reported rather than silently rebound');
+$module->LoadAutomationEditor();

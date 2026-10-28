@@ -68,9 +68,12 @@ aktualisiert und das gewählte Ereignis erneut geprüft. Dafür ist kein erneute
 Öffnen des Formulars notwendig. Ein unterstütztes Ereignis lässt sich danach
 übernehmen; andernfalls erscheint der konkrete Ablehnungsgrund.
 
-Beim Laden wird der lokale Entwurf durch die in Z2M gespeicherten Regeln ersetzt.
-Der Bestätigungsdialog weist darauf hin; ohne Bestätigung wird nichts geladen.
-Bereits lokal erstellte Änderungen deshalb vorher sichern bzw. speichern.
+Beim Nachladen über **Gerätedaten für den Import laden** bleiben vorhandene
+Entwürfe in Symcon erhalten. Erst wenn es noch keinen Entwurf gibt, werden die
+in Z2M gespeicherten Regeln als Ausgangspunkt geladen. Der separate Button
+**Geräte und gespeicherte Automationen laden** ersetzt weiterhin den Entwurf
+nach Bestätigung. Bei zwischenzeitlichen Änderungen in Z2M oder unübernommenen
+Änderungen im YAML-Editor wird das Nachladen abgebrochen und der Entwurf erhalten.
 Während der Antwort aus Z2M bleiben Laden und Übernahme gesperrt. Ladefehler
 werden verständlich angezeigt und bleiben beim erneuten Öffnen sichtbar.
 

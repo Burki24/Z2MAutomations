@@ -184,19 +184,36 @@ trait AutomationEditor
             $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
             return;
         }
+        $preserved = ($state['workflow']['preserveDraft'] ?? false) ? $this->ReadEditorDraft() : null;
+        if ($preserved !== null && ($preserved['scope'] !== $state['scope']
+            || $preserved['baseRevision'] !== $metadata['storedRevision'] || $preserved['baseChecksum'] !== $metadata['checksum']
+            || $preserved['draftChecksum'] !== hash('sha256', $this->ReadAttributeString('YamlDraft')))) {
+            $this->DebugEvent('FEHLER', 'Gerätedaten nicht übernommen: Entwurf und gespeicherter Z2M-Stand passen nicht zusammen. Vorhandener Entwurf bleibt unverändert.');
+            $this->FinishExtensionWorkflow($state, 'error', 'editor_changed');
+            return;
+        }
         $this->WriteAttributeString('EditorSnapshot', json_encode(['scope' => $state['scope'], 'devices' => $devices, 'groups' => $groups], JSON_THROW_ON_ERROR));
-        $this->WriteAttributeString('EditorSource', '');
-        $this->WriteAttributeString('EditorTarget', '');
-        $draft = ['scope'  => $state['scope'], 'session' => $metadata['session'], 'baseRevision' => $metadata['storedRevision'],
-            'baseChecksum' => $metadata['checksum'], 'configuration' => json_decode(json_encode($configuration, JSON_THROW_ON_ERROR), true, 32, JSON_THROW_ON_ERROR)];
-        $this->SaveEditorDraft($draft, $yaml);
-        $this->SetEditorSelection($this->ReadEditorDraft(), '');
+        if ($preserved !== null) {
+            // Only renew the receiver session. Keep YAML bytes, rules and current selection.
+            $preserved['session'] = $metadata['session'];
+            $this->WriteAttributeString('EditorDraft', json_encode($preserved, JSON_THROW_ON_ERROR));
+            $this->DebugEvent('AKTION', 'Gerätedaten aktualisiert; vorhandener Entwurf einschließlich ungespeicherter Regeln unverändert erhalten.', ['Automationen' => count($preserved['configuration']['automations'])]);
+        } else {
+            $this->WriteAttributeString('EditorSource', '');
+            $this->WriteAttributeString('EditorTarget', '');
+            $draft = ['scope'  => $state['scope'], 'session' => $metadata['session'], 'baseRevision' => $metadata['storedRevision'],
+                'baseChecksum' => $metadata['checksum'], 'configuration' => json_decode(json_encode($configuration, JSON_THROW_ON_ERROR), true, 32, JSON_THROW_ON_ERROR)];
+            $this->SaveEditorDraft($draft, $yaml);
+            $this->SetEditorSelection($this->ReadEditorDraft(), '');
+        }
         $state['validation'] = null;
         $this->UpdateEditorField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorCondition', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
-            $this->UpdateEditorField($field, 'value', '');
+        if ($preserved === null) {
+            foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
+                $this->UpdateEditorField($field, 'value', '');
+            }
         }
         $readable = $writable = 0;
         $filtered = $this->EditorSnapshot();

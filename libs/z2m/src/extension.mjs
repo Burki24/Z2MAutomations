@@ -98,18 +98,19 @@ export function buildEditorCatalog(zigbee) {
         if (!device?.isDevice?.() || device.zh?.type === 'Coordinator' || !/^0x[0-9a-f]{16}$/.test(device.ieeeAddr)) continue;
         const triggers = [], actions = [], numeric = [], properties = [];
         let visited = 0;
-        const walk = (features, depth = 0, primary = false, endpoint = '') => {
+        const walk = (features, depth = 0, phase = 0, endpoint = '') => {
             if (!Array.isArray(features) || depth > 6) return;
             for (const feature of features) {
                 if (++visited > 128 || optionCount >= 1024) break;
                 if (!isObject(feature)) continue;
                 const channel = typeof feature.endpoint === 'string' ? feature.endpoint : endpoint;
-                walk(feature.features, depth + 1, primary, channel);
+                walk(feature.features, depth + 1, phase, channel);
                 if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
                     || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
                 const state = feature.type === 'binary' && (feature.property === 'state' || feature.name === 'state'
                     || (typeof feature.endpoint === 'string' && feature.property === 'state_' + feature.endpoint));
-                if (state !== primary) continue;
+                const priority = state ? 0 : feature.type === 'enum' && /^(?:state|action)(?:_[A-Za-z0-9_]+)?$/.test(feature.property) ? 1 : 2;
+                if (priority !== phase) continue;
                 const admitted = [];
                 const before = optionCount;
                 if (feature.type === 'numeric' && (feature.access & 3) !== 0 && numeric.length < 64 && optionCount < 1024) {
@@ -146,13 +147,13 @@ export function buildEditorCatalog(zigbee) {
         try { features = device.exposes(); } catch { continue; }
         candidates.push({entry: {id: device.ieeeAddr,
             name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric, properties},
-        scan: primary => { visited = 0; walk(features, 0, primary); }, failed: false});
+        scan: phase => { visited = 0; walk(features, 0, phase); }, failed: false});
     }
-    // Reserve ordinary on/off choices across the bounded device set before special options.
-    for (const primary of [true, false]) {
+    // Reserve switch channels first, then button events and cover commands, before special options.
+    for (const phase of [0, 1, 2]) {
         for (const candidate of candidates) {
             if (candidate.failed) continue;
-            try { candidate.scan(primary); } catch { candidate.failed = true; }
+            try { candidate.scan(phase); } catch { candidate.failed = true; }
         }
     }
     return candidates.filter(({entry, failed}) => !failed && (entry.triggers.length || entry.actions.length || entry.numeric.length || entry.properties.length)).map(({entry}) => entry);

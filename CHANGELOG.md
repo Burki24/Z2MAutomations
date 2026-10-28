@@ -2,6 +2,13 @@
 
 ## Fixes
 
+- Gerätedaten für den Ereignisimport lassen sich nachladen, ohne vorhandene
+  Entwürfe zu ersetzen. Abweichende gespeicherte Z2M-Stände und unübernommene
+  YAML-Änderungen werden erkannt; es erfolgt kein stilles Überschreiben.
+- Der begrenzte Gerätekatalog berücksichtigt nach Ein-/Aus-Kanälen zuerst
+  Tasterereignisse und Auf-/Zu-/Stopp-Befehle. Umfangreiche Sonderoptionen
+  anderer Geräte verdrängen diese Grundfunktionen nicht mehr.
+
 - Die Importprüfung unterscheidet nicht unterstützte Variablen, fehlende
   Gerätedaten, andere MQTT-Verbindungen und fehlende Schaltrechte. Liste und
   Vorschau nennen die tatsächlich geprüfte Variable. Ein passendes Gateway wird

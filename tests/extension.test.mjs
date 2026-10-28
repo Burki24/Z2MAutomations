@@ -44,6 +44,19 @@ test('click editor reserves individual switch channels before special options ex
     assert.ok(catalog.reduce((sum, item) => sum + item.triggers.length + item.actions.length + item.numeric.length, 0) <= 1024);
 });
 
+test('button events and cover commands are reserved before rich device options consume the catalog budget', () => {
+    const devices = Array.from({length: 12}, (_, i) => ({ieeeAddr: '0x' + (i + 1).toString(16).padStart(16, '0'), name: 'Synthetic rich device', isDevice: () => true,
+        exposes: () => Array.from({length: 8}, (_, n) => ({property: 'special_' + n, type: 'enum', access: 7, values: Array.from({length: 32}, (_, v) => 'option_' + v)}))}));
+    devices.push({ieeeAddr: '0x00000000000000fd', name: 'Synthetic late button', isDevice: () => true,
+        exposes: () => [{property: 'action', type: 'enum', access: 1, values: ['single', 'double', 'hold']}]});
+    devices.push({ieeeAddr: '0x00000000000000fe', name: 'Synthetic late cover', isDevice: () => true,
+        exposes: () => [{property: 'state', type: 'enum', access: 3, values: ['OPEN', 'CLOSE', 'STOP']}]});
+    const catalog = buildEditorCatalog({devicesIterator: () => devices});
+    assert.deepEqual(catalog.find(item => item.id === '0x00000000000000fd')?.triggers.map(item => item.value), ['single', 'double', 'hold']);
+    assert.deepEqual(catalog.find(item => item.id === '0x00000000000000fe')?.actions.map(item => item.value), ['OPEN', 'CLOSE', 'STOP']);
+    assert.ok(catalog.reduce((sum, item) => sum + item.triggers.length + item.actions.length + item.numeric.length, 0) <= 1024);
+});
+
 test('click editor reads bounded discrete Exposes and ignores unsupported values and raw definitions', () => {
     const catalog = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000001', name: 'Synthetic button', isDevice: () => true,
         exposes: () => [{features: [{property: 'action', type: 'enum', access: 1, values: ['single', 'double']},

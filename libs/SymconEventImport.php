@@ -59,8 +59,8 @@ trait SymconEventImport
             $this->UpdateFormField('ImportEventID', 'enabled', false);
             $this->UpdateFormField('ImportLoadButton', 'enabled', false);
             $this->UpdateFormField('ImportMessage', 'caption', $this->Translate('Loading device data from Z2M. The selected event will be checked after the response.'));
-            $this->DebugEvent('AKTION', 'Gerätedaten und gespeicherte Regeln für den Import angefordert; Bestätigung steht aus.', ['Gateway' => $this->GetParentID(), 'Basistopic' => $this->ReadPropertyString('BaseTopic')]);
-            $request = $this->StartExtensionWorkflow('editor', '', '', false, false, $EventID);
+            $this->DebugEvent('AKTION', 'Aktuelle Gerätedaten für den Import angefordert; vorhandener Entwurf bleibt erhalten.', ['Gateway' => $this->GetParentID(), 'Basistopic' => $this->ReadPropertyString('BaseTopic')]);
+            $request = $this->StartExtensionWorkflow('editor', '', '', false, false, $EventID, true);
             if ($request === '') {
                 $state = $this->WithTransportLock(fn (): array => $this->RefreshState());
                 $this->FinishImportDeviceLoad($EventID, 'error', $state['workflow'] !== null ? 'busy' : ($state['lastError'] ?: 'busy'), $state);
