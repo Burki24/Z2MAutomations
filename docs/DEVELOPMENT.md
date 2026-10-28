@@ -1,3 +1,25 @@
+## Automatische Kodierungsprüfung
+
+`php tests/run.php` führt zuerst die Regressionstests des Kodierungsprüfers und
+anschließend `php tests/check_encoding.php` aus. Die bestehende Tests-CI verwendet
+denselben Einstieg; ein Kodierungsfehler beendet den Lauf mit Fehlerstatus.
+Der Prüfer läuft auch separat, ohne Git, Node oder zusätzliche PHP-Erweiterungen.
+
+Geprüft werden eigene PHP-, Markdown-, JSON-, JavaScript-/TypeScript-, YAML-,
+HTML-, CSS-, SVG- und Textdateien sowie LICENSE und die bekannten
+Repository-Konfigurationsdateien. Ungültiges UTF-8, Unicode-Ersatzzeichen und
+typische Windows-1252-/Latin-1-Fehlinterpretationen deutscher Sonderzeichen
+(einfach und doppelt kodiert) werden mit relativem Pfad und Zeilennummer gemeldet.
+Die Erkennung ist eine gezielte Heuristik, keine allgemeine Sprachprüfung.
+Absichtliche Negativbeispiele in Tests verwenden Unicode-/Byte-Escapes.
+
+Ausgeschlossen sind `.git`, `.style`, `tests/stubs`, `libs/helper`, `libs/vendor`,
+`vendor`, `node_modules` sowie lokale Vorschau-/IDE-Verzeichnisse. Symbolische
+Links werden nicht verfolgt; binäre Dateitypen und private `.env`-Dateien werden
+nicht eingelesen. Der Prüfer liest ausschließlich und korrigiert keine Datei.
+Synthetische temporäre Fixtures sichern korrekte Umlaute, beschädigte Zeichen,
+Zeilenzuordnung, eigene Dateien, Ausschlüsse und unveränderte Inhalte ab.
+
 ## Installation bei fehlender bridge/info-Bestätigung
 
 Praxisbefund: Nach einem Modulupdate war externalJS unbekannt (null) und die

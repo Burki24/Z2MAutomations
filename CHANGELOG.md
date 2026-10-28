@@ -2,6 +2,9 @@
 
 ## Fixes
 
+- Projektprüfungen erkennen beschädigte Umlaute und ungültiges UTF-8 frühzeitig.
+  Eingebundene Fremdquellen bleiben von dieser Prüfung ausgenommen.
+
 - Einzelne Schaltkanäle von Mehrkanalgeräten erhalten im begrenzten Katalog
   denselben Vorrang wie der allgemeine Zustand. Sonderoptionen verdrängen sie
   dadurch nicht mehr. Auswahl zeigt beispielsweise „Zustand (Kanal L3)“;
