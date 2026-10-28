@@ -8,6 +8,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Messwertvergleiche im Geräteauslöser-Dialog und mehrere UND-verknüpfte
+  Gerätebedingungen im Geräte- und Zeiteditor implementiert. Vergleich,
+  Schwellenwert, Mindestdauer und sämtliche Bedingungen werden vorbelegt.
+  Ein optionales Zeitfenster bleibt separat; insgesamt maximal 16 Bedingungen.
+  Offline mit echten Formularskripten und dem JavaScript-Empfänger geprüft,
+  einschließlich Persistenz und synthetischer Ausführung bei wahren/falschen
+  Bedingungen. Dieser neue Stand ist noch nicht live installiert.
+
 - Mehrkanal-Katalog korrigiert: explizite state_l1/state_l2/state_l3-Exposes werden
   wie allgemeine Zustände priorisiert, ihre Eigenschaften unverändert übernommen.
   Kanalbeschriftungen und sichere Kanalanzahl im Debug ergänzt. Modul und neue

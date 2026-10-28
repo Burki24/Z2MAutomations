@@ -324,6 +324,7 @@ trait AutomationEditor
         $this->FillScheduleForm($form, $draft, $selection);
         $this->FillActionSequenceForm($form, $selection, $snapshot);
         $this->FillTriggerSequenceForm($form, $selection, $snapshot);
+        $this->FillConditionSequenceForm($form, $selection, $snapshot);
         $this->FillAutomationSections($form, $draft, $selection);
     }
 

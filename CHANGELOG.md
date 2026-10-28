@@ -2,6 +2,13 @@
 
 ## Fixes
 
+- Geräteauslöser im Klick-Editor unterstützen Vergleichsoperatoren für
+  Messwerte sowie Gleichheit/Ungleichheit für Zustände und Ereignisse.
+- Geräte- und Zeitautomationen bieten eine Liste mehrerer UND-verknüpfter
+  Bedingungen mit vollständiger Vorbelegung, Bearbeitung und Löschung.
+  Das optionale Zeitfenster gilt zusätzlich; verständliche Debug-Ausgaben
+  begleiten Auswahl, Prüfung und Übernahme.
+
 - Die Kodierungsprüfung verwendet jetzt die gemeinsame Implementierung aus
   Symcon_ModuleCI. Lokal ist dessen Checkout erforderlich; Fremdquellen bleiben
   ausgeschlossen.

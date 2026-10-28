@@ -6,9 +6,9 @@ namespace Z2MAutomations;
 
 trait EditorItemForms
 {
-    public function GetEditorItemForm(string $List, string $Choice, int $Duration): string
+    public function GetEditorItemForm(string $List, string $Choice, int $Duration, string $Compare = 'eq'): string
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($List, $Choice, $Duration): string
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($List, $Choice, $Duration, $Compare): string
         {
             $context = $this->EditorItemContext($List);
             if ($context === null || !$this->CheckEditorArea($context['area'])) {
@@ -43,10 +43,15 @@ trait EditorItemForms
                     $field['options'] = $this->EditorItemValues($snapshot, $device, $meta, $context['side']);
                     $field['value'] = !$numeric && $choice !== null ? $parts[1] : '';
                     $field['visible'] = !$numeric;
+                } elseif ($name === 'Compare') {
+                    $field['options'] = $this->EditorComparisonOptions($numeric ? 'numeric' : 'state');
+                    $field['value'] = $Compare;
                 } elseif ($name === 'RowNumber') {
                     $field['value'] = $numeric ? $choice['value'] : 0;
                     $field['visible'] = $numeric;
-                    $field += array_intersect_key($meta ?? [], array_flip(['minimum', 'maximum']));
+                    if ($context['side'] === 'Target') {
+                        $field += array_intersect_key($meta ?? [], array_flip(['minimum', 'maximum']));
+                    }
                 } elseif ($name === 'Choice') {
                     $field['value'] = $choice === null ? '' : $Choice;
                 } elseif ($name === $context['duration']) {
@@ -59,12 +64,12 @@ trait EditorItemForms
         });
     }
 
-    public function ConfigureEditorItem(string $Change, string $List, string $Device, string $Property, string $Value): void
+    public function ConfigureEditorItem(string $Change, string $List, string $Device, string $Property, string $Value, string $Compare = 'eq'): void
     {
-        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Change, $List, $Device, $Property, $Value): void
+        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Change, $List, $Device, $Property, $Value, $Compare): void
         {
             $context = $this->EditorItemContext($List);
-            if ($context === null || !$this->CheckEditorArea($context['area']) || !in_array($Change, ['device', 'property', 'value'], true)) {
+            if ($context === null || !$this->CheckEditorArea($context['area']) || !in_array($Change, ['device', 'property', 'value', 'compare'], true)) {
                 $this->DebugEvent('FEHLER', 'Unbekannte Auswahl im Zeilendialog abgewiesen.');
                 return;
             }
@@ -77,14 +82,21 @@ trait EditorItemForms
             $meta = $this->EditorItemProperty($snapshot, $Device, $Property, $context['side']);
             $numeric = ($meta['type'] ?? '') === 'numeric';
             $choice = null;
-            if ($Change !== 'value') {
+            if ($context['side'] === 'Source') {
+                $this->UpdateFormField('Compare', 'options', json_encode($this->EditorComparisonOptions($numeric ? 'numeric' : 'state'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+                if (in_array($Change, ['device', 'property'], true)) {
+                    $Compare = 'eq';
+                    $this->UpdateFormField('Compare', 'value', 'eq');
+                }
+            }
+            if (in_array($Change, ['device', 'property'], true)) {
                 $this->UpdateFormField('RowValue', 'options', json_encode($this->EditorItemValues($snapshot, $Device, $meta, $context['side']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
                 $this->UpdateFormField('RowValue', 'value', '');
-                $number = max($meta['minimum'] ?? -PHP_FLOAT_MAX, min($meta['maximum'] ?? PHP_FLOAT_MAX, 0));
+                $number = max(($context['side'] === 'Target' ? ($meta['minimum'] ?? -PHP_FLOAT_MAX) : -PHP_FLOAT_MAX), min(($context['side'] === 'Target' ? ($meta['maximum'] ?? PHP_FLOAT_MAX) : PHP_FLOAT_MAX), 0));
                 $this->UpdateFormField('RowNumber', 'value', $number);
                 // Reset bounds when switching between different numeric properties.
-                $this->UpdateFormField('RowNumber', 'minimum', $meta['minimum'] ?? -PHP_FLOAT_MAX);
-                $this->UpdateFormField('RowNumber', 'maximum', $meta['maximum'] ?? PHP_FLOAT_MAX);
+                $this->UpdateFormField('RowNumber', 'minimum', ($context['side'] === 'Target' ? ($meta['minimum'] ?? -PHP_FLOAT_MAX) : -PHP_FLOAT_MAX));
+                $this->UpdateFormField('RowNumber', 'maximum', ($context['side'] === 'Target' ? ($meta['maximum'] ?? PHP_FLOAT_MAX) : PHP_FLOAT_MAX));
                 if ($numeric) {
                     $key = $this->EditorValueKey($snapshot, $Device, $meta['property'], $number, $context['side']);
                     $choice = $key === null ? null : $Device . ':' . $key;
@@ -99,6 +111,9 @@ trait EditorItemForms
                 }
                 $choice = $key === null ? null : $Device . ':' . $key;
             }
+            if ($context['side'] === 'Source' && !in_array($Compare, array_column($this->EditorComparisonOptions($numeric ? 'numeric' : 'state'), 'value'), true)) {
+                $choice = null;
+            }
             $this->UpdateFormField('RowValue', 'visible', !$numeric);
             $this->UpdateFormField('RowNumber', 'visible', $numeric);
             $this->UpdateFormField('Choice', 'value', $choice ?? '');
@@ -107,7 +122,7 @@ trait EditorItemForms
                 $saved = $saved === '' ? [] : json_decode($saved, true, 16, JSON_THROW_ON_ERROR);
                 $saved[] = $choice;
                 $this->SetBuffer('EditorRowChoices', json_encode(array_slice(array_values(array_unique($saved)), -128), JSON_THROW_ON_ERROR));
-                $columns = $context['side'] === 'Target' ? $this->EditorActionColumns($snapshot) : $this->EditorTriggerColumns($snapshot);
+                $columns = str_ends_with($List, 'ConditionList') ? $this->EditorConditionColumns($snapshot) : ($context['side'] === 'Target' ? $this->EditorActionColumns($snapshot) : $this->EditorTriggerColumns($snapshot));
                 $this->UpdateEditorField($List, 'columns', json_encode($columns, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
             }
             $this->DebugEvent('AKTION', 'Abhängige Eigenschafts- und Wertauswahl aktualisiert; alte Auswahl verworfen.', ['Änderung' => $Change, 'Auswahlart' => $context['side'], 'EigenschaftVerfügbar' => $meta !== null, 'WertGültig' => $choice !== null]);
@@ -115,11 +130,11 @@ trait EditorItemForms
     }
     private function EditorItemContext(string $list): ?array
     {
-        if (!in_array($list, ['EditorActions', 'EditorTriggers', 'DeviceEditorActions', 'DeviceEditorTriggers', 'TimeEditorActions', 'TimeEditorTriggers'], true)) {
+        if (!in_array($list, ['EditorActions', 'EditorTriggers', 'DeviceEditorActions', 'DeviceEditorTriggers', 'TimeEditorActions', 'TimeEditorTriggers', 'EditorConditionList', 'DeviceEditorConditionList', 'TimeEditorConditionList'], true)) {
             return null;
         }
-        return ['side' => str_ends_with($list, 'Triggers') ? 'Source' : 'Target',
-            'duration' => str_ends_with($list, 'Triggers') ? 'Hold' : 'Delay',
+        return ['side' => str_ends_with($list, 'Actions') ? 'Target' : 'Source',
+            'duration' => str_ends_with($list, 'ConditionList') ? '' : (str_ends_with($list, 'Triggers') ? 'Hold' : 'Delay'),
             'area'     => str_starts_with($list, 'Device') ? 'device' : (str_starts_with($list, 'Time') ? 'time' : '')];
     }
 
@@ -190,8 +205,8 @@ trait EditorItemForms
             $name = $field['name'] ?? '';
             $context = $this->EditorItemContext($name);
             if ($context !== null) {
-                $duration = $context['duration'];
-                $field['form'] = "return json_decode(Z2MA_GetEditorItemForm(\$id, '" . $name . "', $" . $name . "['Choice'] ?? '', $" . $name . "['" . $duration . "'] ?? 0), true);";
+                $duration = $context['duration'] === '' ? '0' : '$' . $name . "['" . $context['duration'] . "'] ?? 0";
+                $field['form'] = "return json_decode(Z2MA_GetEditorItemForm(\$id, '" . $name . "', $" . $name . "['Choice'] ?? '', " . $duration . ', $' . $name . "['Compare'] ?? 'eq'), true);";
             }
         }
         unset($field);

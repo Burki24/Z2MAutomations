@@ -136,3 +136,13 @@ Ist die Freigabe für externes JavaScript unbekannt, erklärt eine Fachmeldung,
 dass der Auftrag über die offizielle Z2M-Schnittstelle geprüft wird. Unbekannt
 ist kein Nachweis für eine deaktivierte Einstellung. Ein ausdrücklich gemeldetes
 false blockiert weiterhin vor dem Versand.
+
+## Messwertvergleiche und Bedingungslisten
+
+InspectEditorTriggers meldet die Häufigkeit der gewählten Vergleichsoperatoren.
+InspectEditorConditions erklärt Hinzufügen, Bearbeiten und den Vorbestand beim
+Löschen; alle Bedingungen gelten gemeinsam (UND). SaveScheduledAutomation meldet
+die gesamte Bedingungsanzahl und die UND-Verknüpfung. SelectAutomation meldet die
+Anzahl vorbelegter Bedingungen. Keine Gerätenamen, IEEE-Adressen oder Werte
+werden dafür protokolliert. Neue öffentliche Listenaktionen folgen denselben
+zentralen Start-/Ende-Abläufen wie die bestehenden Editoraktionen.

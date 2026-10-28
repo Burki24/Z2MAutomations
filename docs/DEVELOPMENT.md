@@ -1,3 +1,33 @@
+## Messwertvergleiche und UND-Bedingungsliste
+
+Der native Geräteauslöser-Zeilendialog bietet einen Vergleich an. Numerische
+Eigenschaften unterstützen sechs Operatoren, diskrete Eigenschaften eq/ne.
+Die serialisierte Auslöserzeile enthält Choice, Compare und Hold. Die neue
+EditorConditionList enthält Choice und Compare pro Zeile; sie ersetzt die
+sichtbare einzelne Gerätebedingung in Geräte- und Zeitbereich. Ein optionales
+Zeitfenster bleibt separat. Alle Bedingungen verwenden unverändert die
+bestehenden device_value-/time_window-Klauseln und die UND-Semantik der Engine.
+Kein neues YAML-Schema und keine geänderte Erweiterung erforderlich.
+
+AutomationEditorConditions hält Validierung, Vorbelegung und Debug der Liste
+librarylokal. Der vorhandene ConfigurationFormHelper und DebugFlowHelper bleiben
+kanonisch eingebunden und unverändert. GetEditorItemForm und ConfigureEditorItem
+verwenden dieselben geräteabhängigen Dialogfelder für Auslöser und Bedingungen.
+Vergleichsschwellen werden als endliche Zahlen geprüft; Messbereich und Schritt
+beschränken weiterhin Aktionswerte, nicht Vergleichsschwellen. Diskrete Werte
+bleiben auf lesbare Katalogeinträge beschränkt. Unvollständige Listen und mehr
+als 16 Bedingungen einschließlich Zeitfenster werden vor der Übernahme abgewiesen.
+
+Offline-Nachweis in tests/editor-comparisons.inc.php, eingebunden in den echten
+PHP-/JavaScript-Integrationstest: Formularcallbacks für Vergleich und Listen,
+Erstellen/Bearbeiten/Löschen, alle numerischen Operatoren, Zustandsvergleiche,
+Grenzen, falsche Datentypen, Vorbelegung in beiden Bereichen, Validierung und
+persistente Speicherung. Die synthetische Ausführung blockiert bei jeweils
+einer falschen Bedingung und schaltet erst bei gemeinsam erfüllten Bedingungen.
+Danach wird gestoppt. Start-/Ende-Debug, UND-Meldungen und Vorbelegungsanzahl
+sind geprüft. Kein Praxisauftrag, kein Deployment und keine reale Schaltung;
+die Darstellung der neuen Felder in der Testkonsole ist noch praktisch zu prüfen.
+
 ## Gemeinsame Kodierungsprüfung aus Symcon_ModuleCI
 
 `php tests/run.php` führt `tests/check_encoding.php` aus. Dieser dünne Einstieg

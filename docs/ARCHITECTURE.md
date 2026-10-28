@@ -2,6 +2,14 @@
 
 ## Zuständigkeiten
 
+Der Geräteeditor bildet ODER-Auslöser mit individuellen Vergleichen und
+Mindestdauern ab. Geräte- und Zeiteditor teilen die AND-Bedingungsliste für
+lesbare skalare Eigenschaften plus optionales Zeitfenster. Die Liste bleibt
+librarylokal in AutomationEditorConditions; die Z2M-Engine führt die vorhandenen
+Schema-1-Klauseln ohne Symcon-Abhängigkeit aus. Der native Dialog verwendet
+Gerät, Eigenschaft, Vergleich und typisierten Wert. Aktionsrechte und deren
+Gerätegrenzen bleiben davon getrennt.
+
 Die nativen Geräte- und Zeitbereiche besitzen eigene statische Formularfelder
 und darin eingebettete Bearbeitungen. `AutomationEditorAreas` ordnet gemeinsame
 Befüllung und Live-Updates den jeweiligen lokalen Feldern zu und schützt

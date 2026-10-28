@@ -29,7 +29,7 @@ trait AutomationEditorManagement
             $this->DebugEvent('AKTION', 'Bearbeitung im passenden Automationsbereich geöffnet; Z2M bleibt unverändert.', ['Bereich' => $this->EditorTypeLabel($type), 'NeueAutomation' => $index === null]);
             $state['lastError'] = '';
             $state['operation'] = ['kind' => 'editor', 'status' => 'rule_selected', 'transaction' => ''];
-            $this->DebugEvent('AKTION', 'Regelauswahl im lokalen Editor geladen.', ['VorhandeneRegel' => $index !== null, 'EmpfängerBestätigt' => $state['extensionConfirmed'], 'FelderVorbelegt' => $index !== null]);
+            $this->DebugEvent('AKTION', 'Regelauswahl im lokalen Editor geladen.', ['VorhandeneRegel' => $index !== null, 'EmpfängerBestätigt' => $state['extensionConfirmed'], 'FelderVorbelegt' => $index !== null, 'BedingungenVorbelegt' => $index === null ? 0 : count($draft['configuration']['automations'][$index]['conditions'])]);
             $this->SaveState($state);
             return true;
         }));
@@ -186,13 +186,14 @@ trait AutomationEditorManagement
         $selected = $index !== null && ($selection['checksum'] ?? null) === ($draft['draftChecksum'] ?? null);
         $rule = $selected ? $draft['configuration']['automations'][$index] : null;
         $simple = $rule === null ? null : $this->ScheduledEditorFields($rule);
-        return ['EditorRule'    => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
-            'EditorName'        => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
-            'EditorSource'      => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
-            'EditorTarget'      => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
-            'EditorActionRows'  => $simple === null ? [] : $this->EditorActionRows($rule),
-            'EditorTriggerRows' => $simple === null || ($rule['triggers'][0]['type'] ?? '') !== 'device' ? [] : $this->EditorTriggerRows($rule),
-            'selected'          => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
+        return ['EditorRule'      => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
+            'EditorName'          => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
+            'EditorSource'        => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
+            'EditorTarget'        => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
+            'EditorActionRows'    => $simple === null ? [] : $this->EditorActionRows($rule),
+            'EditorConditionRows' => $simple === null ? [] : $this->EditorConditionRows($rule),
+            'EditorTriggerRows'   => $simple === null || ($rule['triggers'][0]['type'] ?? '') !== 'device' ? [] : $this->EditorTriggerRows($rule),
+            'selected'            => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
     }
 
     private function SetEditorSelection(array $draft, string $id, string $newType = ''): void
@@ -219,8 +220,11 @@ trait AutomationEditorManagement
         $this->UpdateEditorField('EditorTriggers', 'columns', json_encode($this->EditorTriggerColumns($snapshot, $fields['EditorTriggerRows']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorTriggers', 'values', json_encode($fields['EditorTriggerRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorTriggers', 'enabled', $fields['simple']);
+        $this->UpdateEditorField('EditorConditionList', 'columns', json_encode($this->EditorConditionColumns($snapshot, $fields['EditorConditionRows']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorConditionList', 'values', json_encode($fields['EditorConditionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorConditionList', 'enabled', $fields['simple']);
         foreach ($fields as $field => $value) {
-            if (!in_array($field, ['selected', 'simple', 'EditorActionRows', 'EditorTriggerRows'], true)) {
+            if (!in_array($field, ['selected', 'simple', 'EditorActionRows', 'EditorTriggerRows', 'EditorConditionRows'], true)) {
                 $this->UpdateEditorField($field, 'value', $value);
             }
         }

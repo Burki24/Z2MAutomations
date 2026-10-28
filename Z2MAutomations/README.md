@@ -386,3 +386,30 @@ Fehlen nach einem Modulupdate noch bridge/info-Metadaten, darf die offizielle
 Z2M-Schnittstelle den Installationsauftrag prüfen. Eine ausdrücklich gemeldete
 Deaktivierung blockiert weiterhin vor dem Versand. Die Library aktiviert externes
 JavaScript nicht selbst; Erfolg benötigt immer die bestätigte Empfängerbereitschaft.
+
+## Messwertauslöser und mehrere Bedingungen
+
+Beim Hinzufügen oder Bearbeiten eines Geräteauslösers stehen Gerät,
+Eigenschaft/Kanal, Vergleich, Wert und Mindestdauer getrennt bereit.
+Für Messwerte sind „Ist gleich“, „Ist ungleich“, „Ist größer als“,
+„Ist mindestens“, „Ist kleiner als“ und „Ist höchstens“ möglich. Für Zustände
+und Ereignisse stehen Gleichheit und Ungleichheit zur Verfügung.
+Beispiel: Helligkeit ist seit 30 Sekunden kleiner als 50 Lux.
+Mehrere Auslöser sind weiterhin ODER-verknüpft.
+
+Unter „Nur wenn …“ können in beiden Automationsbereichen mehrere Geräte- und
+Messwertbedingungen hinzugefügt, bearbeitet und gelöscht werden. Alle Zeilen
+und das optionale Zeitfenster müssen gemeinsam erfüllt sein (UND). Insgesamt
+sind höchstens 16 Bedingungen einschließlich Zeitfenster möglich. Eine leere
+Gerätebedingungsliste fügt keine Einschränkung hinzu. Das Zeitfenster kann
+unabhängig davon eingeschaltet bleiben.
+
+Vorhandene Regeln laden ihre Vergleiche und sämtliche unterstützten Bedingungen
+wieder in die Zeilen. Änderungen werden erst in den lokalen Entwurf übernommen,
+anschließend geprüft und nach Bestätigung gespeichert. Nicht darstellbare
+Regelstrukturen bleiben gegen ein versehentliches Ersetzen geschützt.
+Unbekannte Gerätewerte erfüllen eine Bedingung nicht; Z2M verwendet die seit der
+Aktivierung beobachteten Werte. Gerätewerte müssen weiterhin lesbar sein;
+Aktionsziele benötigen unverändert eine schaltbare Symcon-Variable und Z2M-Schreibrecht.
+Ein numerischer Vergleichswert darf zwischen Meldeschritten oder außerhalb des
+Sensorbereichs liegen. Das erweitert nicht die erlaubten Werte einer Aktion.

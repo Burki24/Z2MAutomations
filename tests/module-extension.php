@@ -376,7 +376,7 @@ try {
     $module->ConfigureEditorSchedule('time', true, 'numeric');
     $module->SelectEditorDevice('Condition', '0x0000000000000002');
     $modeFields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
-    $check($modeFields['EditorAt']['visible'] && $modeFields['EditorNumber']['visible'] && $modeFields['EditorNumericProperty']['options'][1]['value'] === 'temperature', 'Mode changes expose the correct time and numeric condition fields');
+    $check($modeFields['EditorAt']['visible'] && !$modeFields['EditorNumber']['visible'] && isset($modeFields['EditorConditionList']) && $modeFields['EditorNumericProperty']['options'][1]['value'] === 'temperature', 'Mode changes expose the correct time and numeric condition fields');
     $module->ConfigureEditorSchedule('invalid', true, 'numeric');
     $check($module->SaveScheduledAutomation('', '', 'Synthetic timed rule', true, '', '', '0x0000000000000002', $action, json_encode($schedule)), 'A time rule with overnight weekdays and a numeric condition can be created without YAML');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
@@ -469,7 +469,7 @@ try {
     };
     $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorRule' => '', 'DeviceEditorEditToken' => '', 'DeviceEditorName' => 'Synthetic sequence',
         'DeviceEditorEnabled'                                                                   => true, 'DeviceEditorWindow' => false, 'DeviceEditorConditionType' => 'none',
-        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator($steps)]);
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Compare' => 'eq', 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator($steps)]);
     $check($state()['operation']['status'] === 'draft_created', 'The actual form button serializes all list rows and creates the sequence');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $sequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
@@ -587,7 +587,7 @@ try {
         'Device source callbacks update the event choices inside their own section'
     );
     $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Local device editor', 'DeviceEditorEnabled' => false,
-        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator([$steps[0]])]);
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Compare' => 'eq', 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator([$steps[0]])]);
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $deviceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $localDevice = $deviceDocument['automations'][array_key_last($deviceDocument['automations'])];
@@ -612,8 +612,8 @@ try {
     $module->SelectEditorDevice('Source', '0x0000000000000002', 'device');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $secondSourceChoice = $fields['EditorSourceChoice']['options'][1]['value'];
-    $triggerRows = [['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0],
-        ['Choice' => '0x0000000000000002:' . $secondSourceChoice, 'Hold' => 0]];
+    $triggerRows = [['Choice' => '0x0000000000000001:' . $trigger, 'Compare' => 'eq', 'Hold' => 0],
+        ['Choice' => '0x0000000000000002:' . $secondSourceChoice, 'Compare' => 'eq', 'Hold' => 0]];
     $triggerActions = [['Choice' => '0x0000000000000003:' . $changedAction, 'Delay' => 0]];
     foreach (['onAdd', 'onEdit', 'onDelete'] as $event) {
         $runEditorScript($fields['DeviceEditorTriggers'][$event], $fields, ['DeviceEditorTriggers' => new ArrayIterator($triggerRows)]);
@@ -647,9 +647,9 @@ try {
         !$module->SaveScheduledAutomation($twoRule['id'], $twoToken, 'Legacy flatten', true, '0x0000000000000001', $trigger, '', '', '{}', '', false, json_encode($triggerActions)),
         'Legacy calls cannot silently reduce a multi-trigger rule to one'
     );
-    foreach (['[]', '{}', '{', json_encode(array_fill(0, 9, $triggerRows[0])), json_encode([['Choice' => 'forged', 'Hold' => 0]]),
-        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => -1]]), json_encode([['Choice'  => $triggerRows[0]['Choice'], 'Hold' => 86401]]),
-        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => '2']]), json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => 0, 'extra' => true]])] as $invalidTriggers) {
+    foreach (['[]', '{}', '{', json_encode(array_fill(0, 9, $triggerRows[0])), json_encode([['Choice'                    => 'forged', 'Compare' => 'eq', 'Hold' => 0]]),
+        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Compare' => 'eq', 'Hold' => -1]]), json_encode([['Choice'  => $triggerRows[0]['Choice'], 'Compare' => 'eq', 'Hold' => 86401]]),
+        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Compare' => 'eq', 'Hold' => '2']]), json_encode([['Choice' => $triggerRows[0]['Choice'], 'Compare' => 'eq', 'Hold' => 0, 'extra' => true]])] as $invalidTriggers) {
         $check(!$module->SaveScheduledAutomation($twoRule['id'], $twoToken, 'Invalid trigger rows', true, '', '', '', '', '{}', '', false, json_encode($triggerActions), 'device', $invalidTriggers), 'Malformed or out-of-bound trigger lists are rejected');
         $check(
             formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'])['YamlInput']['value'] === $unchangedTwo,
@@ -673,7 +673,7 @@ try {
     foreach ([1, 2, 3] as $channel) {
         $choice = array_values(array_filter($fields['EditorSourceChoice']['options'], static fn (array $option): bool => str_contains($option['caption'], 'L' . $channel) && preg_match('/(?:Off|Aus)$/', $option['caption']) === 1));
         $check(count($choice) === 1, 'Each channel has an explicit localized off-event choice');
-        $channelTriggers[] = ['Choice' => '0x0000000000000004:' . $choice[0]['value'], 'Hold' => $channel];
+        $channelTriggers[] = ['Choice' => '0x0000000000000004:' . $choice[0]['value'], 'Compare' => 'eq', 'Hold' => $channel];
     }
     $channelAction = array_values(array_filter($fields['DeviceEditorActions']['columns'][0]['edit']['options'], static fn (array $option): bool => str_contains($option['caption'], 'L2') && preg_match('/(?:On|Ein)$/', $option['caption']) === 1));
     $check(count($channelAction) === 1, 'Channel-specific actions use the same clear channel label');
@@ -704,7 +704,7 @@ try {
     $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, [
         'DeviceEditorRule'     => '', 'DeviceEditorEditToken' => '', 'DeviceEditorName' => 'Synthetic numeric rule',
         'DeviceEditorEnabled'  => false, 'DeviceEditorWindow' => false, 'DeviceEditorConditionType' => 'none',
-        'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]),
+        'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Compare' => 'eq', 'Hold' => 0]]),
         'DeviceEditorActions'  => new ArrayIterator($numericRows)]);
     $check($state()['operation']['status'] === 'draft_created', 'Actual save button strips dialog fields and accepts the numeric action');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
@@ -716,6 +716,7 @@ try {
     $check($module->SelectAutomation($numericRule['id']), 'Stored numeric rule remains editable');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check($fields['DeviceEditorActions']['values'] === [['Choice' => $numericChoice, 'Delay' => 4]], 'Stored numeric action reopens with its typed value and delay');
+    require __DIR__ . '/editor-comparisons.inc.php';
     $catalogDebug = array_map(static fn (array $entry): array => json_decode($entry[1], true, 512, JSON_THROW_ON_ERROR), $module->debugMessages);
     $check(
         count(array_filter($catalogDebug, static fn (array $entry): bool => ($entry['Bezug']['SchaltbareEigenschaften'] ?? 0) >= 3)) > 0,

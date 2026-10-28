@@ -92,6 +92,11 @@ trait EditorPropertyCatalog
         if ($meta['type'] !== 'numeric') {
             return in_array($value, $meta['values'], true);
         }
+        // A source comparison threshold is not a device command: it may lie between
+        // report steps or outside the sensor's measurement range.
+        if ($side === 'Source') {
+            return (is_int($value) || is_float($value)) && is_finite((float) $value);
+        }
         if (!(is_float($value) || is_int($value)) || !is_finite((float) $value)
             || (isset($meta['minimum']) && $value < $meta['minimum']) || (isset($meta['maximum']) && $value > $meta['maximum'])) {
             return false;

@@ -39,9 +39,9 @@ trait AutomationEditorSchedule
         });
     }
 
-    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = '', string $Area = '', string $TriggerSteps = ''): bool
+    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = '', string $Area = '', string $TriggerSteps = '', string $ConditionSteps = ''): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps, $Area, $TriggerSteps): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps, $Area, $TriggerSteps, $ConditionSteps): bool
         {
             if (!$this->CheckEditorArea($Area)) {
                 return false;
@@ -65,7 +65,7 @@ trait AutomationEditorSchedule
             $rule = $index === null ? null : $draft['configuration']['automations'][$index];
             if ($rule !== null && $this->ScheduledEditorFields($rule) === null) {
                 // Unsupported structures stay intact; only explicit metadata changes apply.
-                if ($Source !== '' || $Trigger !== '' || $Target !== '' || $Action !== '' || ($ActionSteps !== '' && $ActionSteps !== '[]') || ($TriggerSteps !== '' && $TriggerSteps !== '[]')) {
+                if ($Source !== '' || $Trigger !== '' || $Target !== '' || $Action !== '' || ($ActionSteps !== '' && $ActionSteps !== '[]') || ($TriggerSteps !== '' && $TriggerSteps !== '[]') || ($ConditionSteps !== '' && $ConditionSteps !== '[]')) {
                     return $this->RejectEditorChange($state, 'editor_advanced');
                 }
                 $parts = array_intersect_key($rule, array_flip(['triggers', 'conditions', 'actions']));
@@ -76,8 +76,11 @@ trait AutomationEditorSchedule
                 if ($rule !== null && count($rule['actions']) > 1 && $ActionSteps === '') {
                     return $this->RejectEditorChange($state, 'editor_actions');
                 }
+                if ($rule !== null && count(array_filter($rule['conditions'], static fn (array $c): bool => $c['type'] === 'device_value')) > 1 && $ConditionSteps === '') {
+                    return $this->RejectEditorChange($state, 'editor_condition');
+                }
                 $reason = 'editor_schedule';
-                $parts = $this->BuildScheduledRule($Source, $Trigger, $Target, $Action, $Options, $reason, $ActionSteps, $TriggerSteps);
+                $parts = $this->BuildScheduledRule($Source, $Trigger, $Target, $Action, $Options, $reason, $ActionSteps, $TriggerSteps, $ConditionSteps);
                 if ($parts === null) {
                     return $this->RejectEditorChange($state, $reason);
                 }
@@ -91,7 +94,7 @@ trait AutomationEditorSchedule
             } else {
                 $draft['configuration']['automations'][$index] = $rule;
             }
-            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Bereich' => $this->EditorTypeLabel($this->EditorRuleType($rule)), 'Auslöser' => count($rule['triggers']), 'Verknüpfung' => 'ODER', 'Bedingungen' => count($rule['conditions'])]);
+            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Bereich' => $this->EditorTypeLabel($this->EditorRuleType($rule)), 'Auslöser' => count($rule['triggers']), 'Verknüpfung' => 'ODER', 'Bedingungen' => count($rule['conditions']), 'Bedingungsverknüpfung' => 'UND']);
             $this->DebugEditorActionSteps($rule['actions']);
             return $this->CommitEditorChange($state, $draft, $index === null ? 'draft_created' : 'draft_updated', $index === null ? '' : $RuleID);
         }));
@@ -147,7 +150,7 @@ trait AutomationEditorSchedule
         return preg_match('/\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\z/D', $value) === 1 ? (strlen($value) === 5 ? $value . ':00' : $value) : null;
     }
 
-    private function BuildScheduledRule(string $sourceID, string $triggerKey, string $targetID, string $actionKey, string $options, string &$reason, string $actionSteps = '', string $triggerSteps = ''): ?array
+    private function BuildScheduledRule(string $sourceID, string $triggerKey, string $targetID, string $actionKey, string $options, string &$reason, string $actionSteps = '', string $triggerSteps = '', string $conditionSteps = ''): ?array
     {
         if (strlen($options) > 8192) {
             return null;
@@ -246,7 +249,15 @@ trait AutomationEditorSchedule
             }
             $conditions[] = ['type' => 'time_window', 'after' => $after, 'before' => $before, 'timezone' => $v['EditorWindowTimezone'], 'weekdays' => $days];
         }
-        if ($v['EditorConditionType'] !== 'none') {
+        if ($conditionSteps !== '') {
+            $deviceConditions = $this->BuildEditorConditions($conditionSteps);
+            if ($deviceConditions === null || count($deviceConditions) + count($conditions) > 16) {
+                $reason = 'editor_conditions';
+                $this->DebugEvent('FEHLER', 'Bedingungsliste ungültig; einschließlich Zeitfenster sind höchstens 16 Bedingungen zulässig.');
+                return null;
+            }
+            $conditions = array_merge($conditions, $deviceConditions);
+        } elseif ($v['EditorConditionType'] !== 'none') {
             $device = $v['EditorCondition'];
             if ($v['EditorConditionType'] === 'state') {
                 $choice = $this->FindEditorChoice($snapshot, $device, $v['EditorConditionChoice'], 'Source');
@@ -271,7 +282,7 @@ trait AutomationEditorSchedule
 
     private function ScheduledEditorFields(array $rule): ?array
     {
-        if ((count($rule['triggers'] ?? []) !== 1 && $this->EditorTriggerRows($rule) === null) || $this->EditorActionRows($rule) === null || count($rule['conditions'] ?? []) > 2) {
+        if ((count($rule['triggers'] ?? []) !== 1 && $this->EditorTriggerRows($rule) === null) || $this->EditorActionRows($rule) === null || count($rule['conditions'] ?? []) > 16 || $this->EditorConditionRows($rule) === null) {
             return null;
         }
         $t = $rule['triggers'][0];
@@ -294,7 +305,7 @@ trait AutomationEditorSchedule
             $v['EditorAt'] = $t['at'];
             $v['EditorTimezone'] = $t['timezone'];
             $source = $sourceChoice = '';
-        } elseif ($t['type'] === 'device' && $t['operator'] === 'eq') {
+        } elseif ($t['type'] === 'device' && $this->EditorTriggerRows($rule) !== null) {
             $source = $t['device'];
             $sourceChoice = $this->EditorValueKey($snapshot, $source, $t['property'], $t['value'], 'Source') ?? '';
             if ($sourceChoice === '') {
@@ -334,7 +345,7 @@ trait AutomationEditorSchedule
                 } else {
                     return null;
                 }
-            } else {
+            } elseif ($c['type'] !== 'device_value') {
                 return null;
             }
         }
@@ -353,6 +364,9 @@ trait AutomationEditorSchedule
             'WindowHelp'                 => $window, 'ConditionHelp' => $condition !== 'none'];
         foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day) {
             $fields['Editor' . $day] = $window;
+        }
+        foreach (['EditorConditionType', 'EditorCondition', 'EditorConditionProperty', 'EditorConditionChoice', 'EditorNumericProperty', 'EditorNumber', 'EditorCompare'] as $legacyField) {
+            $fields[$legacyField] = false;
         }
         return $fields;
     }

@@ -20,12 +20,20 @@ trait AutomationEditorTriggers
                 $this->DebugEvent('FEHLER', 'Auslöserliste noch nicht gültig; ein bis acht Geräteereignisse und eine Mindestdauer von 0 bis 86400 Sekunden wählen.');
                 return false;
             }
+            $comparisons = array_count_values(array_column($triggers, 'operator'));
             $details = $Change === 'delete' ? ['AuslöserVorLöschen' => count($triggers)] : ['Auslöser' => count($triggers)];
+            $details['Vergleiche'] = $comparisons;
             $this->DebugEvent('AKTION', $Change === 'delete'
                 ? 'Auslöser zum Löschen ausgewählt; Anzahl beschreibt den Vorbestand. Verbleibende Liste wird beim Übernehmen geprüft.'
                 : 'Auslöserliste im Formular bearbeitet; jedes Ereignis kann dieselbe Aktionsfolge starten (ODER).', $details);
             return true;
         });
+    }
+
+    private function EditorComparisonAllowed(array $snapshot, string $device, array $choice, mixed $operator): bool
+    {
+        $meta = $this->EditorProperties($snapshot, $device, 'Source')[$choice['property']] ?? null;
+        return $meta !== null && is_string($operator) && in_array($operator, array_column($this->EditorComparisonOptions($meta['type'] === 'numeric' ? 'numeric' : 'state'), 'value'), true);
     }
 
     private function BuildEditorTriggers(string $text): ?array
@@ -44,7 +52,7 @@ trait AutomationEditorTriggers
         $snapshot = $this->EditorSnapshot();
         $triggers = [];
         foreach ($rows as $row) {
-            if (!is_array($row) || count($row) !== 2 || !is_string($row['Choice'] ?? null) || !is_int($row['Hold'] ?? null)
+            if (!is_array($row) || count($row) !== 3 || !is_string($row['Choice'] ?? null) || !is_int($row['Hold'] ?? null)
                 || $row['Hold'] < 0 || $row['Hold'] > 86400) {
                 return null;
             }
@@ -54,10 +62,10 @@ trait AutomationEditorTriggers
             }
             [$device, $key] = $parts;
             $choice = $this->FindEditorChoice($snapshot, $device, $key, 'Source');
-            if ($choice === null) {
+            if ($choice === null || !$this->EditorComparisonAllowed($snapshot, $device, $choice, $row['Compare'] ?? null)) {
                 return null;
             }
-            $triggers[] = ['type' => 'device', 'device' => $device, 'property' => $choice['property'], 'operator' => 'eq',
+            $triggers[] = ['type' => 'device', 'device' => $device, 'property' => $choice['property'], 'operator' => $row['Compare'],
                 'value'           => $choice['value'], 'for_seconds' => $row['Hold']];
         }
         return $triggers;
@@ -71,7 +79,7 @@ trait AutomationEditorTriggers
         $snapshot = $this->EditorSnapshot();
         $rows = [];
         foreach ($rule['triggers'] as $trigger) {
-            if (($trigger['type'] ?? '') !== 'device' || ($trigger['operator'] ?? '') !== 'eq'
+            if (($trigger['type'] ?? '') !== 'device'
                 || !is_int($trigger['for_seconds'] ?? 0) || ($trigger['for_seconds'] ?? 0) < 0 || ($trigger['for_seconds'] ?? 0) > 86400) {
                 return null;
             }
@@ -86,10 +94,11 @@ trait AutomationEditorTriggers
                 $key = $this->EditorValueKey($snapshot, $trigger['device'], $trigger['property'], $trigger['value'], 'Source');
                 $found = $key === null ? null : $trigger['device'] . ':' . $key;
             }
-            if ($found === null) {
+            $choice = $found === null ? null : $this->FindEditorChoice($snapshot, $trigger['device'], explode(':', $found, 2)[1], 'Source');
+            if ($choice === null || !$this->EditorComparisonAllowed($snapshot, $trigger['device'], $choice, $trigger['operator'] ?? null)) {
                 return null;
             }
-            $rows[] = ['Choice' => $found, 'Hold' => $trigger['for_seconds'] ?? 0];
+            $rows[] = ['Choice' => $found, 'Compare' => $trigger['operator'], 'Hold' => $trigger['for_seconds'] ?? 0];
         }
         return $rows;
     }
@@ -106,6 +115,7 @@ trait AutomationEditorTriggers
         }
         $options = $this->ExtraEditorChoiceOptions($snapshot, 'Source', $options, $rows);
         return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => '60%', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
+            ['name' => 'Compare', 'caption' => $this->Translate('Comparison'), 'width' => '15%', 'add' => 'eq', 'edit' => ['type' => 'Select', 'options' => $this->EditorComparisonOptions('numeric')]],
             ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (seconds)'), 'width' => '25%', 'add' => 0,
                 'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
     }
