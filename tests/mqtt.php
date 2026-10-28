@@ -148,7 +148,7 @@ $check(!$state()['bridgeOnline'], 'Previous topic is no longer accepted');
 $parent->publish('test/new/bridge/state', ['state' => 'online']);
 $check($state()['bridgeOnline'], 'New topic is accepted');
 
-foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $validTopic) {
+foreach (['test/a.b', 'test/ä', 'test/a"b'] as $validTopic) {
     IPS_SetProperty($id, 'BaseTopic', $validTopic);
     IPS_ApplyChanges($id);
     $parent->publish($validTopic . '/bridge/state', ['state' => 'online']);
@@ -188,7 +188,7 @@ $check(!$state()['mqttConnected'] && $module->CheckHealth() === '' && IPS_GetIns
 $server->publish('test/new/bridge/state', ['state' => 'online']);
 $check(!$state()['bridgeOnline'], 'Disabled instance ignores incoming state');
 
-foreach (['test/a.b', 'test/ÃƒÂ¤', 'test/a"b'] as $baseTopic) {
+foreach (['test/a.b', 'test/ä', 'test/a"b'] as $baseTopic) {
     $filter = Z2MAutomations\Z2MProtocol::ReceiveFilter($baseTopic);
     foreach ([0, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE] as $flags) {
         $packet = json_encode(['DataID' => Z2MAutomations\Z2MProtocol::MQTT_RX, 'Topic' => $baseTopic . '/bridge/state', 'Payload' => '6f6e6c696e65'], $flags);
