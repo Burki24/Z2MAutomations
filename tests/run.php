@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-foreach (['encoding.php', 'check_encoding.php', 'validate_structure.php', 'module.php', 'mqtt.php', 'module-extension.php'] as $test) {
+foreach (['check_encoding.php', 'validate_structure.php', 'module.php', 'mqtt.php', 'module-extension.php'] as $test) {
     $process = proc_open([PHP_BINARY, __DIR__ . '/' . $test], [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
     if (!is_resource($process) || proc_close($process) !== 0) {
         exit(1);

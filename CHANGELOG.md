@@ -2,6 +2,10 @@
 
 ## Fixes
 
+- Die Kodierungsprüfung verwendet jetzt die gemeinsame Implementierung aus
+  Symcon_ModuleCI. Lokal ist dessen Checkout erforderlich; Fremdquellen bleiben
+  ausgeschlossen.
+
 - Projektprüfungen erkennen beschädigte Umlaute und ungültiges UTF-8 frühzeitig.
   Eingebundene Fremdquellen bleiben von dieser Prüfung ausgenommen.
 

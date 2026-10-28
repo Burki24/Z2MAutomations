@@ -1,24 +1,30 @@
-## Automatische Kodierungsprüfung
+## Gemeinsame Kodierungsprüfung aus Symcon_ModuleCI
 
-`php tests/run.php` führt zuerst die Regressionstests des Kodierungsprüfers und
-anschließend `php tests/check_encoding.php` aus. Die bestehende Tests-CI verwendet
-denselben Einstieg; ein Kodierungsfehler beendet den Lauf mit Fehlerstatus.
-Der Prüfer läuft auch separat, ohne Git, Node oder zusätzliche PHP-Erweiterungen.
+`php tests/run.php` führt `tests/check_encoding.php` aus. Dieser dünne Einstieg
+lädt ausschließlich die kanonische Implementierung aus
+`Symcon_ModuleCI/php-tests/scripts/check-encoding.php`. Implementierung und
+Regressionstests liegen vollständig im zentralen CI-Repository.
 
-Geprüft werden eigene PHP-, Markdown-, JSON-, JavaScript-/TypeScript-, YAML-,
-HTML-, CSS-, SVG- und Textdateien sowie LICENSE und die bekannten
-Repository-Konfigurationsdateien. Ungültiges UTF-8, Unicode-Ersatzzeichen und
-typische Windows-1252-/Latin-1-Fehlinterpretationen deutscher Sonderzeichen
-(einfach und doppelt kodiert) werden mit relativem Pfad und Zeilennummer gemeldet.
-Die Erkennung ist eine gezielte Heuristik, keine allgemeine Sprachprüfung.
-Absichtliche Negativbeispiele in Tests verwenden Unicode-/Byte-Escapes.
+Lokal wird standardmäßig das benachbarte `../Symcon_ModuleCI` verwendet.
+Alternativ setzt `SYMCON_MODULE_CI_ROOT` dessen absoluten Repositorypfad.
+Die neue php-tests-Action stellt diese Variable automatisch bereit und führt
+den Prüfer außerdem als gemeinsame Basisprüfung aus. Fehlt die zentrale Quelle,
+bricht die lokale Prüfung mit klarer Fehlermeldung ab; kein stilles Überspringen
+und kein Download. Ein separat kopierter Library-Checkout benötigt daher auch
+einen zentralen CI-Checkout beziehungsweise die gesetzte Variable.
 
-Ausgeschlossen sind `.git`, `.style`, `tests/stubs`, `libs/helper`, `libs/vendor`,
-`vendor`, `node_modules` sowie lokale Vorschau-/IDE-Verzeichnisse. Symbolische
-Links werden nicht verfolgt; binäre Dateitypen und private `.env`-Dateien werden
-nicht eingelesen. Der Prüfer liest ausschließlich und korrigiert keine Datei.
-Synthetische temporäre Fixtures sichern korrekte Umlaute, beschädigte Zeichen,
-Zeilenzuordnung, eigene Dateien, Ausschlüsse und unveränderte Inhalte ab.
+Z2MAutomations nutzt für diese Integration `php-tests@main`; die Style-Action
+bleibt auf v1.0.0. Der zentrale Stand muss zuerst auf main verfügbar sein,
+bevor die Consumer-CI ausgeführt wird.
+Nach einem gesondert beauftragten ModuleCI-Release kann auf dessen Tag umgestellt
+werden. Keine anderen Libraries oder veröffentlichten Tags wurden verändert.
+
+Die Prüfung liest eigene Textdateien, meldet ungültiges UTF-8, Ersatzzeichen
+und typische einfach/doppelt beschädigte deutsche Sonderzeichen mit relativem
+Pfad und Zeile. Fremdquellen unter `.style`, `tests/stubs`, `libs/helper` und
+`libs/vendor`, Abhängigkeiten, Git-/IDE-/Vorschauordner und symbolische Links
+bleiben ausgeschlossen. Keine Datei wird automatisch korrigiert. Details und
+Regressionstests sind in Symcon_ModuleCI dokumentiert.
 
 ## Installation bei fehlender bridge/info-Bestätigung
 
