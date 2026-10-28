@@ -1,5 +1,10 @@
 # Debug und MQTT-Diagnose
 
+`OpenAutomationEditor` erklärt das Öffnen bzw. Zuklappen des aktiven Bereichs
+und erhält dabei dessen Eingaben. Ein Wechsel delegiert an die instrumentierte
+Regelauswahl. Falsche Bereiche werden sicher abgewiesen; Debug nennt nur feste
+Bereichsnamen. Der öffentliche Einstieg besitzt zentrale START-/ENDE-Ausgaben.
+
 Die direkt eingebetteten Geräte-/Zeitbearbeitungen nennen bei Geräteauswahl,
 Aktionslisten und Entwurfsübernahme ihren festen deutschen Automationsbereich.
 Optionale Bereichsparameter schützen Formularaktionen vor verspäteten Aufrufen

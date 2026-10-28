@@ -8,6 +8,12 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Beide Bearbeitungsüberschriften bleiben sichtbar. Öffnen aktiviert den passenden
+  Bereich; Auf-/Zuklappen des aktiven Editors erhält ungespeicherte Eingaben.
+  Die redundanten Neu-Buttons entfallen; die Auswahl enthält „Neue Automation
+  erstellen“ und vorhandene Regeln. Native Panel-onClick-Skripte sind offline
+  geprüft; visuelle Live-Abnahme dieses Korrekturstands steht aus.
+
 - Geräte- und Zeitbereiche enthalten jetzt jeweils die vollständige Bearbeitung
   mit eigenen Feldnamen und festgelegter Auslöserart. Eine Auswahl ist jeweils
   aktiv; Wechsel setzen die Bearbeitung wie bisher zurück. Öffentliche Methoden
@@ -22,7 +28,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Der bestehende ShowYamlEditor-Aufruf bedient kompatibel den Panelzustand.
 
 - Native Formularbereiche trennen geräteausgelöste und zeitgesteuerte Regeln.
-  Jede Übersicht bietet eine gefilterte Auswahl und einen Neu-Button; mehrere
+  Jede Übersicht bietet eine gefilterte Auswahl für neue/vorhandene Regeln; mehrere
   oder andere Auslöser bleiben unter weiteren Automationen erreichbar. Bearbeitung
   ist in Wenn/Nur wenn/Dann/Übernehmen gegliedert, Einrichtung und YAML eingeklappt.
   Dynamische Feldbefüllung berücksichtigt verschachtelte Bereiche. Offline wurden

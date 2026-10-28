@@ -2,6 +2,11 @@
 
 ## Fixes
 
+- Bearbeitungsüberschriften bleiben für Geräte- und Zeitautomationen sichtbar.
+  Aufklappen aktiviert den passenden Editor; erneutes Auf-/Zuklappen im aktiven
+  Bereich setzt keine Eingaben zurück. Redundante Neu-Buttons entfernt; neue und
+  vorhandene Regeln werden ausschließlich über die Auswahl bestimmt.
+
 - Zusätzlichen YAML-Anzeigeschalter entfernt. Die YAML ist direkt im aufklappbaren
   Expertenbereich verfügbar. Prüfung und Speicherung verwenden den Editorinhalt;
   manuelle Änderungen bleiben beim grafischen Bearbeiten geschützt.

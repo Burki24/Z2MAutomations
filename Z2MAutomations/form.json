@@ -121,12 +121,6 @@
                     "visible": true
                 },
                 {
-                    "type": "Button",
-                    "name": "NewDeviceRuleButton",
-                    "caption": "New device-triggered automation",
-                    "onClick": "Z2MA_SelectAutomation($id, '', $YamlInput, true, 'device');"
-                },
-                {
                     "type": "ExpansionPanel",
                     "name": "DeviceEditorDetails",
                     "caption": "Edit automation",
@@ -587,7 +581,8 @@
                             ]
                         }
                     ],
-                    "visible": false
+                    "visible": true,
+                    "onClick": "Z2MA_OpenAutomationEditor($id, 'device', $EditorDeviceRule, $YamlInput);"
                 }
             ],
             "visible": true
@@ -645,12 +640,6 @@
                     ],
                     "onChange": "Z2MA_SelectAutomation($id, $EditorTimeRule, $YamlInput, true, 'time');",
                     "visible": true
-                },
-                {
-                    "type": "Button",
-                    "name": "NewTimeRuleButton",
-                    "caption": "New time-controlled automation",
-                    "onClick": "Z2MA_SelectAutomation($id, '', $YamlInput, true, 'time');"
                 },
                 {
                     "type": "ExpansionPanel",
@@ -1114,7 +1103,8 @@
                             ]
                         }
                     ],
-                    "visible": false
+                    "visible": true,
+                    "onClick": "Z2MA_OpenAutomationEditor($id, 'time', $EditorTimeRule, $YamlInput);"
                 }
             ],
             "visible": true

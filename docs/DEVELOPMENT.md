@@ -1,5 +1,21 @@
 # Entwicklung
 
+## Korrektur: sichtbare Bearbeitungsbereiche und eindeutiger Einstieg
+
+Beide Editorüberschriften bleiben sichtbar; nur der aktive Bereich ist zunächst
+aufgeklappt. Der native ExpansionPanel-onClick ruft OpenAutomationEditor auf und
+aktiviert bei einem Bereichswechsel die Regelauswahl. Auf-/Zuklappen im bereits
+aktiven Bereich verändert keine Formulareingaben. Redundante Neu-Buttons sind
+entfernt: Die Auswahl enthält neue und bestehende Regeln. Panel-onClick wird
+laut offizieller ExpansionPanel-Dokumentation seit Symcon 5.3 unterstützt.
+
+Offline-Integration prüft beide echten Panel-Skripte, unveränderte Live-Felder
+beim erneuten Klick, sichtbare Überschriften, fehlende Neu-Buttons und Ablehnung
+falsch zugeordneter Regeln. Die vollständige PHP-/Node-Suite (37 Node-Tests),
+Struktur-, JSON-Style- und PHP-Formatprüfungen bestehen. Die reale Konsolenabnahme
+steht aus; keine Testinstallation in diesem Korrekturschritt geändert.
+
+
 ## Bearbeitung direkt in Geräte- und Zeitbereichen
 
 Eigene statische Feldnamen für beide Bereiche ersetzen den gemeinsamen sichtbaren

@@ -8,6 +8,29 @@ trait AutomationEditorAreas
 {
     private const AREA_EDITOR_FIELDS = ['EditorDetails', 'EditorRule', 'EditorEditToken', 'EditorEditInfo', 'EditorName', 'EditorEnabled', 'EditorTriggerType', 'EditorDeviceTrigger', 'EditorSource', 'EditorSourceChoice', 'EditorHold', 'EditorTimeTrigger', 'EditorAt', 'EditorTimezone', 'ScheduleHelp', 'EditorConditions', 'EditorWindow', 'EditorAfter', 'EditorBefore', 'EditorWindowTimezone', 'EditorMonday', 'EditorTuesday', 'EditorWednesday', 'EditorThursday', 'EditorFriday', 'EditorSaturday', 'EditorSunday', 'WindowHelp', 'EditorConditionType', 'EditorCondition', 'EditorConditionChoice', 'EditorNumericProperty', 'EditorCompare', 'EditorNumber', 'ConditionHelp', 'EditorActionSection', 'EditorActions', 'EditorTarget', 'EditorTargetChoice', 'EditorDelay', 'EditorApply', 'CreateRuleButton', 'UpdateRuleButton', 'DeleteRuleButton'];
 
+    public function OpenAutomationEditor(string $Area, string $RuleID, string $CurrentDraft): bool
+    {
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Area, $RuleID, $CurrentDraft): bool
+        {
+            if (!in_array($Area, ['device', 'time'], true)) {
+                $this->DebugEvent('FEHLER', 'Unbekannter Automationsbereich kann nicht geöffnet werden.');
+                return false;
+            }
+            $draft = $this->ReadEditorDraft();
+            $index = $this->EditorRuleIndex($draft, $RuleID);
+            if ($index !== null && $this->EditorRuleType($draft['configuration']['automations'][$index]) !== $Area) {
+                $this->DebugEvent('FEHLER', 'Gewählte Automation gehört nicht zum geöffneten Bereich.', ['Bereich' => $this->EditorTypeLabel($Area)]);
+                return false;
+            }
+            $selection = $this->EditorSelectionFields($draft);
+            if ($draft !== null && $this->ActiveEditorArea() === $Area && $selection['EditorRule'] === $RuleID) {
+                $this->DebugEvent('AKTION', 'Bearbeitungsbereich auf- oder zugeklappt; aktuelle Eingaben bleiben erhalten.', ['Bereich' => $this->EditorTypeLabel($Area)]);
+                return true;
+            }
+            return $this->SelectAutomation($RuleID, $CurrentDraft, true, $Area);
+        });
+    }
+
     private function ActiveEditorArea(): string
     {
         $draft = $this->ReadEditorDraft();

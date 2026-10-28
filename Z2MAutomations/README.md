@@ -48,12 +48,13 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
    Erweiterungsstatus abfragen.
 2. „Geräte und gespeicherte Automationen laden“ bestätigen. Damit wird der lokale
    Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
-3. Den Bereich „Durch ein Gerät ausgelöste Automationen“ öffnen und „Neue
-   geräteausgelöste Automation“ wählen. Die Bearbeitung öffnet sich direkt in diesem Bereich.
+3. Den Bereich „Durch ein Gerät ausgelöste Automationen“ öffnen und in der Auswahl
+   „Neue Automation erstellen“ wählen und „Automation bearbeiten“ aufklappen. Die Bearbeitung öffnet sich direkt in diesem Bereich.
    Namen eingeben und unter „Wenn ein Gerät ein Ereignis meldet“ Quellgerät
    und Ereignis wählen, beispielsweise „Tasterereignis: Einfach drücken“.
    Für eine Uhrzeitregel stattdessen im Bereich „Zeitgesteuerte Automationen“
-   auf „Neue zeitgesteuerte Automation“ klicken und Uhrzeit/Zeitzone einstellen.
+   „Neue Automation erstellen“ wählen, die Bearbeitung aufklappen und
+   Uhrzeit/Zeitzone einstellen.
 4. Bei Bedarf „Nur wenn … (optional)“ öffnen und Bedingungen hinzufügen.
    Unter „Dann diese Aktionen ausführen“ einen Schritt hinzufügen, Gerät und Aktion auswählen,
    beispielsweise „Zustand: Ein“, und die Wartezeit vor diesem Schritt eingeben.
@@ -87,7 +88,9 @@ passenden Auslöserfelder; bestehende Bedingungen werden aufgeklappt. Jeder
 Bereich besitzt eigene Eingabefelder, eine Aktionsliste und Übernehmen-/Löschen-
 Buttons. Die Auslöserart ergibt sich aus dem Bereich und wird nicht zusätzlich
 ausgewählt. Es wird jeweils eine Regel bearbeitet; vor dem Wechsel Änderungen
-in den lokalen Entwurf übernehmen.
+in den lokalen Entwurf übernehmen. Beide Bearbeitungsüberschriften bleiben
+sichtbar; das Öffnen aktiviert den jeweiligen Bereich. Ein zusätzlicher Neu-Button
+ist nicht erforderlich.
 Regeln mit mehreren oder anderen Auslösern bleiben mit ihrer sicheren
 Metadatenbearbeitung unter „Weitere Automationen“ erreichbar. Unterstützte
 Bearbeitung und der Schutz erweiterter Regeln gelten weiter.

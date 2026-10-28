@@ -277,7 +277,7 @@ trait AutomationEditorManagement
         }
         $active = $this->ActiveEditorArea();
         foreach (['device' => 'Device', 'time' => 'Time'] as $type => $stem) {
-            $fields[$stem . 'EditorDetails'] = ['visible' => $active === $type, 'expanded' => true];
+            $fields[$stem . 'EditorDetails'] = ['visible' => true, 'expanded' => $active === $type];
         }
         $fields['EditorDetails'] = ['visible' => $active === 'advanced', 'expanded' => true];
         return $fields;
