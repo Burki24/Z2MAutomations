@@ -38,7 +38,11 @@ sie persistent und führt sie unabhängig von Symcon aus.
 - Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
   oder Zahlenbedingung sind grafisch erstell- und bearbeitbar. Mindestdauer und
   Verzögerung werden übernommen. Die Erweiterung liefert dafür lesbare numerische
-  Exposes. Dieser neue Stand ist offline geprüft, noch nicht live aktualisiert.
+  Exposes. Dieser Stand wurde offline und in der nativen Testkonsole geprüft:
+  Zeitregel mit Nachtfenster, Wochentagen und numerischer Bedingung erstellen,
+  speichern, neu laden und bearbeiten; ungültige Uhrzeit wird sicher abgewiesen.
+  Die Testregel bleibt deaktiviert, die Engine gestoppt. Keine Schaltprüfung
+  der Zeitregel in diesem Bedienprüfungslauf.
 - Bearbeiten einfacher Regeln und bestätigtes Löschen beliebiger vorhandener
   Regeln im lokalen Entwurf implementiert. Bei erweiterten Regeln sind Name und
   Aktivierung änderbar, ohne die Bedingungen oder Schritte zu ersetzen. Die neue
@@ -64,7 +68,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Nächste Schritte
 
-1. Neue Zeit-/Bedingungsbedienung nach Praxisauftrag in der Konsole prüfen.
+1. Zeitregeln bei Bedarf nach weiterem Praxisauftrag auch live auslösen und
+   weitere Geräte-/Bedingungskombinationen in der Konsole prüfen.
 2. Klick-Editor bei Bedarf um Gruppen und mehrschrittige Regeln erweitern.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.

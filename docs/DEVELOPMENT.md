@@ -17,9 +17,28 @@ unbekannte Eigenschaften und untypisierte Zahlen lassen den Entwurf unverändert
 Die vorhandenen Engine-Tests sichern strikte Vergleiche, unbekannte Zustände,
 UND-Bedingungen, Mitternacht, Sommerzeit und verpasste Zeitpunkte ab.
 
-Die neue Bedienung und der numerische Katalog wurden noch nicht live aktualisiert
-oder in der nativen Konsole geprüft. Dafür müssen Modul und mitgeliefertes
-Erweiterungsartefakt aktualisiert werden; anschließend den Editor neu laden.
+Auf ausdrücklichen Praxisauftrag wurden Modul und Erweiterung in der Testinstallation
+aktualisiert. Quell-/Artefakthashes stimmen mit dem lokalen Stand überein; Reload
+und MQTT-Installation wurden fehlerfrei bestätigt. Eine alte offene Registerkarte
+zeigte noch die vorige Formularstruktur und wurde für die Prüfung neu geöffnet.
+
+In der nativen Konsole wurde ohne YAML-Eingabe eine deaktivierte Regel erstellt:
+täglicher Uhrzeit-Auslöser mit Zeitzone, Nachtfenster, eingeschränkten Wochentagen
+und einer Temperaturbedingung aus dem neuen numerischen Katalog. Uhrzeiten mit
+Minuten wurden korrekt um Sekunden ergänzt. Formular-Prüf-/Speicherbuttons
+übertrugen die Regel nach Z2M; erneutes Laden lieferte exakt dieselben Bytes.
+Die Regelauswahl stellte Zeiten, Zeitzonen, Wochentage, Vergleich und Zahlenwert
+wieder her. Uhrzeit und Temperaturgrenze wurden geändert, erneut geprüft und
+gespeichert. Regel-ID, Fenster, Wochentage und Aktion blieben erhalten. Eine
+weitere frische Abfrage bestätigte die bearbeitete Konfiguration bytegenau.
+
+Ein absichtlicher Versuch mit ungültiger Uhrzeit wurde mit deutschem Debug-Hinweis
+abgewiesen und ließ den Entwurf unverändert. Nach Korrektur bestanden Übernahme,
+Prüfung und Speicherung. Debug protokollierte die Abschlüsse; weitere Fehler
+wurden nicht beobachtet. Die Debug-Dateisitzung ist beendet. Die gespeicherte
+Testregel ist deaktiviert, die Engine gestoppt; es wurde kein Gerät geschaltet.
+Die tatsächliche zeitgesteuerte Auslösung, Tageswechsel und Sommerzeit wurden in
+diesem Bedienprüfungslauf nicht live ausgelöst; dafür gelten die Offline-Nachweise.
 
 ## Bearbeiten und Löschen im Klick-Editor
 
