@@ -23,12 +23,8 @@ trait AutomationEditorManagement
             if ($error !== '') {
                 return $this->RejectEditorChange($state, $error);
             }
-            $this->SetEditorSelection($draft, $RuleID);
-            if ($RuleID === '') {
-                $this->ConfigureEditorSchedule($NewType, false, 'none');
-                $this->UpdateFormField('EditorTriggerType', 'value', $NewType);
-            }
-            $this->UpdateFormField('EditorDetails', 'expanded', true);
+            $this->SetEditorSelection($draft, $RuleID, $NewType);
+            $this->UpdateEditorField('EditorDetails', 'expanded', true);
             $type = $index === null ? $NewType : $this->EditorRuleType($draft['configuration']['automations'][$index]);
             $this->DebugEvent('AKTION', 'Bearbeitung im passenden Automationsbereich geöffnet; Z2M bleibt unverändert.', ['Bereich' => $this->EditorTypeLabel($type), 'NeueAutomation' => $index === null]);
             $state['lastError'] = '';
@@ -81,10 +77,13 @@ trait AutomationEditorManagement
         }));
     }
 
-    public function DeleteAutomation(string $RuleID, string $SelectionToken, string $CurrentDraft = '', bool $CheckDraft = false): bool
+    public function DeleteAutomation(string $RuleID, string $SelectionToken, string $CurrentDraft = '', bool $CheckDraft = false, string $Area = ''): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $CurrentDraft, $CheckDraft): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $CurrentDraft, $CheckDraft, $Area): bool
         {
+            if (!$this->CheckEditorArea($Area)) {
+                return false;
+            }
             $state = $this->RefreshState();
             $draft = $this->ReadEditorDraft();
             $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft);
@@ -194,33 +193,41 @@ trait AutomationEditorManagement
             'selected'         => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
     }
 
-    private function SetEditorSelection(array $draft, string $id): void
+    private function SetEditorSelection(array $draft, string $id, string $newType = ''): void
     {
+        $previousArea = $this->ActiveEditorArea();
         $this->WriteAttributeString('EditorSelection', $id === '' ? '' : json_encode(['id' => $id, 'checksum' => $draft['draftChecksum'], 'token' => bin2hex(random_bytes(16))], JSON_THROW_ON_ERROR));
         $fields = $this->EditorSelectionFields($draft);
+        if (!$fields['selected']) {
+            $fields['EditorTriggerType'] = $newType !== '' ? $newType : ($previousArea === 'time' ? 'time' : 'device');
+        } else {
+            $index = $this->EditorRuleIndex($draft, $id);
+            $type = $this->EditorRuleType($draft['configuration']['automations'][$index]);
+            $fields['EditorTriggerType'] = $type === 'time' ? 'time' : $fields['EditorTriggerType'];
+        }
+        $this->ApplyScheduleFields($fields);
         $snapshot = $this->EditorSnapshot();
         foreach (['Source', 'Target'] as $side) {
             $this->WriteAttributeString('Editor' . $side, $fields['Editor' . $side]);
-            $this->UpdateFormField('Editor' . $side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $fields['Editor' . $side], $side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            $this->UpdateEditorField('Editor' . $side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $fields['Editor' . $side], $side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         }
-        $this->ApplyScheduleFields($fields);
-        $this->UpdateFormField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorActions', 'values', json_encode($fields['EditorActionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorActions', 'enabled', $fields['simple']);
+        $this->UpdateEditorField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorActions', 'values', json_encode($fields['EditorActionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorActions', 'enabled', $fields['simple']);
         foreach ($fields as $field => $value) {
             if (!in_array($field, ['selected', 'simple', 'EditorActionRows'], true)) {
-                $this->UpdateFormField($field, 'value', $value);
+                $this->UpdateEditorField($field, 'value', $value);
             }
         }
-        $this->UpdateFormField('CreateRuleButton', 'visible', !$fields['selected']);
-        $this->UpdateFormField('UpdateRuleButton', 'visible', $fields['selected']);
-        $this->UpdateFormField('DeleteRuleButton', 'enabled', $fields['selected']);
+        $this->UpdateEditorField('CreateRuleButton', 'visible', !$fields['selected']);
+        $this->UpdateEditorField('UpdateRuleButton', 'visible', $fields['selected']);
+        $this->UpdateEditorField('DeleteRuleButton', 'enabled', $fields['selected']);
         foreach (['EditorSource', 'EditorSourceChoice', 'EditorTarget', 'EditorTargetChoice'] as $field) {
-            $this->UpdateFormField($field, 'enabled', $fields['simple']);
+            $this->UpdateEditorField($field, 'enabled', $fields['simple']);
         }
-        $this->UpdateFormField('EditorEditInfo', 'caption', $this->EditorEditInfo($fields));
+        $this->UpdateEditorField('EditorEditInfo', 'caption', $this->EditorEditInfo($fields));
         $this->RefreshAutomationSections($draft);
-        $this->UpdateFormField('EditorConditions', 'expanded', $fields['EditorWindow'] || $fields['EditorConditionType'] !== 'none');
+        $this->UpdateEditorField('EditorConditions', 'expanded', $fields['EditorWindow'] || $fields['EditorConditionType'] !== 'none');
     }
 
     private function EditorEditInfo(array $fields): string
@@ -268,14 +275,21 @@ trait AutomationEditorManagement
                 $fields['EditorAdvancedSection'] = ['visible' => $rows !== []];
             }
         }
+        $active = $this->ActiveEditorArea();
+        foreach (['device' => 'Device', 'time' => 'Time'] as $type => $stem) {
+            $fields[$stem . 'EditorDetails'] = ['visible' => $active === $type, 'expanded' => true];
+        }
+        $fields['EditorDetails'] = ['visible' => $active === 'advanced', 'expanded' => true];
         return $fields;
     }
 
     private function FillAutomationSections(array &$form, ?array $draft, array $selection): void
     {
         $updates = $this->AutomationSectionFields($draft, $selection);
-        $updates['EditorDetails'] = ['expanded' => $selection['selected']];
-        $updates['EditorConditions'] = ['expanded' => $selection['EditorWindow'] || $selection['EditorConditionType'] !== 'none'];
+        $this->FillAreaEditors($form);
+        $conditionPanel = ($this->ActiveEditorArea() === 'advanced' ? '' : ($this->ActiveEditorArea() === 'time' ? 'Time' : 'Device')) . 'EditorConditions';
+        $updates[$conditionPanel] = ['expanded' => $selection['EditorWindow'] || $selection['EditorConditionType'] !== 'none'];
+        $updates['EditorConditions'] = $updates[$conditionPanel];
         foreach ($this->EditorFormFields($form['actions']) as &$field) {
             $field = array_replace($field, $updates[$field['name'] ?? ''] ?? []);
         }
@@ -286,7 +300,7 @@ trait AutomationEditorManagement
     {
         foreach ($this->AutomationSectionFields($draft, $this->EditorSelectionFields($draft)) as $name => $changes) {
             foreach ($changes as $parameter => $value) {
-                $this->UpdateFormField($name, $parameter, is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $value);
+                $this->UpdateEditorField($name, $parameter, is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $value);
             }
         }
     }
@@ -311,7 +325,7 @@ trait AutomationEditorManagement
         $state['validation'] = null;
         $state['lastError'] = '';
         $state['operation'] = ['kind' => 'editor', 'status' => $status, 'transaction' => ''];
-        $this->DebugEvent('AKTION', 'Lokaler Regelentwurf geändert; Z2M noch unverändert.', ['Änderung' => $status, 'Automationen' => count($draft['configuration']['automations'])]);
+        $this->DebugEvent('AKTION', 'Lokaler Regelentwurf geändert; Z2M noch unverändert.', ['Bereich' => $this->EditorTypeLabel($this->ActiveEditorArea()), 'Änderung' => $status, 'Automationen' => count($draft['configuration']['automations'])]);
         $this->SaveState($state);
         return true;
     }

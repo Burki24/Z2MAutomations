@@ -23,10 +23,13 @@ trait AutomationEditor
         return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): string => $this->StartExtensionWorkflow('editor'));
     }
 
-    public function SelectEditorDevice(string $Side, string $Device): void
+    public function SelectEditorDevice(string $Side, string $Device, string $Area = ''): void
     {
-        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Side, $Device): void
+        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Side, $Device, $Area): void
         {
+            if (!$this->CheckEditorArea($Area)) {
+                return;
+            }
             if (!in_array($Side, ['Source', 'Target', 'Condition'], true)) {
                 $this->DebugEvent('FEHLER', 'Unbekannte Geräteauswahl verworfen.');
                 return;
@@ -36,13 +39,13 @@ trait AutomationEditor
                 $Device = '';
             }
             $this->WriteAttributeString('Editor' . $Side, $Device);
-            $this->UpdateFormField('Editor' . $Side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $Device, $Side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-            $this->UpdateFormField('Editor' . $Side . 'Choice', 'value', '');
+            $this->UpdateEditorField('Editor' . $Side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $Device, $Side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            $this->UpdateEditorField('Editor' . $Side . 'Choice', 'value', '');
             if ($Side === 'Condition') {
-                $this->UpdateFormField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $Device), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-                $this->UpdateFormField('EditorNumericProperty', 'value', '');
+                $this->UpdateEditorField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $Device), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+                $this->UpdateEditorField('EditorNumericProperty', 'value', '');
             }
-            $this->DebugEvent('AKTION', 'Geräteauswahl im Editor aktualisiert.', ['Bereich' => $Side, 'GerätGefunden' => $Device !== '']);
+            $this->DebugEvent('AKTION', 'Geräteauswahl im Editor aktualisiert.', ['Bereich' => $this->EditorTypeLabel($this->ActiveEditorArea()), 'Auswahl' => $Side, 'GerätGefunden' => $Device !== '']);
         });
     }
 
@@ -51,7 +54,7 @@ trait AutomationEditor
         $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Visible): void
         {
             $this->WriteAttributeBoolean('ShowYaml', $Visible);
-            $this->UpdateFormField('EditorExpert', 'expanded', $Visible);
+            $this->UpdateEditorField('EditorExpert', 'expanded', $Visible);
             $this->DebugEvent('AKTION', 'YAML-Bereich auf- oder zugeklappt.', ['Aufgeklappt' => $Visible]);
         });
     }
@@ -176,11 +179,11 @@ trait AutomationEditor
         $this->SaveEditorDraft($draft, $yaml);
         $this->SetEditorSelection($this->ReadEditorDraft(), '');
         $state['validation'] = null;
-        $this->UpdateFormField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorCondition', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorSource', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorTarget', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Target'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorCondition', 'options', json_encode($this->EditorDevices(['devices' => $devices], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
-            $this->UpdateFormField($field, 'value', '');
+            $this->UpdateEditorField($field, 'value', '');
         }
         $this->DebugEvent(
             'EMPFANG',
@@ -195,10 +198,10 @@ trait AutomationEditor
         $draft['draftChecksum'] = hash('sha256', $yaml);
         $this->WriteAttributeString('EditorDraft', json_encode($draft, JSON_THROW_ON_ERROR));
         $this->WriteAttributeString('YamlDraft', $yaml);
-        $this->UpdateFormField('YamlInput', 'value', $yaml);
-        $this->UpdateFormField('EditorPreview', 'caption', sprintf($this->Translate('Draft contains %d automations. Z2M is unchanged until storing.'), count($draft['configuration']['automations'])));
-        $this->UpdateFormField('EditorRules', 'values', json_encode($this->EditorRuleRows($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorRule', 'options', json_encode($this->EditorRuleOptions($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('YamlInput', 'value', $yaml);
+        $this->UpdateEditorField('EditorPreview', 'caption', sprintf($this->Translate('Draft contains %d automations. Z2M is unchanged until storing.'), count($draft['configuration']['automations'])));
+        $this->UpdateEditorField('EditorRules', 'values', json_encode($this->EditorRuleRows($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorRule', 'options', json_encode($this->EditorRuleOptions($draft), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->RefreshAutomationSections($draft);
     }
 

@@ -8,6 +8,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Geräte- und Zeitbereiche enthalten jetzt jeweils die vollständige Bearbeitung
+  mit eigenen Feldnamen und festgelegter Auslöserart. Eine Auswahl ist jeweils
+  aktiv; Wechsel setzen die Bearbeitung wie bisher zurück. Öffentliche Methoden
+  besitzen optionale Bereichsparameter für Schutz vor verspäteten Formularaufrufen.
+  Gemeinsame Validierung, Übertragung und Aktivierungs-/Stoppsteuerung bleiben
+  erhalten. Echte Formularskripte sind offline auf Erstellen/Bearbeiten/Löschen
+  beider Typen, Bedingungen, Aktionsfolgen und bereinigtes Debug geprüft. Die
+  Live-Installation und visuelle schmale/breite Konsolenabnahme stehen aus.
+
 - Der zusätzliche YAML-Anzeigeschalter entfällt. YAML ist direkt im eingeklappten
   Expertenbereich verfügbar; Formularaktionen berücksichtigen immer dessen Inhalt.
   Der bestehende ShowYamlEditor-Aufruf bedient kompatibel den Panelzustand.
@@ -17,7 +26,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
   oder andere Auslöser bleiben unter weiteren Automationen erreichbar. Bearbeitung
   ist in Wenn/Nur wenn/Dann/Übernehmen gegliedert, Einrichtung und YAML eingeklappt.
   Dynamische Feldbefüllung berücksichtigt verschachtelte Bereiche. Offline wurden
-  die echten Formularskripte, Typwechsel, Zuordnung, Persistenz und Debug geprüft;
+  die echten Formularskripte, Zuordnung, Persistenz und Debug geprüft;
   Installation und schmale/breite Konsolenabnahme dieses Formularstands stehen aus.
 
 - Entwicklung auf dev; kein Release. Installation und Schaltprüfung nur im

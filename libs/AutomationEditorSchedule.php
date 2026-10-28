@@ -9,11 +9,14 @@ use JsonException;
 
 trait AutomationEditorSchedule
 {
-    public function ConfigureEditorSchedule(string $TriggerType, bool $Window, string $ConditionType): void
+    public function ConfigureEditorSchedule(string $TriggerType, bool $Window, string $ConditionType, string $Area = ''): void
     {
-        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($TriggerType, $Window, $ConditionType): void
+        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($TriggerType, $Window, $ConditionType, $Area): void
         {
-            if (!in_array($TriggerType, ['device', 'time'], true) || !in_array($ConditionType, ['none', 'state', 'numeric'], true)) {
+            if (!$this->CheckEditorArea($Area)) {
+                return;
+            }
+            if (!in_array($TriggerType, ['device', 'time'], true) || !in_array($ConditionType, ['none', 'state', 'numeric'], true) || ($Area !== '' && $TriggerType !== $Area)) {
                 $this->DebugEvent('FEHLER', 'Unbekannte Zeit- oder Bedingungsauswahl abgewiesen.');
                 return;
             }
@@ -21,29 +24,35 @@ trait AutomationEditorSchedule
             $previous = $this->ReadAttributeString('EditorModes');
             $previous = $previous === '' ? [] : json_decode($previous, true, 8, JSON_THROW_ON_ERROR);
             $this->WriteAttributeString('EditorModes', json_encode($modes, JSON_THROW_ON_ERROR));
-            $this->UpdateFormField('EditorCompare', 'options', json_encode($this->EditorComparisonOptions($ConditionType), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            $this->UpdateEditorField('EditorCompare', 'options', json_encode($this->EditorComparisonOptions($ConditionType), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
             if ($ConditionType === 'state' && ($previous['EditorConditionType'] ?? '') !== 'state') {
-                $this->UpdateFormField('EditorCompare', 'value', 'eq');
+                $this->UpdateEditorField('EditorCompare', 'value', 'eq');
             }
             $selection = $this->EditorSelectionFields($this->ReadEditorDraft());
             foreach ($this->ScheduleVisibility($modes) as $name => $visible) {
-                $this->UpdateFormField($name, 'visible', $visible);
+                $this->UpdateEditorField($name, 'visible', $visible);
                 if (!in_array($name, ['WindowHelp', 'ConditionHelp', 'EditorDeviceTrigger', 'EditorTimeTrigger'], true)) {
-                    $this->UpdateFormField($name, 'enabled', $selection['simple']);
+                    $this->UpdateEditorField($name, 'enabled', $selection['simple']);
                 }
             }
             $this->DebugEvent('AKTION', 'Editor für Auslöser und Bedingungen angepasst.', ['Bereich' => $this->EditorTypeLabel($TriggerType), 'Zeitfenster' => $Window, 'Bedingungsart' => $ConditionType]);
         });
     }
 
-    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = ''): bool
+    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = '', string $Area = ''): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps, $Area): bool
         {
+            if (!$this->CheckEditorArea($Area)) {
+                return false;
+            }
             $state = $this->RefreshState();
             $draft = $this->ReadEditorDraft();
             $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft);
             $index = $this->EditorRuleIndex($draft, $RuleID);
+            if ($error === '' && $Area !== '' && $RuleID === '' && $this->EditorSelectionFields($draft)['selected']) {
+                $error = 'editor_changed';
+            }
             if ($error === '' && $RuleID !== '' && ($index === null || !$this->MatchesEditorSelection($draft, $RuleID, $SelectionToken))) {
                 $error = 'editor_changed';
             }
@@ -70,13 +79,16 @@ trait AutomationEditorSchedule
                     return $this->RejectEditorChange($state, $reason);
                 }
             }
+            if ($Area !== '' && $this->EditorRuleType(['triggers' => $parts['triggers']]) !== $Area) {
+                return $this->RejectEditorChange($state, 'editor_changed');
+            }
             $rule = array_replace($rule ?? ['id' => 'rule_' . bin2hex(random_bytes(8))], $parts, ['name' => trim($Name), 'enabled' => $Enabled]);
             if ($index === null) {
                 $draft['configuration']['automations'][] = $rule;
             } else {
                 $draft['configuration']['automations'][$index] = $rule;
             }
-            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Auslöserart' => $rule['triggers'][0]['type'], 'Bedingungen' => count($rule['conditions'])]);
+            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Bereich' => $this->EditorTypeLabel($this->EditorRuleType($rule)), 'Bedingungen' => count($rule['conditions'])]);
             $this->DebugEditorActionSteps($rule['actions']);
             return $this->CommitEditorChange($state, $draft, $index === null ? 'draft_created' : 'draft_updated', $index === null ? '' : $RuleID);
         }));
@@ -324,14 +336,14 @@ trait AutomationEditorSchedule
         $this->WriteAttributeString('EditorCondition', $fields['EditorCondition']);
         $this->WriteAttributeString('EditorModes', json_encode(array_intersect_key($fields, array_flip(['EditorTriggerType', 'EditorWindow', 'EditorConditionType'])), JSON_THROW_ON_ERROR));
         $snapshot = $this->EditorSnapshot();
-        $this->UpdateFormField('EditorCompare', 'options', json_encode($this->EditorComparisonOptions($fields['EditorConditionType']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorConditionChoice', 'options', json_encode($this->EditorChoices($snapshot, $fields['EditorCondition'], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateFormField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $fields['EditorCondition']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorCompare', 'options', json_encode($this->EditorComparisonOptions($fields['EditorConditionType']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorConditionChoice', 'options', json_encode($this->EditorChoices($snapshot, $fields['EditorCondition'], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $fields['EditorCondition']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         foreach ($this->ScheduleVisibility($fields) as $name => $visible) {
-            $this->UpdateFormField($name, 'visible', $visible);
+            $this->UpdateEditorField($name, 'visible', $visible);
         }
         foreach (array_keys($this->ScheduleDefaults()) as $name) {
-            $this->UpdateFormField($name, 'enabled', $fields['simple']);
+            $this->UpdateEditorField($name, 'enabled', $fields['simple']);
         }
     }
 

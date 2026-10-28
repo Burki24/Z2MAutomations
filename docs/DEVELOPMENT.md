@@ -1,5 +1,36 @@
 # Entwicklung
 
+## Bearbeitung direkt in Geräte- und Zeitbereichen
+
+Eigene statische Feldnamen für beide Bereiche ersetzen den gemeinsamen sichtbaren
+Editor. Auslöserart bleibt verborgen und ist durch den jeweiligen Bereich
+festgelegt. Die bisherige Bearbeitung bleibt nur für weitere Auslöser im
+entsprechenden Bereich verfügbar; Metadatenänderungen erhalten deren Strukturen.
+Gemeinsame Prüfung, Speicherung und Aktivierung/Stopp sind nicht dupliziert.
+
+Die librarylokale AutomationEditorAreas ordnet kanonische Felder den aktiven
+Bereichsfeldern zu. Es bleibt eine Regelauswahl aktiv; Auswahlkennung und
+Entwurfsprüfsumme schützen vorhandene Regeln. Optionale Bereichsparameter an
+SaveScheduledAutomation, DeleteAutomation, SelectEditorDevice,
+ConfigureEditorSchedule und InspectEditorActions weisen verspätete Aufrufe aus
+dem anderen Bereich zurück. Bisherige öffentliche Aufrufe bleiben kompatibel.
+Vorhandener ConfigurationFormHelper ist unverändert; keine neue Runtime-API.
+
+Offline-Integration führt die tatsächlichen Geräte-/Zeit-Formularskripte aus:
+Erstellen, Auswählen, Wiederladen, Bearbeiten, Löschen, Bedingungen, Aktionsfolgen,
+veraltete Bereichsaufrufe und gemeinsames Prüfen/Speichern gegen den echten
+synthetischen Node-Empfänger. Die folgende Dokumentation beschreibt frühere
+Entwicklungsstände. Dieser Stand ist noch nicht live installiert; visuelle
+Prüfung auf schmaler und breiter Konsole steht aus.
+
+Abschlussprüfung: `php tests/run.php` einschließlich 37 Node-Tests,
+`php tests/validate_structure.php`, offizieller StylePHP-JSON-Check und
+php-cs-fixer im Prüfmodus bestanden. Der StylePHP-Check lief über die eigenen
+Quellen ohne node_modules; die Testabhängigkeiten wurden unverändert zurückgelegt.
+Native Feldnamen und Übersetzungen sind eindeutig; Live-Updates werden in der
+Integration zusätzlich gegen tatsächlich vorhandene Formularfelder geprüft.
+
+
 ## Native Formularbereiche
 
 Geräte- und Zeitregeln erhalten gefilterte native ExpansionPanels mit eigenen

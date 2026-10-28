@@ -2,6 +2,15 @@
 
 ## Zuständigkeiten
 
+Die nativen Geräte- und Zeitbereiche besitzen eigene statische Formularfelder
+und darin eingebettete Bearbeitungen. `AutomationEditorAreas` ordnet gemeinsame
+Befüllung und Live-Updates den jeweiligen lokalen Feldern zu und schützt
+bereichsgebundene Formularaufrufe. Eine Regelauswahl bleibt aktiv; Validierung,
+Speicherung und Laufzeitsteuerung bleiben gemeinsame Backend-Funktionen.
+Mehrfachauslöser verwenden weiterhin die begrenzte Metadatenbearbeitung im
+Bereich weiterer Automationen. Bestehende öffentliche Aufrufe bleiben durch
+optionale letzte Bereichsparameter kompatibel. Keine Änderung am YAML-Schema.
+
 Symcon ist der Editor und Verwalter. Zigbee2MQTT ist die Laufzeit.
 Beide Teile erhalten eigenen Implementierungscode in diesem Repository:
 

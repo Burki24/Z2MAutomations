@@ -8,10 +8,13 @@ use JsonException;
 
 trait AutomationEditorActions
 {
-    public function InspectEditorActions(string $Steps, string $Change): bool
+    public function InspectEditorActions(string $Steps, string $Change, string $Area = ''): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Steps, $Change): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Steps, $Change, $Area): bool
         {
+            if (!$this->CheckEditorArea($Area)) {
+                return false;
+            }
             $reason = 'editor_actions';
             $actions = $this->BuildEditorActions($Steps, $reason);
             if (!in_array($Change, ['add', 'edit', 'delete', 'order'], true) || $actions === null) {
@@ -20,10 +23,10 @@ trait AutomationEditorActions
             }
             if ($Change === 'delete') {
                 // Native onDelete supplies the list before the selected row is removed.
-                $this->DebugEvent('AKTION', 'Löschen eines Aktionsschritts gemeldet; übergebene Anzahl ist der Vorbestand. Die verbleibende Liste wird beim Übernehmen geprüft.', ['AktionenVorLöschen' => count($actions)]);
+                $this->DebugEvent('AKTION', 'Löschen eines Aktionsschritts gemeldet; übergebene Anzahl ist der Vorbestand. Die verbleibende Liste wird beim Übernehmen geprüft.', ['Bereich' => $this->EditorTypeLabel($this->ActiveEditorArea()), 'AktionenVorLöschen' => count($actions)]);
                 return true;
             }
-            $this->DebugEvent('AKTION', 'Aktionsliste im Formular bearbeitet; noch nicht in den Regelentwurf übernommen.', ['Änderung' => $Change, 'Aktionen' => count($actions)]);
+            $this->DebugEvent('AKTION', 'Aktionsliste im Formular bearbeitet; noch nicht in den Regelentwurf übernommen.', ['Bereich' => $this->EditorTypeLabel($this->ActiveEditorArea()), 'Änderung' => $Change, 'Aktionen' => count($actions)]);
             $this->DebugEditorActionSteps($actions);
             return true;
         });

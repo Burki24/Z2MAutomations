@@ -49,7 +49,7 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
 2. „Geräte und gespeicherte Automationen laden“ bestätigen. Damit wird der lokale
    Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
 3. Den Bereich „Durch ein Gerät ausgelöste Automationen“ öffnen und „Neue
-   geräteausgelöste Automation“ wählen. Die gemeinsame Bearbeitung öffnet sich.
+   geräteausgelöste Automation“ wählen. Die Bearbeitung öffnet sich direkt in diesem Bereich.
    Namen eingeben und unter „Wenn ein Gerät ein Ereignis meldet“ Quellgerät
    und Ereignis wählen, beispielsweise „Tasterereignis: Einfach drücken“.
    Für eine Uhrzeitregel stattdessen im Bereich „Zeitgesteuerte Automationen“
@@ -82,11 +82,15 @@ umbenannt, deaktiviert oder gelöscht werden; ihre zusätzlichen Schritte bleibe
 
 Geräteausgelöste und zeitgesteuerte Automationen besitzen jeweils eine eigene
 Übersicht und die Auswahl „Automation bearbeiten“. Die Auswahl lädt die Regel
-in die gemeinsame Bearbeitung. Dort erscheinen nur die passenden Auslöserfelder;
-bestehende Bedingungen werden aufgeklappt. Wird die Auslöserart geändert und in
-den Entwurf übernommen, wechselt die Regel in die entsprechende Übersicht.
-Regeln mit mehreren oder anderen Auslösern bleiben unter „Weitere Automationen“
-erreichbar. Unterstützte Bearbeitung und der Schutz erweiterter Regeln gelten weiter.
+in die Bearbeitung direkt im jeweiligen Bereich. Dort erscheinen nur die
+passenden Auslöserfelder; bestehende Bedingungen werden aufgeklappt. Jeder
+Bereich besitzt eigene Eingabefelder, eine Aktionsliste und Übernehmen-/Löschen-
+Buttons. Die Auslöserart ergibt sich aus dem Bereich und wird nicht zusätzlich
+ausgewählt. Es wird jeweils eine Regel bearbeitet; vor dem Wechsel Änderungen
+in den lokalen Entwurf übernehmen.
+Regeln mit mehreren oder anderen Auslösern bleiben mit ihrer sicheren
+Metadatenbearbeitung unter „Weitere Automationen“ erreichbar. Unterstützte
+Bearbeitung und der Schutz erweiterter Regeln gelten weiter.
 
 „Prüfen und an Z2M übertragen“ enthält Prüfung, Speicherung und Aktivierung.
 Aktivieren und Stoppen beziehen sich auf die gesamte gespeicherte Konfiguration.

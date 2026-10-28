@@ -1,5 +1,12 @@
 # Debug und MQTT-Diagnose
 
+Die direkt eingebetteten Geräte-/Zeitbearbeitungen nennen bei Geräteauswahl,
+Aktionslisten und Entwurfsübernahme ihren festen deutschen Automationsbereich.
+Optionale Bereichsparameter schützen Formularaktionen vor verspäteten Aufrufen
+aus einem inzwischen verlassenen Bereich; diese werden als FEHLER erklärt und
+ändern weder den Entwurf noch Z2M. Öffentliche Einstiege verwenden unverändert
+den zentralen Start-/Ende-Ablauf. Namen, Gerätekennungen und Regeln bleiben geschützt.
+
 Der kompatible Aufruf `ShowYamlEditor` klappt jetzt den YAML-Bereich auf oder zu
 und protokolliert diesen Zustand. Der Editor selbst bleibt innerhalb des Bereichs
 verfügbar. Formularaktionen prüfen den aktuellen YAML-Inhalt unabhängig vom

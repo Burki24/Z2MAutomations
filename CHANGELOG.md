@@ -17,6 +17,12 @@
 
 ## Neu
 
+- Bearbeitung direkt in Geräte- und Zeitbereiche integriert: eigene Eingaben,
+  Bedingungen, Aktionsfolgen und Übernehmen-/Löschen-Buttons. Die Auslöserart
+  ist durch den Bereich festgelegt. Prüfung, Speicherung und Ausführungssteuerung
+  bleiben gemeinsam. Veraltete bereichsfremde Formularaufrufe werden mit einer
+  verständlichen deutschen Debug-Meldung abgewiesen.
+
 - Natives Formular in geräteausgelöste und zeitgesteuerte Automationen aufgeteilt,
   jeweils mit eigener Übersicht, Regelauswahl und Neu-Button. Gemeinsame Bearbeitung
   führt durch Auslöser, optionale Bedingungen, Aktionen und Entwurfsübernahme.

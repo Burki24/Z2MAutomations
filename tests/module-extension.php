@@ -43,6 +43,11 @@ class ObservedAutomationModule extends Z2MAutomations
 
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
+        static $knownFields = null;
+        $knownFields ??= formFields(json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/form.json'), true, 512, JSON_THROW_ON_ERROR)['actions']);
+        if (!isset($knownFields[$Field])) {
+            throw new RuntimeException('Live update targets an unknown form field: ' . $Field);
+        }
         if (in_array($Parameter, ['options', 'values', 'columns'], true)) {
             if (!is_string($Value) || !is_array(json_decode($Value, true, 512, JSON_THROW_ON_ERROR))) {
                 throw new RuntimeException('Complex live form updates must be JSON encoded.');
@@ -150,6 +155,11 @@ try {
     $check($module->RequestExtensionStatus() !== '' && $state()['operation']['status'] === 'status_received', 'Explicit receiver refresh works');
     $check($module->LoadAutomationEditor() !== '' && $state()['operation']['status'] === 'editor_loaded', 'Editor loads real receiver catalog and stored configuration');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $topNames = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], 'name');
+    $check(!in_array('EditorDetails', $topNames, true) && isset($fields['DeviceEditorName'], $fields['TimeEditorName']), 'Each trigger section owns its editing fields without a shared top-level editor');
+    $sections = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check(isset(formFields($sections['EditorDeviceSection']['items'])['DeviceEditorName'])
+        && isset(formFields($sections['EditorTimeSection']['items'])['TimeEditorName']), 'Both editing forms are physically nested in their trigger sections');
     $sentBeforeSections = count($parent->sent);
     $runSectionScript = static function (string $script, array $fields, array $overrides = []) use ($id): void
     {
@@ -168,7 +178,10 @@ try {
         $check($fields['EditorTriggerType']['value'] === $type && $fields['EditorTimeTrigger']['visible'] === ($type === 'time')
             && $fields['EditorDeviceTrigger']['visible'] === ($type === 'device') && $fields['EditorRule']['value'] === ''
             && $fields['EditorEditToken']['value'] === '' && $fields['EditorActions']['values'] === [], 'New buttons initialize the right trigger, empty selection and action list');
-        $check($module->formUpdates['EditorDetails']['expanded'] === true, 'New buttons open the common editing area');
+        $check($module->formUpdates['EditorDetails']['expanded'] === true, 'New buttons open the editing area inside their trigger section');
+        $otherStem = $stem === 'Time' ? 'Device' : 'Time';
+        $check($fields[$stem . 'EditorDetails']['visible'] && !$fields[$otherStem . 'EditorDetails']['visible']
+            && !$fields[$stem . 'EditorTriggerType']['visible'] && $fields[$stem . 'EditorTriggerType']['value'] === $type, 'Only the selected local editor is shown and its trigger type is fixed');
     }
     $check(count($parent->sent) === $sentBeforeSections && $fields['YamlInput']['value'] === $second, 'Changing editing sections does not transmit or change the draft');
     $check(!$module->SelectAutomation('', '', false, 'invalid'), 'Unknown automation sections are rejected');
@@ -371,9 +384,9 @@ try {
         extract(array_replace($values, $overrides), EXTR_SKIP);
         eval($script);
     };
-    $runEditorScript($fields['CreateRuleButton']['onClick'], $fields, ['EditorRule' => '', 'EditorEditToken' => '', 'EditorName' => 'Synthetic sequence',
-        'EditorEnabled'                                                             => true, 'EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorConditionType' => 'none',
-        'EditorSource'                                                              => '0x0000000000000001', 'EditorSourceChoice' => $trigger, 'EditorActions' => new ArrayIterator($steps)]);
+    $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorRule' => '', 'DeviceEditorEditToken' => '', 'DeviceEditorName' => 'Synthetic sequence',
+        'DeviceEditorEnabled'                                                                   => true, 'DeviceEditorWindow' => false, 'DeviceEditorConditionType' => 'none',
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorActions' => new ArrayIterator($steps)]);
     $check($state()['operation']['status'] === 'draft_created', 'The actual form button serializes all list rows and creates the sequence');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $sequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
@@ -413,7 +426,7 @@ try {
         $check($module->InspectEditorActions(json_encode($steps), $change), 'Each list operation has a safe diagnostic entry');
     }
     foreach (['onAdd', 'onEdit', 'onDelete', 'onChangeOrder'] as $event) {
-        $runEditorScript($fields['EditorActions'][$event], $fields, ['EditorActions' => new ArrayIterator($steps)]);
+        $runEditorScript($fields['DeviceEditorActions'][$event], $fields, ['DeviceEditorActions' => new ArrayIterator($steps)]);
     }
     $check(count($parent->sent) === $sequenceSent, 'List edits do not send commands to Z2M');
     foreach (['[]', '{}', '{', json_encode(array_fill(0, 17, $steps[0])), json_encode([['Choice'  => 'forged', 'Delay' => 0]]),
@@ -443,6 +456,73 @@ try {
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited sequence validates and stores');
     $module->LoadAutomationEditor();
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $runEditorScript($fields['NewTimeRuleButton']['onClick'], $fields, []);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $timeBaseline = $fields['YamlInput']['value'];
+    $sentBeforeLocalEditing = count($parent->sent);
+    $module->SelectEditorDevice('Source', '0x0000000000000001', 'device');
+    $check(!$module->InspectEditorActions(json_encode($steps), 'edit', 'device'), 'Delayed action callbacks from another area are rejected');
+    $check(!$module->SaveScheduledAutomation('', '', 'Wrong area', true, '', '', '', '', '{}', $timeBaseline, true, json_encode([$steps[0]]), 'device'), 'Saving from an inactive area is rejected');
+    $check(
+        formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'])['YamlInput']['value'] === $timeBaseline,
+        'Rejected cross-area edits leave the full draft unchanged'
+    );
+    $runEditorScript($fields['TimeEditorWindow']['onChange'], $fields, ['TimeEditorWindow' => true]);
+    $check($module->formUpdates['TimeEditorAfter']['visible'] === true, 'Time editor condition callbacks update their own field names');
+    $runEditorScript($fields['TimeEditorCondition']['onChange'], $fields, ['TimeEditorCondition' => '0x0000000000000002']);
+    $check(
+        count(json_decode($module->formUpdates['TimeEditorNumericProperty']['options'], true, 512, JSON_THROW_ON_ERROR)) > 1,
+        'Condition device callbacks populate measured values in the time editor'
+    );
+    $runEditorScript($fields['TimeCreateRuleButton']['onClick'], $fields, ['TimeEditorName' => 'Local timed editor', 'TimeEditorEnabled' => false,
+        'TimeEditorAt'                                                                      => '13:45', 'TimeEditorWindow' => false, 'TimeEditorActions' => new ArrayIterator([$steps[0]])]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $localDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $localTimed = $localDocument['automations'][array_key_last($localDocument['automations'])];
+    $check(
+        $localTimed['name'] === 'Local timed editor' && $localTimed['triggers'][0]['type'] === 'time' && $localTimed['triggers'][0]['at'] === '13:45:00',
+        'The time area create button serializes only its own fields'
+    );
+    $runEditorScript($fields['EditorTimeRule']['onChange'], $fields, ['EditorTimeRule' => $localTimed['id']]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['TimeEditorName']['value'] === 'Local timed editor' && $fields['TimeEditorActions']['values'] === [$steps[0]]
+        && $fields['TimeUpdateRuleButton']['visible'] && !$fields['DeviceEditorDetails']['visible'], 'Selecting a time rule restores its local fields, token and action list');
+    $runEditorScript($fields['TimeUpdateRuleButton']['onClick'], $fields, ['TimeEditorName' => 'Updated local time', 'TimeEditorAt' => '14:00',
+        'TimeEditorActions'                                                                 => new ArrayIterator([$steps[0]])]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $updatedLocal = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $check($updatedLocal['automations'][array_key_last($updatedLocal['automations'])]['triggers'][0]['at'] === '14:00:00', 'The time area update button preserves identity while applying local changes');
+    $runEditorScript($fields['TimeDeleteRuleButton']['onClick'], $fields, []);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check(json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === json_decode($timeBaseline, true, 512, JSON_THROW_ON_ERROR)['automations']
+        && count($parent->sent) === $sentBeforeLocalEditing, 'Local create/edit/delete preserves unrelated rules without sending to Z2M');
+    $runEditorScript($fields['NewDeviceRuleButton']['onClick'], $fields, []);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $runEditorScript($fields['DeviceEditorSource']['onChange'], $fields, ['DeviceEditorSource' => '0x0000000000000001']);
+    $check(
+        count(json_decode($module->formUpdates['DeviceEditorSourceChoice']['options'], true, 512, JSON_THROW_ON_ERROR)) > 1,
+        'Device source callbacks update the event choices inside their own section'
+    );
+    $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Local device editor', 'DeviceEditorEnabled' => false,
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorActions' => new ArrayIterator([$steps[0]])]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $deviceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $localDevice = $deviceDocument['automations'][array_key_last($deviceDocument['automations'])];
+    $runEditorScript($fields['EditorDeviceRule']['onChange'], $fields, ['EditorDeviceRule' => $localDevice['id']]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorName']['value'] === 'Local device editor' && $fields['DeviceEditorActions']['values'] === [$steps[0]]
+        && !$fields['TimeEditorDetails']['visible'], 'Selecting a device rule restores its own fields and hides the other editor');
+    $runEditorScript($fields['DeviceUpdateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Updated local device',
+        'DeviceEditorActions'                                                                   => new ArrayIterator([$steps[0]])]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorName']['value'] === 'Updated local device', 'Device update button applies its local metadata and selection token');
+    $runEditorScript($fields['DeviceDeleteRuleButton']['onClick'], $fields, []);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check(
+        json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'] === json_decode($timeBaseline, true, 512, JSON_THROW_ON_ERROR)['automations'],
+        'Device deletion preserves all unrelated time and device rules'
+    );
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Common validation and storage accept the local editor result');
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');
