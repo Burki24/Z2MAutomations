@@ -5,7 +5,7 @@
 Der Import übersetzt ausschließlich bekannte strukturierte Ereignis- und
 Aktionsverträge in deaktivierte lokale Regeln. Er analysiert und startet keinen
 PHP-Code. Originalereignisse bleiben unangetastet. Quellen und Ziele werden über
-Variablen-IDs, native Instanztypen, Basistopic und bestätigte Z2M-Kennungen zugeordnet.
+Variablen-IDs, native Instanztypen, eigene MQTT-ConnectionID, Basistopic und bestätigte Z2M-Kennungen zugeordnet.
 Eigene Aktionsskripte, Bedingungen, Begrenzungen und ungesicherte Skalierungen
 werden im ersten Umfang vollständig abgewiesen. Vorschau und erneute Prüfung
 schützen vor geänderten Ereignissen oder Zuordnungen; die bestehende

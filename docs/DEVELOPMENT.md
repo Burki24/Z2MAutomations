@@ -1,3 +1,30 @@
+## Gatewaygebundene Instanz- und Ereignissuche
+
+`Z2MInstanceDiscovery` ermittelt bekannte Z2M-Modultypen lokal. GUID-Konstanten
+bezeichnen Modultypen, keine konkreten Instanzen. Vor Konfigurationszugriffen
+prüft der Code `IPS_InstanceExists`, Modultyp und die eigene `ConnectionID`.
+Er liest dann `IPS_GetConfiguration` und validiert vorhandene Felder; es gibt
+keine ungesicherte `MQTTBaseTopic`-Abfrage an fremde Elternobjekte.
+Der vorhandene ParentConnectionHelper liefert die eigene Gateway-ID unverändert.
+Geräte-/Gruppenbindungen im gesamten Klick-Editor nutzen denselben Suchbereich.
+
+`DetectedBaseTopic` verwendet die native MultiSelect-Wertübergabe von Symcon 9.0:
+Eine Auswahl setzt nur das bestehende BaseTopic-Formularfeld. Das Modul speichert
+oder wechselt dadurch keine Verbindung und überschreibt keine Konfiguration.
+Die lokal ermittelte Auswahl wird pro Formulardurchlauf neu aufgebaut.
+Die Ereignissuche filtert zunächst nur die native Quelle nach Gateway/Topic;
+Katalog und Zugriffsrechte bleiben Voraussetzungen der Importvorschau.
+Caches für Suchbericht und Vorschau enthalten diesen Kontext. Ein fremder oder
+veralteter Katalog kann keine Importfreigabe erteilen.
+
+`tests/event-import-scope.inc.php` ergänzt den echten PHP-/JS-Test um Kategorien,
+fremde Instanzen, zwei getrennte Gateways/Automationsmodule und identische
+IEEE-/Gruppenkennungen. Namen und Objektbaumposition sind keine Identität.
+`tests/import-kernel-guards.php` zählt unzulässige Reads an der Kernelgrenze,
+weil die offiziellen Stubs dort Exceptions statt der realen PHP-Warnungen liefern.
+Der Test verlangt null solcher Reads und prüft Suche ohne Katalog, Topic-Vorschläge,
+Gateway-/Topic-Trennung, fremde Ziele und Kontextwechsel. Keine Live-Mutation.
+
 ## Ereignisimport und Umschaltaktionen
 
 Der native Bereich `EventImportSection` führt Suche, Vorschau und deaktivierte

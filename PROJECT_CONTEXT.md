@@ -8,6 +8,16 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Ereignisimport korrigiert: fremde Variablen/Eltern werden vor Instanz- und
+  Konfigurationszugriffen klassifiziert. Kein konkreter Instanz-ID-Bezug im Code.
+  Native Z2M-Instanzen werden über Modultyp, eigene MQTT-ConnectionID und
+  Basistopic entdeckt. Zwei MQTT-Server bleiben zwei Automationsinstanzen.
+  Lokale Topic-Vorschläge befüllen das bestehende BaseTopic-Feld; manuelle Eingabe
+  bleibt möglich. Ereignissuche läuft auch ohne Katalog, Import nur mit passendem
+  Katalog. Such-/Vorschaucaches sind an Gateway/Topic gebunden.
+  Offline gegen Kategorien, fremde Module und getrennte Gateways geprüft;
+  neuer Modulstand noch nicht auf der Testinstallation geprüft.
+
 - Erster Import ausgelöster nativer Symcon-Ereignisse implementiert: lesende Suche,
   Vorschau, erneute Prüfung und deaktivierte lokale Übernahme, ohne Originaländerung.
   Bestimmter Wert mit Wiederholung, native boolesche/Textwerte und Umschalten;

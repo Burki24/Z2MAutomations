@@ -12,9 +12,25 @@
                     "caption": "Enable MQTT connection"
                 },
                 {
+                    "type": "Select",
+                    "name": "DetectedBaseTopic",
+                    "caption": "Base topics found on this MQTT gateway",
+                    "options": [
+                        {
+                            "caption": "Choose a detected base topic",
+                            "value": []
+                        }
+                    ],
+                    "value": []
+                },
+                {
                     "type": "ValidationTextBox",
                     "name": "BaseTopic",
                     "caption": "Zigbee2MQTT base topic"
+                },
+                {
+                    "type": "Label",
+                    "caption": "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events."
                 },
                 {
                     "type": "NumberSpinner",

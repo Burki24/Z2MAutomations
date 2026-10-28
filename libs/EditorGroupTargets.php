@@ -52,12 +52,15 @@ trait EditorGroupTargets
             return $this->editorGroupBindings[$key];
         }
         $found = null;
-        foreach (array_slice(IPS_GetInstanceListByModuleID('{11BF3773-E940-469B-9DD7-FB9ACD7199A2}'), 0, 512) as $instance) {
+        foreach ($this->GatewayZ2MInstances() as $instance => $scope) {
             try {
-                if (IPS_GetProperty($instance, 'GroupId') !== $id || IPS_GetProperty($instance, 'MQTTBaseTopic') !== $this->ReadPropertyString('BaseTopic')) {
+                if ($scope['type'] !== 'group' || $scope['key'] !== $key || $scope['topic'] !== $this->ReadPropertyString('BaseTopic') || !IPS_InstanceExists($instance)) {
                     continue;
                 }
                 foreach (IPS_GetChildrenIDs($instance) as $variableID) {
+                    if (!IPS_ObjectExists($variableID)) {
+                        continue;
+                    }
                     $object = IPS_GetObject($variableID);
                     if ($object['ObjectType'] !== 2 || $object['ObjectIdent'] !== 'state') {
                         continue;

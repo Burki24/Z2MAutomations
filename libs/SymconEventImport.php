@@ -15,10 +15,13 @@ trait SymconEventImport
             $this->SetBuffer('EventImportPreview', '');
             $rows = $options = [];
             $snapshot = $this->EditorSnapshot();
+            if (!$this->ImportCatalogMatchesContext($snapshot)) {
+                $snapshot = [];
+            }
             $ids = $this->ImportEventIDs();
             foreach (array_slice($ids, 0, 4096) as $id) {
                 $record = $this->ReadImportEvent($id);
-                if ($record === null || $this->ImportVariableBinding($snapshot, $record['event']['TriggerVariableID'] ?? 0, 'Source') === null) {
+                if ($record === null || !$this->ImportSourceInScope($record['event']['TriggerVariableID'] ?? 0)) {
                     continue;
                 }
                 $result = $this->EvaluateImportEvent($id, $record, $snapshot);
@@ -28,14 +31,14 @@ trait SymconEventImport
                     break;
                 }
             }
-            $report = ['rows' => $rows, 'options' => $options];
+            $report = ['context' => $this->EventImportContext(), 'rows' => $rows, 'options' => $options];
             $this->SetBuffer('EventImportReport', json_encode($report, JSON_THROW_ON_ERROR));
             $this->RefreshEventImportFields();
-            $message = $snapshot === [] ? 'Load devices and stored automations before checking events.'
+            $message = $snapshot === [] ? 'Load the Z2M catalog for the selected gateway and topic before importing.'
                 : (count($ids) > 4096 || count($rows) >= 256 ? 'Search limit reached. Only the listed events were checked.' : 'Select an event to preview its import.');
             $this->UpdateFormField('ImportMessage', 'caption', $this->Translate($message));
-            $this->DebugEvent('AKTION', 'Symcon-Ereignisse lesend geprüft; keine Ereignisse oder Geräte verändert.', ['EreignisseGeprüft' => min(count($ids), 4096), 'Zugeordnet' => count($rows)]);
-            return $snapshot !== [];
+            $this->DebugEvent('AKTION', 'Symcon-Ereignisse lesend geprüft; keine Ereignisse oder Geräte verändert.', ['Gateway' => $this->GetParentID(), 'Basistopic' => $this->ReadPropertyString('BaseTopic'), 'EreignisseGeprüft' => min(count($ids), 4096), 'Zugeordnet' => count($rows)]);
+            return $this->HasParent();
         });
     }
 
@@ -45,7 +48,7 @@ trait SymconEventImport
         {
             $this->SetBuffer('EventImportPreview', '');
             $result = $this->EvaluateImportEvent($EventID, $this->ReadImportEvent($EventID), $this->EditorSnapshot());
-            $preview = ['event' => $EventID, 'result' => $result, 'token' => $result['rule'] === null ? '' : bin2hex(random_bytes(16))];
+            $preview = ['context' => $this->EventImportContext(), 'event' => $EventID, 'result' => $result, 'token' => $result['rule'] === null ? '' : bin2hex(random_bytes(16))];
             $this->SetBuffer('EventImportPreview', json_encode($preview, JSON_THROW_ON_ERROR));
             $this->RefreshEventImportFields();
             $this->DebugEvent($result['rule'] === null ? 'FEHLER' : 'AKTION', 'Importvorschau geprüft; Originalereignis bleibt unverändert.', ['Übertragbar' => $result['rule'] !== null, 'Grund' => $result['reason']]);
@@ -63,6 +66,7 @@ trait SymconEventImport
             $result = $this->EvaluateImportEvent($EventID, $this->ReadImportEvent($EventID), $this->EditorSnapshot());
             $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft, false);
             if ($error !== '' || $result['rule'] === null || $Token === '' || ($preview['event'] ?? null) !== $EventID
+                || ($preview['context'] ?? null) !== $this->EventImportContext()
                 || !hash_equals($preview['token'] ?? '', $Token) || ($preview['result'] ?? null) !== $result
                 || count($draft['configuration']['automations'] ?? []) >= 100) {
                 $this->UpdateFormField('ImportMessage', 'caption', $this->Translate('Import rejected. Preview the current event again and check the draft.'));
@@ -104,6 +108,9 @@ trait SymconEventImport
     private function EvaluateImportEvent(int $id, ?array $record, array $snapshot): array
     {
         $reject = static fn (string $reason): array => ['reason' => $reason, 'rule' => null];
+        if (!$this->ImportCatalogMatchesContext($snapshot)) {
+            return $reject('Load the Z2M catalog for the selected gateway and topic before importing.');
+        }
         if ($record === null) {
             return $reject('Event no longer exists.');
         }
@@ -160,23 +167,21 @@ trait SymconEventImport
     private function ImportVariableBinding(array $snapshot, int $id, string $side): ?array
     {
         try {
-            if (!IPS_VariableExists($id)) {
+            if (!IPS_ObjectExists($id) || !IPS_VariableExists($id)) {
                 return null;
             }
             $object = IPS_GetObject($id);
             $variable = IPS_GetVariable($id);
+            if (!is_array($object) || !is_array($variable)) {
+                return null;
+            }
             $instance = $object['ParentID'];
-            $module = IPS_GetInstance($instance)['ModuleInfo']['ModuleID'];
-            if (IPS_GetProperty($instance, 'MQTTBaseTopic') !== $this->ReadPropertyString('BaseTopic')) {
+            $scope = $this->ReadZ2MInstanceScope($instance);
+            if ($scope === null || $scope['topic'] !== $this->ReadPropertyString('BaseTopic')
+                || ($scope['type'] !== 'device' && !($side === 'Target' && $scope['type'] === 'group'))) {
                 return null;
             }
-            if ($module === '{E5BB36C6-A70B-EB23-3716-9151A09AC8A2}') {
-                $key = IPS_GetProperty($instance, 'IEEE');
-            } elseif ($module === '{11BF3773-E940-469B-9DD7-FB9ACD7199A2}' && $side === 'Target') {
-                $key = 'group.' . IPS_GetProperty($instance, 'GroupId');
-            } else {
-                return null;
-            }
+            $key = $scope['key'];
             $property = $object['ObjectIdent'];
             if (!isset($this->EditorProperties($snapshot, $key, $side)[$property])) {
                 return null;
@@ -221,10 +226,42 @@ trait SymconEventImport
         return $text === '' ? [] : json_decode($text, true, 32, JSON_THROW_ON_ERROR);
     }
 
+    private function EventImportContext(): array
+    {
+        return [$this->GetParentID(), $this->ReadPropertyString('BaseTopic')];
+    }
+
+    private function ImportCatalogMatchesContext(array $snapshot): bool
+    {
+        $scope = json_decode($snapshot['scope'] ?? '', true);
+        return is_array($scope) && array_slice($scope, 0, 2) === $this->EventImportContext();
+    }
+
+    private function ImportSourceInScope(int $id): bool
+    {
+        if (!IPS_ObjectExists($id) || !IPS_VariableExists($id)) {
+            return false;
+        }
+        try {
+            $object = IPS_GetObject($id);
+            $scope = $this->ReadZ2MInstanceScope($object['ParentID']);
+            return $scope !== null && in_array($scope['type'], ['device', 'group'], true)
+                && $scope['topic'] === $this->ReadPropertyString('BaseTopic');
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
     private function EventImportFields(): array
     {
         $report = $this->EventImportBuffer('EventImportReport');
         $preview = $this->EventImportBuffer('EventImportPreview');
+        if (($report['context'] ?? null) !== $this->EventImportContext()) {
+            $report = [];
+        }
+        if (($preview['context'] ?? null) !== $this->EventImportContext()) {
+            $preview = [];
+        }
         $result = $preview['result'] ?? [];
         return ['ImportEvents' => ['values' => $report['rows'] ?? []],
             'ImportEventID'    => ['options' => array_merge([['caption' => $this->Translate('Choose event'), 'value' => 0]], $report['options'] ?? []), 'value' => $preview['event'] ?? 0],

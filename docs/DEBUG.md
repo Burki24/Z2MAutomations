@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+## Suchbereich der Ereignissuche
+
+Die Suche nennt eigenes Gateway, konfiguriertes Basistopic, Anzahl geprüfter
+Ereignisse und zugeordneter Quellen. Der Formularaufbau meldet die Anzahl lokal
+gefundener Topics am eigenen Gateway. Fremde Variablen werden vor dem Lesen von
+Instanzkonfigurationen ausgeschlossen; ihre Namen und Inhalte werden nicht geloggt.
+
+
 ## Ereignisimport
 
 `ScanEventImports`, `PreviewEventImport` und `ImportSymconEvent` verwenden den

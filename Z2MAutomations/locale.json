@@ -270,7 +270,6 @@
             "Preview token": "Vorschaubestätigung",
             "Import event into draft": "Ereignis in den Entwurf übernehmen",
             "Check existing Symcon events, then select one for preview.": "Vorhandene Symcon-Ereignisse prüfen und anschließend eines für die Vorschau auswählen.",
-            "Load devices and stored automations before checking events.": "Vor der Ereignisprüfung Geräte und gespeicherte Automationen laden.",
             "Search limit reached. Only the listed events were checked.": "Suchgrenze erreicht. Nur die aufgelisteten Ereignisse wurden geprüft.",
             "Select an event to preview its import.": "Ein Ereignis auswählen, um die Importvorschau anzuzeigen.",
             "Import rejected. Preview the current event again and check the draft.": "Import abgewiesen. Vorschau des aktuellen Ereignisses erneut öffnen und den Entwurf prüfen.",
@@ -285,7 +284,11 @@
             "The target value or toggle command is not supported by this property.": "Der Zielwert oder Umschaltbefehl wird von dieser Eigenschaft nicht unterstützt.",
             "The event name is not a valid automation name.": "Der Ereignisname ist kein gültiger Automationsname.",
             "Supported. Imported rules start disabled; the original event remains unchanged.": "Übertragbar. Importierte Regeln beginnen deaktiviert; das Originalereignis bleibt unverändert.",
-            "The current Z2M target state is unknown. Toggle was not executed.": "Der aktuelle Z2M-Zielzustand ist unbekannt. Umschalten wurde nicht ausgeführt."
+            "The current Z2M target state is unknown. Toggle was not executed.": "Der aktuelle Z2M-Zielzustand ist unbekannt. Umschalten wurde nicht ausgeführt.",
+            "Base topics found on this MQTT gateway": "An diesem MQTT-Gateway gefundene Basistopics",
+            "Choose a detected base topic": "Gefundenes Basistopic auswählen",
+            "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events.": "Ein Automationsmodul pro MQTT-Gateway. Gefundenes Topic auswählen oder manuell eingeben, Einstellungen übernehmen und vor dem Ereignisimport den Gerätekatalog neu laden.",
+            "Load the Z2M catalog for the selected gateway and topic before importing.": "Vor dem Import den Z2M-Katalog für das ausgewählte Gateway und Topic laden."
         }
     }
 }

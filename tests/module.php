@@ -44,6 +44,15 @@ function formFields(array $items): array
 
 $form = json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/form.json'), true, 512, JSON_THROW_ON_ERROR);
 foreach (formFields($form['elements']) as $field) {
+    if ($field['type'] === 'Select' && is_array($field['options'][0]['value'] ?? null)) {
+        // Native multi-select assigns named properties; its own name is not a property.
+        foreach ($field['options'] as $option) {
+            foreach ($option['value'] as $assignment) {
+                IPS_GetProperty($id, $assignment['name']);
+            }
+        }
+        continue;
+    }
     if (isset($field['name']) && $field['type'] !== 'ExpansionPanel') {
         IPS_GetProperty($id, $field['name']);
     }

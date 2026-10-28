@@ -16,13 +16,16 @@ trait EditorSymconVariables
             return $this->editorActionVariables;
         }
         $result = [];
-        foreach (array_slice(IPS_GetInstanceListByModuleID('{E5BB36C6-A70B-EB23-3716-9151A09AC8A2}'), 0, 512) as $instance) {
+        foreach ($this->GatewayZ2MInstances() as $instance => $scope) {
             try {
-                $ieee = strtolower(IPS_GetProperty($instance, 'IEEE'));
-                if (IPS_GetProperty($instance, 'MQTTBaseTopic') !== $this->ReadPropertyString('BaseTopic') || preg_match('/\A0x[a-f0-9]{16}\z/D', $ieee) !== 1) {
+                $ieee = $scope['key'];
+                if ($scope['type'] !== 'device' || $scope['topic'] !== $this->ReadPropertyString('BaseTopic') || !IPS_InstanceExists($instance)) {
                     continue;
                 }
                 foreach (IPS_GetChildrenIDs($instance) as $id) {
+                    if (!IPS_ObjectExists($id)) {
+                        continue;
+                    }
                     $object = IPS_GetObject($id);
                     if ($object['ObjectType'] !== 2 || $object['ObjectIdent'] === '') {
                         continue;
@@ -52,11 +55,15 @@ trait EditorSymconVariables
             return null;
         }
         try {
+            if (!IPS_ObjectExists($binding['id']) || !IPS_VariableExists($binding['id'])) {
+                return null;
+            }
+            $scope = $this->ReadZ2MInstanceScope($binding['instance']);
             $object = IPS_GetObject($binding['id']);
             $variable = IPS_GetVariable($binding['id']);
             if ($object['ParentID'] !== $binding['instance'] || $object['ObjectIdent'] !== $property
-                || IPS_GetProperty($binding['instance'], 'IEEE') !== $device
-                || IPS_GetProperty($binding['instance'], 'MQTTBaseTopic') !== $this->ReadPropertyString('BaseTopic')
+                || ($scope['type'] ?? '') !== 'device' || ($scope['key'] ?? '') !== $device
+                || ($scope['topic'] ?? '') !== $this->ReadPropertyString('BaseTopic')
                 || ($variable['VariableIsLocked'] ?? false)) {
                 return null;
             }

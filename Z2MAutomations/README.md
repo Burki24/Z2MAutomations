@@ -1,5 +1,29 @@
 # Z2MAutomations
 
+## MQTT-Gateway und Suchbereich
+
+Für zwei MQTT-Server werden zwei getrennte Automationsinstanzen verwendet.
+Jede Instanz nutzt ausschließlich ihre eigene übergeordnete MQTT-Verbindung
+und das unter **Zigbee2MQTT-Basistopic** konfigurierte Topic (Groß-/Kleinschreibung
+beachten). Gleichlautende Topics, IEEE-Kennungen oder Gruppen-IDs an anderen
+Gateways werden nicht vermischt.
+
+Unter **An diesem MQTT-Gateway gefundene Basistopics** lassen sich Topics aus
+vorhandenen Z2M-Geräte-, Gruppen- und Bridge-Instanzen auswählen. Die Auswahl
+befüllt nur das Basistopic-Feld; eine manuelle Eingabe bleibt möglich. Danach
+**Änderungen übernehmen** und für den Import den Z2M-Katalog neu laden.
+Die Auswahl ändert weder das Gateway noch Konfigurationen anderer Instanzen.
+Die Vorschläge werden beim Öffnen des Formulars aus der lokalen Installation
+ermittelt; es wird kein MQTT-Netzwerkscan durchgeführt.
+
+**Vorhandene Ereignisse prüfen** findet passende Symcon-Ereignisse anhand ihrer
+Quellvariablen unabhängig vom Ablageort im Objektbaum. Auch ohne geladenen
+Z2M-Katalog werden diese Ereignisse angezeigt. Ob sie importierbar sind, wird
+anschließend gegen den Katalog desselben Gateways und Topics geprüft. Nach einem
+Gateway- oder Topic-Wechsel werden bisherige Suchergebnisse und Freigaben nicht
+weiter angeboten. Es sind keine konkreten Instanz-IDs im Modul hinterlegt.
+
+
 ## Vorhandene Symcon-Ereignisse importieren
 
 1. Modul und mitgelieferte Z2M-Erweiterung auf denselben aktuellen Stand bringen.
@@ -19,8 +43,8 @@ Ein-/Aus-Zustände. Zahlenwerte mit möglicher Symcon-Skalierung, Prozent-/Farba
 PHP-Code, Ablaufpläne und weitere Aktionsarten werden mit Begründung abgewiesen.
 Es wird keine teilweise vereinfachte Regel erzeugt.
 
-Die Zuordnung verwendet die referenzierten Variablen-IDs, den Instanztyp, das
-konfigurierte Basistopic und die Z2M-Geräte-/Gruppenkennung. Namen sind nur Anzeige.
+Die Zuordnung verwendet die referenzierten Variablen-IDs, den Instanztyp, die
+Gateway-Verbindung, das konfigurierte Basistopic und die Z2M-Geräte-/Gruppenkennung. Namen sind nur Anzeige.
 Aktionsziele benötigen eine native schaltbare Variable ohne eigene Aktionsskripte
 und eine passende schreibbare Katalogeigenschaft. Sensoren bleiben lesbare Quellen.
 Gruppen sind als Aktionsziele für ihren Ein-/Aus-Zustand verfügbar.

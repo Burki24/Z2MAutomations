@@ -2,6 +2,13 @@
 
 ## Fixes
 
+- Die Ereignissuche prüft fremde Variablen und Elternobjekte vor Instanzzugriffen;
+  Kategorien und fremde Module erzeugen keine ungültigen Instanz-/Property-Abfragen.
+- Geräte, Gruppen und Ereignisse werden nach dem eigenen MQTT-Gateway und dem
+  gewählten Basistopic getrennt. Zwei Server verwenden getrennte Automationsmodule.
+  Erkannte Topics am eigenen Gateway lassen sich in den MQTT-Einstellungen auswählen.
+  Die Ereignissuche benötigt keinen geladenen Z2M-Katalog; die Importprüfung schon.
+
 - Unterstützte ausgelöste Symcon-Ereignisse lassen sich mit Prüfung und Vorschau
   als deaktivierte Regeln in den Klick-Editor importieren. Originalereignisse
   bleiben unverändert; geänderte Vorschauen und doppelte Imports werden abgewiesen.

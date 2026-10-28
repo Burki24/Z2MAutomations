@@ -3,7 +3,11 @@
 ## Symcon-Ereignisimport
 
 Ein lesender Import übersetzt ausdrücklich unterstützte Kernel-Ereignisse über
-Variablen-IDs in lokale Regeln. Er führt keinen Quellcode aus und verändert weder
+Variablen-IDs in lokale Regeln. `Z2MInstanceDiscovery` bindet die Zuordnung an
+die eigene MQTT-ConnectionID und das ausgewählte Basistopic; pro Gateway wird
+eine eigene Automationsinstanz verwendet. Fremde Elternobjekte werden vor
+Instanzzugriffen ausgeschlossen. Die Ereignissuche ist vom geladenen Katalog
+unabhängig, die Importfreigabe erfordert weiterhin dessen passenden Kontext. Er führt keinen Quellcode aus und verändert weder
 Originalereignisse noch Z2M. Quelle und Ziel müssen zur geladenen Geräte-/Gruppen-
 Identität passen; unbekannte Semantik wird vollständig abgewiesen. Vorschau,
 Konfliktprüfung und deterministische Import-ID sichern die Übernahme ab.

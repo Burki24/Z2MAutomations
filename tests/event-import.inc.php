@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Synthetic kernel event boundary; real module/form/editor and real JS peer below.
 IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/Z2MGroup', $library['id']);
 $groupID = IPS_CreateInstance('{11BF3773-E940-469B-9DD7-FB9ACD7199A2}');
+IPS_ConnectInstance($groupID, $parentID);
 IPS_ApplyChanges($groupID);
 $sourceVariable = IPS_GetObjectIDByIdent('action', $syntheticDevices[1]);
 $targetVariable = IPS_GetObjectIDByIdent('state', $groupID);
@@ -103,6 +104,7 @@ IPS_ApplyChanges($groupID);
 IPS_SetName($sourceVariable, 'Synthetic renamed action');
 $check($module->PreviewEventImport(900003), 'Variable renaming preserves identity-based mapping');
 $duplicateGroup = IPS_CreateInstance('{11BF3773-E940-469B-9DD7-FB9ACD7199A2}');
+IPS_ConnectInstance($duplicateGroup, $parentID);
 IPS_ApplyChanges($duplicateGroup);
 $check(!$module->PreviewEventImport(900003), 'Ambiguous group identities are rejected instead of choosing a variable by name');
 IPS_SetProperty($duplicateGroup, 'GroupId', 8);

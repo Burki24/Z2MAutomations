@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/stubs/autoload.php';
+require __DIR__ . '/import-kernel-guards.php';
+$GLOBALS['invalidImportKernelReads'] = 0;
 
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool
 {
@@ -46,6 +48,13 @@ class ObservedAutomationModule extends Z2MAutomations
     public array $debugMessages = [];
     public bool $debugFails = false;
     public array $formUpdates = [];
+    public function CopySyntheticImportCatalog(self $source): void
+    {
+        $snapshot = json_decode($source->ReadAttributeString('EditorSnapshot'), true, 32, JSON_THROW_ON_ERROR);
+        $state = json_decode($this->GetBuffer('TransportState'), true, 32, JSON_THROW_ON_ERROR);
+        $snapshot['scope'] = $state['scope'];
+        $this->WriteAttributeString('EditorSnapshot', json_encode($snapshot, JSON_THROW_ON_ERROR));
+    }
 
     public function ReplaceTransportBuffer(string $value): string
     {
@@ -109,6 +118,7 @@ $parent = IPS\InstanceManager::getInstanceInterface($parentID);
 $syntheticDevices = [];
 foreach ([1, 2, 3, 4] as $n) {
     $deviceID = IPS_CreateInstance('{E5BB36C6-A70B-EB23-3716-9151A09AC8A2}');
+    IPS_ConnectInstance($deviceID, $parentID);
     IPS_SetProperty($deviceID, 'IEEE', '0x' . str_pad((string) $n, 16, '0', STR_PAD_LEFT));
     IPS_ApplyChanges($deviceID);
     $syntheticDevices[$n] = $deviceID;
@@ -739,6 +749,7 @@ try {
     $check($module->StopAutomations() !== '' && $state()['operation']['status'] === 'stopped', 'A failing diagnostic channel cannot suppress stop');
     $module->debugFails = false;
     require __DIR__ . '/event-import.inc.php';
+    require __DIR__ . '/event-import-scope.inc.php';
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
     $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'Synthetic sequence')
