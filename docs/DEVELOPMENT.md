@@ -1,5 +1,37 @@
 # Entwicklung
 
+## Reale ODER-Prüfung mit Radar und Mehrkanaltaster
+
+Auf ausdrücklichen Praxisauftrag löste der Anwender den beauftragten Radar und
+den Wandtaster physisch aus. Eine temporäre aktivierte Regel verwendete zwei
+ODER-Geräteauslöser und dieselbe Aktionsfolge: beauftragtes Flurlicht ein,
+fünf Sekunden warten, aus. Der Radar meldete Anwesenheit; danach wurden Ein-
+und Aus-Rückmeldungen des Zielgeräts erfasst. Nach dem zwischenzeitlichen Stopp
+wurde neu aktiviert: Der Weg zum Taster verursachte zunächst einen weiteren
+Radar-Lauf; anschließend startete die echte Kanalmeldung des Tasters eine eigene
+Ein-/Aus-Folge. Beim Tasterlauf lagen die Ein-/Aus-Rückmeldungen rund fünf Sekunden
+auseinander. Symcon-/Geräte-Debug-Dateien belegen Quellen und Zielzustände;
+Empfängerstatus bestätigte aktive Testrevision und leeren Laufzeitfehler.
+
+Beim ausgewählten dreikanaligen Taster erscheint im Klick-Katalog nur ein
+allgemeiner Zustand, nicht der tatsächlich gemeldete einzelne Tastenkanal.
+Deshalb wurde für diese Praxisprüfung ausdrücklich die passende Kanaleigenschaft
+in der Test-YAML verwendet. Die ODER-Laufzeit ist damit geprüft; die vollständige
+Kanalabbildung dieses Tasters im Klick-Katalog bleibt ein separates offenes Thema.
+Keine Änderung an Produktionscode oder Geräteparametern in diesem Prüfschritt.
+
+Testautomation anschließend gestoppt, ursprüngliche Regeln inhaltlich unverändert
+mit neuer Speicherrevision 18 wiederhergestellt und erneut geladen. Endzustand:
+Engine gestoppt, keine aktive Revision, kein Laufzeitfehler. Nach dem Stopp
+meldete das Licht nochmals Ein bei weiterhin gestoppter Engine; abschließend
+ausdrücklich ausgeschaltet und frische Aus-/Helligkeit-0-Rückmeldung bestätigt. Alle fünf Debug-Dateisitzungen beendet. Vorübergehend geänderte
+Z2M-Logoptionen wurden auf info bzw. deaktivierte Debug-Veröffentlichung
+zurückgesetzt. Die Debug-Veröffentlichungsoption meldete Neustartbedarf; kein
+Z2M-Neustart durchgeführt. Die aufgezeichnete Diagnose enthält keine separaten
+Z2M-internen Debug-Schrittlogs, sondern native Geräte-/Transportmeldungen und
+den korrelierten Modulstatus.
+
+
 ## Mehrfachauslöser im Geräteeditor
 
 Native List verwaltet 1 bis 8 Kombinationen aus Katalogauswahl und Mindestdauer.

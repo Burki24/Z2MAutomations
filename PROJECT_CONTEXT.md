@@ -8,6 +8,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Reale ODER-Prüfung: Anwender löste Radar und Mehrkanaltaster physisch aus;
+  beide starteten dieselbe Ein-/Warte-/Aus-Folge am Testlicht. Beim Weg zum
+  Taster entstand ein zusätzlicher Radar-Lauf, separat im Debug erkennbar.
+  Anschließend gestoppt, ursprüngliche Regeln inhaltlich erhalten (Revision 18),
+  Testlicht aus, Laufzeitfehler leer. Der Einzelkanal des Mehrkanaltasters fehlt
+  noch im Klick-Katalog; Praxisprüfung verwendete dessen explizite YAML-Eigenschaft.
+  Siehe docs/DEVELOPMENT.md auch zu zurückgesetzten Diagnoseoptionen.
+
 - Geräteeditor unterstützt ein bis acht ODER-Auslöser mit eigener Mindestdauer.
   Alle unterstützten Einträge werden wieder geladen. Alte Einzelaufrufe können
   Mehrfachregeln nicht verkürzen; gemischte Zeit-/Geräteregeln bleiben geschützt.
