@@ -36,6 +36,31 @@
     ],
     "actions": [
         {
+            "type": "ExpansionPanel",
+            "name": "EditorSetup",
+            "caption": "Setup and diagnostics",
+            "expanded": false,
+            "items": [
+                {
+                    "type": "Button",
+                    "caption": "Check Zigbee2MQTT connection",
+                    "onClick": "Z2MA_CheckHealth($id);"
+                },
+                {
+                    "caption": "Refresh extension status",
+                    "type": "Button",
+                    "onClick": "Z2MA_RequestExtensionStatus($id);"
+                },
+                {
+                    "confirm": "Install the bundled z2m-automations.mjs in Z2M and replace an existing file with this name?",
+                    "caption": "Install or update bundled extension",
+                    "type": "Button",
+                    "onClick": "Z2MA_InstallExtension($id);",
+                    "name": "InstallButton"
+                }
+            ]
+        },
+        {
             "type": "Label",
             "name": "ExecutionInfo",
             "caption": "Execution state unknown. Refresh extension status."
@@ -2298,31 +2323,6 @@
                     ],
                     "values": [],
                     "visible": false
-                }
-            ]
-        },
-        {
-            "type": "ExpansionPanel",
-            "name": "EditorSetup",
-            "caption": "Setup and diagnostics",
-            "expanded": false,
-            "items": [
-                {
-                    "type": "Button",
-                    "caption": "Check Zigbee2MQTT connection",
-                    "onClick": "Z2MA_CheckHealth($id);"
-                },
-                {
-                    "caption": "Refresh extension status",
-                    "type": "Button",
-                    "onClick": "Z2MA_RequestExtensionStatus($id);"
-                },
-                {
-                    "confirm": "Install the bundled z2m-automations.mjs in Z2M and replace an existing file with this name?",
-                    "caption": "Install or update bundled extension",
-                    "type": "Button",
-                    "onClick": "Z2MA_InstallExtension($id);",
-                    "name": "InstallButton"
                 }
             ]
         }
