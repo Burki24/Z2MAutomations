@@ -24,8 +24,38 @@ Abstand aus. Weitere Nachweise: Wiederladen aller Schritte, Umordnen, Hinzufüge
 Löschen bis auf einen Schritt, Grenzwerte, ungültige Listen ohne Entwurfsänderung,
 veraltete Auswahl, Schutz vor Verkürzung durch alte Aufrufe, Erhalt anderer Regeln
 und erweiterter Strukturen sowie zentrale Debug-Ausgaben und ein gestörter Debugkanal.
-Native Konsolenbedienung und reale Geräteausführung dieses Editorstands bleiben
-einem gesonderten Praxisauftrag vorbehalten.
+Auf ausdrücklichen Praxisauftrag wurde der Stand am 28.10.2026 in der Testinstallation
+abgeglichen und neu geladen: Modul-, Formular- und Editorhashes stimmen überein,
+der Reload meldete keine Warnungen oder Fehler. In der Konsolenoberfläche wurde
+ohne YAML-Eingabe eine deaktivierte Zeitregel mit zwei Aktionen (0 und 5 Sekunden)
+erstellt, geprüft, gespeichert und erneut geladen. Die zweite Wartezeit wurde auf
+12 Sekunden geändert und ein dritter Schritt mit anderem Ziel und 3 Sekunden
+ergänzt; Prüfung und Speicherung bestätigten die Änderung.
+
+Automatisierte Ziehversuche änderten die Liste nicht. Der Anwender führte das
+Umsortieren manuell aus; Screenshot und Debug bestätigten die Reihenfolge 3, 0,
+12 Sekunden. Der Agent übernahm diese Liste über den Desktop-Formularbutton,
+prüfte und speicherte sie. Frisches Laden lieferte exakt dieselbe Aktionsfolge;
+Wartezeiten und Zielzuordnung blieben erhalten. Danach wurde der erste Schritt
+über den Zeilen-Löschbutton entfernt. Übernahme, Prüfung, Speicherung und erneutes
+Laden bestätigten genau die verbleibenden zwei Schritte (0 und 12 Sekunden).
+
+Ein bestätigter Diagnosebefund bleibt offen: Der native onDelete-Kontext liefert
+bei der unmittelbaren Löschmeldung noch den Vorbestand. InspectEditorActions
+protokollierte deshalb drei Aktionen und deren Wartezeiten, obwohl die Oberfläche
+anschließend zwei Zeilen zeigte. Die spätere Übernahme und Speicherung verwenden
+die richtige verbleibende Liste und protokollieren zwei Schritte. Die sofortige
+Löschdiagnose muss den Vorbestand ausdrücklich kennzeichnen oder den gelöschten
+Eintrag berücksichtigen; der bisherige ArrayIterator-Test bildet diesen nativen
+Ereigniszeitpunkt nicht ab. Unter einem reinen Prüfauftrag wurden keine
+Produktionsquellen geändert. In schmalen Ansichten sind die rechten Bearbeitungs-
+und Löschbuttons durch horizontales Scrollen erreichbar.
+
+Die Testregel wurde über den bestätigten Lösch-/Prüf-/Speicherablauf entfernt.
+Eine frische Abfrage bestätigte die ursprünglichen Regeln inhaltlich unverändert
+bei fortgeschriebener Revision. Die Engine blieb durchgehend gestoppt; keine
+Geräteaktionen wurden ausgeführt. Die Debug-Dateisitzung wurde beendet. Die reale
+Ausführung einer über diese neue Liste erstellten Mehrschrittfolge bleibt offen.
 
 ## Zeitsteuerungen und Bedingungen im Klick-Editor
 

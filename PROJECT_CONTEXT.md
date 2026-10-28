@@ -41,8 +41,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
   vollständig wieder geladen. Alte Einzelaktionsaufrufe dürfen sie nicht verkürzen.
   Offline-Integration prüft die echten Formularskripte, Validierung, Persistenz,
   verzögerte Ausführung für zwei synthetische Geräte und bereinigte deutsche
-  Debug-Ausgaben. Schema und Z2M-Artefakt bleiben unverändert. Native Bedienprüfung
-  dieses Editorstands und reale Mehrschrittprüfung sind noch offen.
+  Debug-Ausgaben. Schema und Z2M-Artefakt bleiben unverändert. Die Konsolenprüfung
+  bestätigt Erstellen, Bearbeiten, Wiederladen und Löschen sowie Prüfung und
+  Speicherung. Umsortieren wurde durch den Anwender manuell ausgeführt und durch
+  den Agenten einschließlich Persistenz geprüft. Ein Debug-Befund bleibt offen:
+  Die unmittelbare native Löschmeldung protokolliert noch den Vorbestand; die
+  eigentliche Übernahme und Speicherung der verbleibenden Schritte sind korrekt.
+  Ursprüngliche Regeln wurden wiederhergestellt, die Engine blieb gestoppt.
+  Reale Geräteausführung einer mit dieser neuen Liste erstellten Folge ist offen.
 - Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
   oder Zahlenbedingung sind grafisch erstell- und bearbeitbar. Mindestdauer und
   Verzögerung werden übernommen. Die Erweiterung liefert dafür lesbare numerische
@@ -78,8 +84,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 1. Zeitregeln bei Bedarf nach weiterem Praxisauftrag auch live auslösen und
    weitere Geräte-/Bedingungskombinationen in der Konsole prüfen.
-2. Aktionsliste nach Praxisauftrag in der nativen Konsole prüfen; Gruppen bei
-   Bedarf im Klick-Editor ergänzen.
+2. Unmittelbare Löschdiagnose der Aktionsliste nach Korrekturauftrag an den nativen
+   Ereigniszeitpunkt anpassen und erneut prüfen; Gruppen bei Bedarf ergänzen.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 
