@@ -2,6 +2,11 @@
 
 ## Fixes
 
+- Grundlegende Ein-/Aus-Auswahlwerte werden im begrenzten Gerätekatalog vor
+  Sonderoptionen berücksichtigt. Viele Optionen früher Geräte verdrängen dadurch
+  nicht mehr die normalen Schaltaktionen späterer Geräte. Erweiterung aktualisieren
+  und Geräte neu laden; die bisherigen Größenlimits bleiben erhalten.
+
 - Debug beim Löschen eines Aktionsschritts kennzeichnet die vom nativen Formular
   übergebene Liste als Vorbestand. Gelöschte Schritte erscheinen nicht mehr als
   vermeintlich verbleibende Folge; diese wird beim Übernehmen geprüft.

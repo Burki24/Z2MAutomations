@@ -326,7 +326,7 @@ export function validateYaml(yaml) {
 
 // Only discrete exposed values enter the click editor; raw definitions stay in Z2M.
 export function buildEditorCatalog(zigbee) {
-    const result = [];
+    const candidates = [];
     let optionCount = 0, devicesSeen = 0;
     const scalar = value => value === null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))
         || (typeof value === 'string' && [...value].length <= 256);
@@ -335,14 +335,15 @@ export function buildEditorCatalog(zigbee) {
         if (!device?.isDevice?.() || device.zh?.type === 'Coordinator' || !/^0x[0-9a-f]{16}$/.test(device.ieeeAddr)) continue;
         const triggers = [], actions = [], numeric = [];
         let visited = 0;
-        const walk = (features, depth = 0) => {
+        const walk = (features, depth = 0, primary = false) => {
             if (!Array.isArray(features) || depth > 6) return;
             for (const feature of features) {
                 if (++visited > 128 || optionCount >= 1024) break;
                 if (!isObject(feature)) continue;
-                walk(feature.features, depth + 1);
+                walk(feature.features, depth + 1, primary);
                 if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
                     || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
+                if ((feature.type === 'binary' && feature.property === 'state') !== primary) continue;
                 if (feature.type === 'numeric' && (feature.access & 1) !== 0 && numeric.length < 64 && optionCount < 1024) {
                     numeric.push({property: feature.property, unit: typeof feature.unit === 'string' ? [...feature.unit].slice(0, 24).join('') : ''});
                     optionCount++;
@@ -352,16 +353,25 @@ export function buildEditorCatalog(zigbee) {
                 for (const value of values) {
                     if (!scalar(value) || optionCount >= 1024) continue;
                     const entry = {property: feature.property, value};
-                    if ((feature.access & 1) !== 0 && triggers.length < 64) { triggers.push(entry); optionCount++; }
-                    if ((feature.access & 2) !== 0 && actions.length < 64) { actions.push(entry); optionCount++; }
+                    if ((feature.access & 1) !== 0 && triggers.length < 64 && optionCount < 1024) { triggers.push(entry); optionCount++; }
+                    if ((feature.access & 2) !== 0 && actions.length < 64 && optionCount < 1024) { actions.push(entry); optionCount++; }
                 }
             }
         };
-        try { walk(device.exposes()); } catch { continue; }
-        if (triggers.length || actions.length || numeric.length) result.push({id: device.ieeeAddr,
-            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric});
+        let features;
+        try { features = device.exposes(); } catch { continue; }
+        candidates.push({entry: {id: device.ieeeAddr,
+            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric},
+        scan: primary => { visited = 0; walk(features, 0, primary); }, failed: false});
     }
-    return result;
+    // Reserve ordinary on/off choices across the bounded device set before special options.
+    for (const primary of [true, false]) {
+        for (const candidate of candidates) {
+            if (candidate.failed) continue;
+            try { candidate.scan(primary); } catch { candidate.failed = true; }
+        }
+    }
+    return candidates.filter(({entry, failed}) => !failed && (entry.triggers.length || entry.actions.length || entry.numeric.length)).map(({entry}) => entry);
 }
 
 class ConfigurationStore {

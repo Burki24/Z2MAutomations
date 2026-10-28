@@ -65,7 +65,9 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
 Der erste Editor unterstützt diskrete Geräteereignisse und Geräteaktionen aus
 den Z2M-Exposes (Enum und Binary): etwa Taster, Bewegung oder Ein-/Ausschalten.
 Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die ersten
-256 Geräte und insgesamt 1024 Auswahlwerte werden geladen; unpassende Exposes
+256 Geräte und insgesamt 1024 Auswahlwerte werden geladen. Grundlegende binäre
+Zustandswerte erhalten über diese Geräte hinweg Vorrang vor Sonderoptionen;
+unpassende Exposes
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
 Geräteaktionen und mehrere Auslöser bleiben der erweiterten

@@ -1,5 +1,35 @@
 # Entwicklung
 
+## Reale Aktionsfolge aus dem Klick-Editor
+
+Beim Praxisauftrag am 28.10.2026 fehlte das freigegebene Testlicht im bisherigen
+Katalog, obwohl Z2M dessen schaltbaren binären Zustand anbot. Viele Sonderoptionen
+früher Geräte hatten das globale Auswahlbudget erschöpft. Nach ausdrücklicher
+Korrekturfreigabe sammelt der Empfänger die begrenzte Gerätemenge und berücksichtigt
+zuerst binäre state-Werte, danach weitere Eigenschaften. Die Limits von 256
+Geräten, 1024 Auswahlwerten, 64 Werten je Art und Gerät sowie die begrenzte
+Feature-Tiefe bleiben erhalten. Exposes werden pro Gerät einmal gelesen.
+Regressionstests prüfen ein spätes Licht hinter vielen Sonderoptionen und den
+Grenzfall mit 256 Lichtern; der ursprüngliche Stand bestand den neuen Test nicht.
+
+Das neu erzeugte Erweiterungsartefakt wurde in der Testinstallation installiert
+und bestätigt. Der frisch geladene Klick-Editor bot das Testlicht nun an. Ohne
+YAML-Eingabe wurde eine Zeitregel mit zwei Aktionen erstellt: Ein ohne Wartezeit,
+Aus nach fünf Sekunden. Die Formularbuttons prüften, speicherten und aktivierten
+die Regel; Symcon bestätigte die aktive Revision mit genau einer aktivierten Regel.
+
+Die native Z2M-Ausführung protokollierte Start, zwei Schaltübergaben mit rund
+5,002 Sekunden Abstand und Ende. Frische Geräte-Rückmeldungen bestätigten Ein
+und Aus mit rund 4,996 Sekunden Abstand; auch eine positive Helligkeit wurde
+gemeldet. Der abschließend abgefragte Laufzeitfehler war leer. Anschließend wurde
+über den Modulbutton gestoppt und der gestoppte Zustand von Z2M bestätigt.
+Die Testregel wurde über die Oberfläche gelöscht, geprüft und gespeichert.
+Frisches Laden bestätigte den ursprünglichen Regelinhalt mit neuer Revision;
+das Testlicht war wieder aus mit der ursprünglichen Helligkeit 0. Temporäre
+Diagnoseerweiterung und erhöhte Logstufe wurden zurückgenommen, die Debug-Dateisitzung
+beendet. Die Aufzeichnung lief unabhängig vom Symcon-Verwaltungsmodul über MQTT;
+dieser einzelne reale Ablauf ist keine vollständige Geräte-/Versionsabnahme.
+
 ## Aktionsfolgen im Klick-Editor
 
 Eine native List mit add/delete/changeOrder erlaubt bis zu 16 diskrete Set-Aktionen
@@ -63,9 +93,9 @@ und Löschbuttons durch horizontales Scrollen erreichbar.
 
 Die Testregel wurde über den bestätigten Lösch-/Prüf-/Speicherablauf entfernt.
 Eine frische Abfrage bestätigte die ursprünglichen Regeln inhaltlich unverändert
-bei fortgeschriebener Revision. Die Engine blieb durchgehend gestoppt; keine
-Geräteaktionen wurden ausgeführt. Die Debug-Dateisitzung wurde beendet. Die reale
-Ausführung einer über diese neue Liste erstellten Mehrschrittfolge bleibt offen.
+bei fortgeschriebener Revision. Die Engine blieb durchgehend gestoppt.
+Geräteaktionen wurden in diesem Bedienprüfungslauf nicht ausgeführt. Die
+Debug-Dateisitzung wurde beendet. Der spätere reale Ausführungsnachweis steht oben.
 
 ## Zeitsteuerungen und Bedingungen im Klick-Editor
 

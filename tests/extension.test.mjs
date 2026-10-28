@@ -10,6 +10,25 @@ import Extension, {validateYaml, LIMITS, buildEditorCatalog} from '../libs/z2m/z
 const emptyYaml = revision => `schema_version: 1\nrevision: ${revision}\nautomations: []\n`;
 const fixtureYaml = await readFile(new URL('../libs/z2m/examples/automations.yaml', import.meta.url), 'utf8');
 
+test('click editor reserves basic state choices for later devices before filling special options', () => {
+    const devices = Array.from({length: 12}, (_, i) => ({ieeeAddr: '0x' + (i + 1).toString(16).padStart(16, '0'), name: 'Synthetic rich device', isDevice: () => true,
+        exposes: () => Array.from({length: 8}, (_, n) => ({property: 'special_' + n, type: 'enum', access: 7, values: Array.from({length: 32}, (_, v) => 'option_' + v)}))}));
+    devices.push({ieeeAddr: '0x00000000000000ff', name: 'Synthetic later light', isDevice: () => true,
+        exposes: () => [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}]});
+    const catalog = buildEditorCatalog({devicesIterator: () => devices});
+    const light = catalog.find(device => device.id === '0x00000000000000ff');
+    assert.deepEqual(light?.actions.map(choice => choice.value), ['ON', 'OFF']);
+    assert.deepEqual(light?.triggers.map(choice => choice.value), ['ON', 'OFF']);
+    assert.ok(catalog.reduce((sum, device) => sum + device.actions.length + device.triggers.length + device.numeric.length, 0) <= 1024);
+    let exposed = 0;
+    const lights = Array.from({length: 257}, (_, i) => ({ieeeAddr: '0x' + (i + 1).toString(16).padStart(16, '0'), name: 'Synthetic light', isDevice: () => true,
+        exposes: () => { exposed++; return [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}]; }}));
+    const bounded = buildEditorCatalog({devicesIterator: () => lights});
+    assert.equal(bounded.length, 256);
+    assert.equal(exposed, 256, 'Exposes are read once per admitted device');
+    assert.equal(bounded.reduce((sum, device) => sum + device.actions.length + device.triggers.length, 0), 1024);
+});
+
 test('click editor reads bounded discrete Exposes and ignores unsupported values and raw definitions', () => {
     const catalog = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000001', name: 'Synthetic button', isDevice: () => true,
         exposes: () => [{features: [{property: 'action', type: 'enum', access: 1, values: ['single', 'double']},
@@ -18,7 +37,7 @@ test('click editor reads bounded discrete Exposes and ignores unsupported values
             {property: '__proto__', type: 'enum', access: 7, values: ['forbidden']},
             {property: 'bad', type: 'enum', access: 7, values: [{private: 'raw-definition'}]}]}]}]});
     assert.equal(catalog.length, 1);
-    assert.deepEqual(catalog[0].triggers.map(item => item.property), ['action', 'action', 'state', 'state']);
+    assert.deepEqual(catalog[0].triggers.map(item => item.property), ['state', 'state', 'action', 'action']);
     assert.deepEqual(catalog[0].actions.map(item => item.value), [true, false]);
     assert.equal(JSON.stringify(catalog).includes('raw-definition'), false);
     let seen = 0;

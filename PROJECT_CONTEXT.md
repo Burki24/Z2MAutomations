@@ -41,7 +41,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
   vollständig wieder geladen. Alte Einzelaktionsaufrufe dürfen sie nicht verkürzen.
   Offline-Integration prüft die echten Formularskripte, Validierung, Persistenz,
   verzögerte Ausführung für zwei synthetische Geräte und bereinigte deutsche
-  Debug-Ausgaben. Schema und Z2M-Artefakt bleiben unverändert. Die Konsolenprüfung
+  Debug-Ausgaben. Schema 1 bleibt unverändert. Die Konsolenprüfung
   bestätigt Erstellen, Bearbeiten, Wiederladen und Löschen sowie Prüfung und
   Speicherung. Umsortieren wurde durch den Anwender manuell ausgeführt und durch
   den Agenten einschließlich Persistenz geprüft. Die unmittelbare Löschdiagnose
@@ -49,7 +49,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Schritte nicht als verbleibende Folge auf. Regressionstest und erneute native
   Löschprüfung (2 auf 1 sowie 1 auf 0 Formularzeilen) bestätigen die Korrektur.
   Ursprüngliche Regeln wurden wiederhergestellt, die Engine blieb gestoppt.
-  Reale Geräteausführung einer mit dieser neuen Liste erstellten Folge ist offen.
+  Eine per Klick erstellte Folge wurde real geprüft: Testlicht einschalten,
+  fünf Sekunden warten, ausschalten. Frische Geräte-Rückmeldungen und native
+  Z2M-Debug-Ausgaben bestätigten den Ablauf; anschließend gestoppt und bereinigt.
+- Der begrenzte Gerätekatalog priorisiert jetzt grundlegende binäre state-Werte
+  über alle berücksichtigten Geräte vor deren Sonderoptionen. Ein späteres
+  Testlicht war zuvor wegen ausgeschöpften Auswahlbudgets nicht auswählbar.
+  Regressionstests und die aktualisierte Testinstallation bestätigen die Korrektur;
+  globale Größenlimits bleiben unverändert. Erweiterung aktualisieren und Katalog
+  neu laden, um das korrigierte Verhalten zu verwenden.
 - Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
   oder Zahlenbedingung sind grafisch erstell- und bearbeitbar. Mindestdauer und
   Verzögerung werden übernommen. Die Erweiterung liefert dafür lesbare numerische
@@ -85,8 +93,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 1. Zeitregeln bei Bedarf nach weiterem Praxisauftrag auch live auslösen und
    weitere Geräte-/Bedingungskombinationen in der Konsole prüfen.
-2. Reale Ausführung einer über die neue Aktionsliste erstellten Folge nach
-   Praxisauftrag prüfen; Gruppen bei Bedarf ergänzen.
+2. Weitere Aktionsfolgen und Geräte nach Praxisauftrag prüfen; Gruppen bei Bedarf
+   im Klick-Editor ergänzen.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 
