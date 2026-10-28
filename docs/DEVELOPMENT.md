@@ -1,5 +1,22 @@
 # Entwicklung
 
+## Korrektur: Vorbelegung nach Verlust des Transportcaches
+
+Die Testinstallation zeigte erhaltene Editorregeln, aber extensionConfirmed=false
+und editor_changed. Die gemeinsame Kontextprüfung verhinderte dadurch schon die
+lokale Auswahl. SelectAutomation erlaubt nun ausschließlich für diese lesende
+Vorbelegung fehlende Empfängerbestätigung. Scope-/YAML-Abgleich und bekannte
+Empfängerkonflikte bleiben erhalten; mutierende Aktionen verwenden weiterhin die
+vollständige Empfängerprüfung. UpdateEditorField reicht Eigenschaften des
+internen EditorDetails nicht an den aktiven Bereich weiter, dessen eigene
+Sichtbarkeit durch AutomationSectionFields verwaltet wird.
+
+Regression: flüchtigen Transportcache im synthetischen Modul verwerfen, echte
+Auswahl ausführen und tatsächlich gesendete Live-Feldwerte für Name, Zeit,
+Zahlenbedingung und sichtbaren Zeitbereich prüfen. Löschen bleibt dabei gesperrt.
+Die Korrektur ist nicht live installiert; reale Konsolenprüfung steht aus.
+
+
 ## Korrektur: sichtbare Bearbeitungsbereiche und eindeutiger Einstieg
 
 Beide Editorüberschriften bleiben sichtbar; nur der aktive Bereich ist zunächst

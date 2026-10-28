@@ -57,7 +57,7 @@ trait AutomationEditorAreas
     private function UpdateEditorField(string $name, string $parameter, mixed $value): void
     {
         $this->UpdateFormField($name, $parameter, $value);
-        if (!in_array($name, self::AREA_EDITOR_FIELDS, true)) {
+        if ($name === 'EditorDetails' || !in_array($name, self::AREA_EDITOR_FIELDS, true)) {
             return;
         }
         $area = $this->ActiveEditorArea();

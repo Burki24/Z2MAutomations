@@ -2,6 +2,12 @@
 
 ## Fixes
 
+- Gespeicherte lokale Regeln lassen sich nach einem Library-Neuladen auch ohne
+  erneute Empfängerbestätigung zur Ansicht auswählen. Name, Uhrzeit, Bedingungen
+  und Aktionen werden vorbelegt; Änderungen und Übertragung behalten die
+  Empfängerprüfung. Interne Editor-Sichtbarkeit wird nicht mehr irrtümlich
+  an den sichtbaren Bereich weitergereicht.
+
 - Bearbeitungsüberschriften bleiben für Geräte- und Zeitautomationen sichtbar.
   Aufklappen aktiviert den passenden Editor; erneutes Auf-/Zuklappen im aktiven
   Bereich setzt keine Eingaben zurück. Redundante Neu-Buttons entfernt; neue und

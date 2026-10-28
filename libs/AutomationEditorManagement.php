@@ -12,7 +12,7 @@ trait AutomationEditorManagement
         {
             $state = $this->RefreshState();
             $draft = $this->ReadEditorDraft();
-            $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft);
+            $error = $this->EditorContextError($state, $draft, $CurrentDraft, $CheckDraft, false);
             if ($error === '' && !in_array($NewType, ['device', 'time'], true)) {
                 $error = 'editor_invalid';
             }
@@ -29,7 +29,7 @@ trait AutomationEditorManagement
             $this->DebugEvent('AKTION', 'Bearbeitung im passenden Automationsbereich geöffnet; Z2M bleibt unverändert.', ['Bereich' => $this->EditorTypeLabel($type), 'NeueAutomation' => $index === null]);
             $state['lastError'] = '';
             $state['operation'] = ['kind' => 'editor', 'status' => 'rule_selected', 'transaction' => ''];
-            $this->DebugEvent('AKTION', 'Regelauswahl im lokalen Editor geladen.', ['VorhandeneRegel' => $index !== null]);
+            $this->DebugEvent('AKTION', 'Regelauswahl im lokalen Editor geladen.', ['VorhandeneRegel' => $index !== null, 'EmpfängerBestätigt' => $state['extensionConfirmed'], 'FelderVorbelegt' => $index !== null]);
             $this->SaveState($state);
             return true;
         }));
@@ -108,14 +108,15 @@ trait AutomationEditorManagement
         return $text === '' ? null : json_decode($text, true, 32, JSON_THROW_ON_ERROR);
     }
 
-    private function EditorContextError(array $state, ?array $draft, string $currentDraft, bool $checkDraft): string
+    private function EditorContextError(array $state, ?array $draft, string $currentDraft, bool $checkDraft, bool $requireReceiver = true): string
     {
         if ($draft === null || $this->EditorSnapshot() === []) {
             return 'editor_unavailable';
         }
-        return !$state['extensionConfirmed'] || $state['workflow'] !== null || $draft['scope'] !== $state['scope']
-            || $draft['session'] !== $state['extension']['session'] || $draft['baseRevision'] !== $state['extension']['storedRevision']
-            || $draft['baseChecksum'] !== $state['extension']['checksum'] || $draft['draftChecksum'] !== hash('sha256', $this->ReadAttributeString('YamlDraft'))
+        $receiverChanged = $state['extensionConfirmed'] && ($draft['session'] !== $state['extension']['session']
+            || $draft['baseRevision'] !== $state['extension']['storedRevision'] || $draft['baseChecksum'] !== $state['extension']['checksum']);
+        return ($requireReceiver && !$state['extensionConfirmed']) || $receiverChanged || $state['workflow'] !== null || $draft['scope'] !== $state['scope']
+            || $draft['draftChecksum'] !== hash('sha256', $this->ReadAttributeString('YamlDraft'))
             || (($checkDraft || $currentDraft !== '') && hash('sha256', $currentDraft) !== $draft['draftChecksum']) ? 'editor_changed' : '';
     }
 

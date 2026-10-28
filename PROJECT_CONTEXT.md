@@ -8,6 +8,12 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Auswahl und Vorbelegung eines gültigen lokalen Entwurfs benötigen keine
+  erneute Z2M-Bestätigung nach Verlust des flüchtigen Transportcaches. Bekannte
+  Empfängerkonflikte, Scope-/YAML-Konflikte sowie jede Änderung/Übertragung bleiben
+  geschützt. Live-Feldwerte und sichtbarer Zeitbereich sind im Regressionstest
+  geprüft; Korrektur noch nicht auf der Testinstallation installiert.
+
 - Beide Bearbeitungsüberschriften bleiben sichtbar. Öffnen aktiviert den passenden
   Bereich; Auf-/Zuklappen des aktiven Editors erhält ungespeicherte Eingaben.
   Die redundanten Neu-Buttons entfallen; die Auswahl enthält „Neue Automation

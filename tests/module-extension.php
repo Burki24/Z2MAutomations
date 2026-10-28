@@ -41,6 +41,13 @@ class ObservedAutomationModule extends Z2MAutomations
     public bool $debugFails = false;
     public array $formUpdates = [];
 
+    public function ReplaceTransportBuffer(string $value): string
+    {
+        $previous = $this->GetBuffer('TransportState');
+        $this->SetBuffer('TransportState', $value);
+        return $previous;
+    }
+
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
         static $knownFields = null;
@@ -340,6 +347,16 @@ try {
     $runSectionScript($fields['EditorTimeRule']['onChange'], $fields, ['EditorTimeRule' => $scheduled['id']]);
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $check(!$module->OpenAutomationEditor('device', $scheduled['id'], $fields['YamlInput']['value']), 'Panel entry rejects an automation from the wrong category');
+    $transportBeforeReload = $module->ReplaceTransportBuffer('');
+    $check($module->SelectAutomation($scheduled['id'], $fields['YamlInput']['value'], true, 'time'), 'A cached rule can be selected after volatile receiver confirmation is lost');
+    $check(
+        $module->formUpdates['TimeEditorName']['value'] === $scheduled['name'] && $module->formUpdates['TimeEditorAt']['value'] === '07:15:00'
+        && $module->formUpdates['TimeEditorNumber']['value'] === 18.5 && $module->formUpdates['TimeEditorDetails']['visible'] === true,
+        'Live selection fills name, time and condition in the visible time editor'
+    );
+    $check(!$module->DeleteAutomation($scheduled['id'], $module->formUpdates['TimeEditorEditToken']['value']), 'Losing receiver confirmation still blocks modifying the draft');
+    $module->ReplaceTransportBuffer($transportBeforeReload);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $timeToken = $fields['EditorEditToken']['value'];
     $unchangedScheduledYaml = $fields['YamlInput']['value'];
     foreach ([['EditorAt' => '25:00'], ['EditorTimezone'        => 'invalid-zone'], ['EditorBefore' => '22:00'], ['EditorMonday' => false],

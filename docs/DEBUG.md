@@ -1,5 +1,10 @@
 # Debug und MQTT-Diagnose
 
+Regelauswahl meldet `FelderVorbelegt` und `EmpfängerBestätigt` getrennt. Ein
+gültiger lokaler Entwurf kann nach Verlust der flüchtigen Z2M-Bestätigung
+weiter zur Bearbeitungsansicht geladen werden. Änderungen bleiben bis zur
+Bestätigung gesperrt. Namen, Uhrzeiten und Bedingungswerte werden nicht geloggt.
+
 `OpenAutomationEditor` erklärt das Öffnen bzw. Zuklappen des aktiven Bereichs
 und erhält dabei dessen Eingaben. Ein Wechsel delegiert an die instrumentierte
 Regelauswahl. Falsche Bereiche werden sicher abgewiesen; Debug nennt nur feste
