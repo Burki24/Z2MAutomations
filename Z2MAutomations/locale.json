@@ -202,7 +202,13 @@
             "Enter valid and different start and end times for the time window.": "Gültige, unterschiedliche Start- und Endzeiten für das Zeitfenster eingeben.",
             "Choose at least one weekday for the time window.": "Mindestens einen Wochentag für das Zeitfenster auswählen.",
             "Choose an available condition property, comparison and correctly typed value.": "Eine verfügbare Messgröße bzw. einen Zustand, einen passenden Vergleich und einen gültigen Vergleichswert auswählen.",
-            "Event duration and action delay must be whole seconds from 0 to 86400.": "Mindestdauer und Aktionsverzögerung müssen ganze Sekunden zwischen 0 und 86400 sein."
+            "Event duration and action delay must be whole seconds from 0 to 86400.": "Mindestdauer und Aktionsverzögerung müssen ganze Sekunden zwischen 0 und 86400 sein.",
+            "Device and action": "Gerät und Aktion",
+            "Choose device and action": "Gerät und Aktion auswählen",
+            "Wait before this step (seconds)": "Wartezeit vor diesem Schritt (Sekunden)",
+            "Action sequence (maximum 16 steps)": "Aktionsfolge (höchstens 16 Schritte)",
+            "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards.": "Aktionen laufen von oben nach unten. Schritte hinzufügen, bearbeiten und durch Ziehen umsortieren. Jede Wartezeit gilt vor ihrem Schritt; 0 bedeutet sofort. Anschließend die Automation in den Entwurf übernehmen.",
+            "Use 1 to 16 actions from the device catalog and waits from 0 to 86400 seconds.": "1 bis 16 Aktionen aus der Geräteauswahl und Wartezeiten von 0 bis 86400 Sekunden verwenden."
         }
     }
 }

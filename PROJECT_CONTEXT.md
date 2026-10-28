@@ -34,7 +34,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Engine-Fehler besitzen eigene lesbare Statusvariablen.
 - Erster Klick-Editor für diskrete Geräteereignisse und Set-Aktionen aus Z2M-Exposes.
   Vorhandene Regeln werden beim Ergänzen erhalten; YAML bleibt optional sichtbar.
-  Gruppen und mehrschrittige Regeln benötigen weiterhin die erweiterte YAML-Ansicht.
+  Gruppen benötigen weiterhin die erweiterte YAML-Ansicht.
+- Native Aktionsliste für bis zu 16 geordnete Geräteaktionen implementiert:
+  hinzufügen, bearbeiten, löschen und durch Ziehen umordnen; pro Schritt eine
+  Wartezeit vor der Aktion von 0 bis 86400 Sekunden. Gespeicherte Folgen werden
+  vollständig wieder geladen. Alte Einzelaktionsaufrufe dürfen sie nicht verkürzen.
+  Offline-Integration prüft die echten Formularskripte, Validierung, Persistenz,
+  verzögerte Ausführung für zwei synthetische Geräte und bereinigte deutsche
+  Debug-Ausgaben. Schema und Z2M-Artefakt bleiben unverändert. Native Bedienprüfung
+  dieses Editorstands und reale Mehrschrittprüfung sind noch offen.
 - Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
   oder Zahlenbedingung sind grafisch erstell- und bearbeitbar. Mindestdauer und
   Verzögerung werden übernommen. Die Erweiterung liefert dafür lesbare numerische
@@ -70,7 +78,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 1. Zeitregeln bei Bedarf nach weiterem Praxisauftrag auch live auslösen und
    weitere Geräte-/Bedingungskombinationen in der Konsole prüfen.
-2. Klick-Editor bei Bedarf um Gruppen und mehrschrittige Regeln erweitern.
+2. Aktionsliste nach Praxisauftrag in der nativen Konsole prüfen; Gruppen bei
+   Bedarf im Klick-Editor ergänzen.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 

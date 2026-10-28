@@ -19,13 +19,14 @@ Das Modul prüft YAML über den Empfänger und überträgt sie nach Vorschau und
 Bestätigung in dessen persistenten Speicher. Die Erweiterung kann eine gespeicherte
 Revision nach ausdrücklicher Aktivierung ausführen. Aktivierung und Stopp werden
 im Modul bedient und von Z2M bestätigt. Ein erster Klick-Editor lädt Geräte aus
-Z2M und erstellt einfache Geräteautomationen durch Auswahl von Quelle, Ereignis,
-Ziel und Aktion. YAML-Kenntnisse sind dafür nicht erforderlich.
+Z2M und erstellt Geräte- oder Zeitautomationen mit Bedingungen und bis zu 16
+geordneten Geräteaktionen. Die Wartezeit ist pro Schritt einstellbar;
+YAML-Kenntnisse sind dafür nicht erforderlich.
 [Bedienung](Z2MAutomations/README.md), [Ausführung und Grenzen](docs/RUNTIME.md).
 Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
 eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.
 
-Erweiterte Zeit-/Bedingungsregeln sind weiterhin über die zusätzliche YAML-Ansicht
+Weitere Auslöser, Bedingungen und Gruppen sind über die zusätzliche YAML-Ansicht
 möglich. Die Ausführung aktivierter Regeln findet in Z2M statt und benötigt
 kein laufendes Symcon. Nach einem Z2M-Neustart ist ausdrücklich neu zu aktivieren.
 

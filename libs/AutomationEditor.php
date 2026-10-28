@@ -293,6 +293,7 @@ trait AutomationEditor
         }
         unset($field);
         $this->FillScheduleForm($form, $draft, $selection);
+        $this->FillActionSequenceForm($form, $selection, $snapshot);
     }
 
     private function EditorRuleRows(array $draft): array

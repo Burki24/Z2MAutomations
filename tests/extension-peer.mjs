@@ -22,7 +22,9 @@ const devices = new Map([
     ['0x0000000000000001', {ID: '0x0000000000000001', ieeeAddr: '0x0000000000000001', name: 'synthetic/button', isDevice: () => true,
         exposes: () => [{type: 'enum', property: 'action', access: 1, values: ['single', 'double']}]}],
     ['0x0000000000000002', {ID: '0x0000000000000002', ieeeAddr: '0x0000000000000002', name: 'synthetic/light', isDevice: () => true,
-        exposes: () => [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}, {type: 'numeric', property: 'temperature', access: 1, unit: '°C'}]}]
+        exposes: () => [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}, {type: 'numeric', property: 'temperature', access: 1, unit: '°C'}]}],
+    ['0x0000000000000003', {ID: '0x0000000000000003', ieeeAddr: '0x0000000000000003', name: 'synthetic/second-light', isDevice: () => true,
+        exposes: () => [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}]}]
 ]);
 const zigbee = {resolveEntity: id => devices.get(id), devicesIterator: () => devices.values(), groupsIterator: () => [][Symbol.iterator]()};
 const bus = {onMQTTMessage: (_owner, callback) => { listener = callback; },

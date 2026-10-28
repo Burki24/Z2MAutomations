@@ -176,11 +176,12 @@ trait AutomationEditorManagement
         $selected = $index !== null && ($selection['checksum'] ?? null) === ($draft['draftChecksum'] ?? null);
         $rule = $selected ? $draft['configuration']['automations'][$index] : null;
         $simple = $rule === null ? null : $this->ScheduledEditorFields($rule);
-        return ['EditorRule' => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
-            'EditorName'     => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
-            'EditorSource'   => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
-            'EditorTarget'   => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
-            'selected'       => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
+        return ['EditorRule'   => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
+            'EditorName'       => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
+            'EditorSource'     => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
+            'EditorTarget'     => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
+            'EditorActionRows' => $simple === null ? [] : $this->EditorActionRows($rule),
+            'selected'         => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
     }
 
     private function SetEditorSelection(array $draft, string $id): void
@@ -193,8 +194,11 @@ trait AutomationEditorManagement
             $this->UpdateFormField('Editor' . $side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $fields['Editor' . $side], $side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         }
         $this->ApplyScheduleFields($fields);
+        $this->UpdateFormField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateFormField('EditorActions', 'values', json_encode($fields['EditorActionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateFormField('EditorActions', 'enabled', $fields['simple']);
         foreach ($fields as $field => $value) {
-            if (!in_array($field, ['selected', 'simple'], true)) {
+            if (!in_array($field, ['selected', 'simple', 'EditorActionRows'], true)) {
                 $this->UpdateFormField($field, 'value', $value);
             }
         }

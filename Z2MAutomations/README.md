@@ -51,7 +51,8 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
 3. Unter „Automation bearbeiten“ die Auswahl „Neue Automation erstellen“ wählen.
    Namen eingeben, ein Quellgerät und dessen Ereignis auswählen, beispielsweise
    „Tasterereignis: Einfach drücken“.
-4. Zielgerät und Aktion auswählen, beispielsweise „Zustand: Ein“.
+4. Unter „Aktionsfolge“ einen Schritt hinzufügen, Gerät und Aktion auswählen,
+   beispielsweise „Zustand: Ein“, und die Wartezeit vor diesem Schritt eingeben.
 5. „Automation zum Entwurf hinzufügen“ betätigen. Weitere einfache Regeln können
    vor der Übertragung ergänzt werden. Vorhandene gespeicherte Regeln bleiben
    im Entwurf vollständig erhalten.
@@ -67,9 +68,35 @@ Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die erste
 256 Geräte und insgesamt 1024 Auswahlwerte werden geladen; unpassende Exposes
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
-Gruppen, mehrere Auslöser oder mehrschrittige Aktionsfolgen bleiben der erweiterten
+Geräteaktionen und mehrere Auslöser bleiben der erweiterten
 YAML-Ansicht vorbehalten. Bestehende Regeln außerhalb des Formularumfangs können
 umbenannt, deaktiviert oder gelöscht werden; ihre zusätzlichen Schritte bleiben erhalten.
+
+## Mehrere Aktionen per Klick
+
+Die Liste „Aktionsfolge“ enthält bis zu 16 Schritte. Über „Hinzufügen“ Gerät und
+Aktion auswählen; vorhandene Schritte über die Bearbeitung ändern oder löschen.
+Die Reihenfolge durch Ziehen der Zeilen ändern. Sie wird von oben nach unten
+ausgeführt. Geräte dürfen in mehreren Schritten vorkommen.
+
+„Wartezeit vor diesem Schritt“ ist eine ganze Sekundenzahl von 0 bis 86400.
+0 bedeutet sofort; bei späteren Schritten beginnt die Wartezeit nach der Übergabe
+der vorherigen Aktion an Z2M. Beispiel: Licht ein mit 0 Sekunden, Licht aus mit
+30 Sekunden. Eine Übergabe bestätigt noch keine tatsächliche Gerätewirkung.
+Auch vor dem ersten Schritt darf eine Wartezeit stehen.
+
+Danach „Automation zum Entwurf hinzufügen“ bzw. „Änderungen in den Entwurf
+übernehmen“ betätigen und den Entwurf prüfen und speichern. Mindestens ein
+gültiger Schritt ist erforderlich. Änderungen an der Liste alleine ändern weder
+den Regelentwurf noch Z2M. Bei Auswahl einer vorhandenen Automation werden alle
+unterstützten Schritte einschließlich ihrer Wartezeiten geladen. Einzelaktionen
+erscheinen als eine Zeile. Die Wartezeit gehört zum Schritt und wandert beim
+Umsortieren mit.
+
+Alle Bedingungen werden vor jedem Schritt erneut geprüft. Ist eine Bedingung
+nicht mehr erfüllt, endet die verbleibende Folge. „Automationen in Z2M stoppen“
+verwirft ausstehende Wartezeiten; bereits übergebene Aktionen werden nicht rückgängig
+gemacht. Die Ausführung der gespeicherten, aktivierten Folge benötigt kein Symcon.
 
 ## Zeitsteuerungen und Bedingungen per Klick
 
@@ -108,8 +135,8 @@ Bedarf aktivieren. Erstellen oder Bearbeiten führt noch keine Aktion aus.
 1. Geräte und gespeicherte Automationen laden. Unter „Automation bearbeiten“
    die gewünschte Regel auswählen. Die Nummer neben dem Namen unterscheidet
    gleichnamige Regeln; intern bleibt jede Regel über ihre feste ID zugeordnet.
-2. Bei einer einfachen Geräte-Regel werden Name, Aktivierung, Quelle, Ereignis,
-   Ziel und Aktion vorbelegt. Änderungen mit „Änderungen in den Entwurf übernehmen“
+2. Bei unterstützten Regeln werden Name, Aktivierung, Auslöser, Bedingungen und
+   sämtliche Aktionsschritte vorbelegt. Änderungen mit „Änderungen in den Entwurf übernehmen“
    anwenden. „Regel aktiviert“ legt fest, ob die Regel bei der nächsten Aktivierung
    der gespeicherten Konfiguration mitläuft; es schaltet nicht sofort ein Gerät.
 3. Alternativ „Ausgewählte Automation aus dem Entwurf löschen“ betätigen und

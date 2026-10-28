@@ -2,6 +2,11 @@
 
 ## Neu
 
+- Klick-Editor um Aktionsfolgen mit bis zu 16 Schritten erweitert. Schritte lassen
+  sich hinzufügen, bearbeiten, löschen und durch Ziehen umsortieren. Jeder Schritt
+  besitzt eine Wartezeit; gespeicherte Folgen werden vollständig wieder geladen.
+  Deutsche Debug-Ausgaben erklären Änderungen, Schrittreihenfolge und Wartezeiten.
+
 - Klick-Editor um tägliche Uhrzeit-Auslöser, Zeitzonen, Zeitfenster mit Wochentagen
   und eine zusätzliche Zustands- oder Zahlenbedingung erweitert. Mindestdauer und
   Aktionsverzögerung sind auswählbar; Regeln werden zum Bearbeiten wieder vorbelegt.

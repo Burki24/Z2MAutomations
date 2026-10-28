@@ -196,6 +196,52 @@
             "maximum": 86400
         },
         {
+            "type": "Label",
+            "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards."
+        },
+        {
+            "type": "List",
+            "name": "EditorActions",
+            "caption": "Action sequence (maximum 16 steps)",
+            "rowCount": 5,
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "columns": [
+                {
+                    "name": "Choice",
+                    "caption": "Device and action",
+                    "width": "70%",
+                    "add": "",
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Choose device and action",
+                                "value": ""
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Delay",
+                    "caption": "Wait before this step (seconds)",
+                    "width": "30%",
+                    "add": 0,
+                    "edit": {
+                        "type": "NumberSpinner",
+                        "minimum": 0,
+                        "maximum": 86400
+                    }
+                }
+            ],
+            "values": [],
+            "onAdd": "Z2MA_InspectEditorActions($id, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR), 'add');",
+            "onEdit": "Z2MA_InspectEditorActions($id, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR), 'edit');",
+            "onDelete": "Z2MA_InspectEditorActions($id, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR), 'delete');",
+            "onChangeOrder": "Z2MA_InspectEditorActions($id, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR), 'order');"
+        },
+        {
             "type": "Select",
             "name": "EditorTarget",
             "caption": "Target device",
@@ -206,7 +252,8 @@
                 }
             ],
             "value": "",
-            "onChange": "Z2MA_SelectEditorDevice($id, 'Target', $EditorTarget);"
+            "onChange": "Z2MA_SelectEditorDevice($id, 'Target', $EditorTarget);",
+            "visible": false
         },
         {
             "type": "Select",
@@ -218,7 +265,8 @@
                     "value": ""
                 }
             ],
-            "value": ""
+            "value": "",
+            "visible": false
         },
         {
             "type": "NumberSpinner",
@@ -226,7 +274,8 @@
             "caption": "Wait before action (seconds)",
             "value": 0,
             "minimum": 0,
-            "maximum": 86400
+            "maximum": 86400,
+            "visible": false
         },
         {
             "type": "Label",
@@ -432,7 +481,7 @@
         {
             "type": "Button",
             "caption": "Add automation to draft",
-            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);",
+            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));",
             "name": "CreateRuleButton"
         },
         {
@@ -440,7 +489,7 @@
             "name": "UpdateRuleButton",
             "caption": "Apply changes to draft",
             "visible": false,
-            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));"
         },
         {
             "type": "Button",

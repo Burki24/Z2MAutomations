@@ -48,6 +48,10 @@ einen lokalen Entwurf. Eine Auswahlkennung bindet die Bedienung an den aktuellen
 Entwurf und verhindert Änderungen aus veralteten Formularen. Einfache Regeln
 werden vollständig bearbeitet; bei erweiterten Regeln bleiben die Strukturen
 für sichere Namens-/Aktivierungsänderungen erhalten.
+Die native Aktionsliste verwaltet bis zu 16 geordnete Geräteaktionen mit Wartezeit
+vor jedem Schritt. Alle List-Zeilen werden atomar mit den Auslöser-/Bedingungsfeldern
+in den Entwurf übernommen. Nur vollständig im Katalog darstellbare Folgen werden
+bearbeitet; nicht unterstützte Strukturen werden nicht teilweise vereinfacht.
 Geräteaktionen werden innerhalb Z2Ms an `eventBus.emitMQTTMessage` übergeben;
 sie benötigen keine Rückzustellung eigener Set-Veröffentlichungen vom Broker.
 Siehe [ADR 0007](adr/0007-native-command-dispatch.md).

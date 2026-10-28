@@ -1,5 +1,32 @@
 # Entwicklung
 
+## Aktionsfolgen im Klick-Editor
+
+Eine native List mit add/delete/changeOrder erlaubt bis zu 16 diskrete Set-Aktionen
+aus dem vorhandenen Katalog. Jede Zeile kombiniert Geräte-/Aktionsauswahl und eine
+Wartezeit vor dem Schritt (0 bis 86400 ganze Sekunden). Die Formularskripte iterieren
+alle List-Zeilen; der ausgewählte Eintrag alleine wäre kein vollständiger Ablauf.
+Die Zeilen bleiben bis zur ausdrücklichen Übernahme Formularwerte. Prüfung,
+Speicherung und Aktivierung verwenden die bestehenden getrennten Workflows.
+
+`SaveScheduledAutomation` besitzt den optional angehängten Parameter `ActionSteps`.
+Alte Einzelaktionsaufrufe bleiben kompatibel, dürfen jedoch keine mehrschrittige
+Regel verkürzen. Auswahlkennung, Prüfsumme und Sitzung schützen weiter den Entwurf.
+Vollständig darstellbare Folgen werden wieder geladen. Nicht darstellbare Aktionen
+oder Auslöser bleiben bei Metadatenänderungen vollständig erhalten. Schema 1 und
+das Erweiterungsartefakt bleiben unverändert; deren Laufzeit unterstützt die Folge
+einschließlich Stopp und erneuter Bedingungsprüfung bereits.
+
+Der PHP-/JavaScript-Integrationstest führt das echte Formularskript mit iterierbaren
+List-Werten aus und speichert die erzeugte Folge im realen Empfängerartefakt.
+Ein synthetisches Ereignis führt zwei Geräteaktionen geordnet mit einer Sekunde
+Abstand aus. Weitere Nachweise: Wiederladen aller Schritte, Umordnen, Hinzufügen,
+Löschen bis auf einen Schritt, Grenzwerte, ungültige Listen ohne Entwurfsänderung,
+veraltete Auswahl, Schutz vor Verkürzung durch alte Aufrufe, Erhalt anderer Regeln
+und erweiterter Strukturen sowie zentrale Debug-Ausgaben und ein gestörter Debugkanal.
+Native Konsolenbedienung und reale Geräteausführung dieses Editorstands bleiben
+einem gesonderten Praxisauftrag vorbehalten.
+
 ## Zeitsteuerungen und Bedingungen im Klick-Editor
 
 Neue Formularfelder und die eigene Schedule-Logik erzeugen das unveränderte Schema 1:

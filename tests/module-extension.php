@@ -30,7 +30,7 @@ class ObservedAutomationModule extends Z2MAutomations
 
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
-        if (in_array($Parameter, ['options', 'values'], true)) {
+        if (in_array($Parameter, ['options', 'values', 'columns'], true)) {
             if (!is_string($Value) || !is_array(json_decode($Value, true, 512, JSON_THROW_ON_ERROR))) {
                 throw new RuntimeException('Complex live form updates must be JSON encoded.');
             }
@@ -208,6 +208,7 @@ try {
     $advanced['triggers'][0]['for_seconds'] = 5;
     $advanced['actions'][0]['delay_seconds'] = 2;
     $advanced['actions'][] = $advanced['actions'][0];
+    $advanced['triggers'][] = $advanced['triggers'][0];
     $advanced['conditions'] = [['type' => 'device_value', 'device' => '0x0000000000000002', 'property' => 'state', 'operator' => 'eq', 'value' => 'OFF']];
     $advancedYaml = json_encode(['schema_version' => 1, 'revision' => 6, 'automations' => [$advanced]], JSON_THROW_ON_ERROR);
     $module->ValidateYaml($advancedYaml);
@@ -216,7 +217,8 @@ try {
     $check($module->SelectAutomation($ruleID), 'Advanced rules remain selectable');
     $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $token = $fields['EditorEditToken']['value'];
-    $check(!$fields['EditorSource']['enabled'] && $fields['EditorName']['value'] === $advanced['name'], 'Advanced rules expose metadata editing without flattening their clauses');
+    $check(!$fields['EditorSource']['enabled'] && !$fields['EditorActions']['enabled'] && $fields['EditorActions']['values'] === []
+        && $fields['EditorName']['value'] === $advanced['name'], 'Advanced rules expose metadata editing without flattening their clauses');
     $check(!$module->DeleteAutomation($ruleID, $token, '', true) && $state()['lastError'] === 'editor_changed', 'An empty unsaved expert draft cannot be overwritten');
     $check(!$module->SelectAutomation('unknown-rule') && $state()['lastError'] === 'editor_missing', 'Unknown IDs never fall back to a name or row');
     $check(!$module->UpdateAutomation($ruleID, $token, 'Unsafe simplification', true, '0x0000000000000001', $trigger, '0x0000000000000002', $action)
@@ -283,6 +285,92 @@ try {
         && $changedRule['conditions'][0]['value'] === 'OFF', 'Replacing clauses keeps identity and removes obsolete time/numeric conditions');
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited event/condition rule validates and stores in Z2M');
     $module->LoadAutomationEditor();
+    $steps = [['Choice' => '0x0000000000000002:' . $action, 'Delay' => 0],
+        ['Choice' => '0x0000000000000003:' . $changedAction, 'Delay' => 1]];
+    $check($module->InspectEditorActions(json_encode($steps), 'add') && !$module->InspectEditorActions('[]', 'delete'), 'List callbacks explain valid and incomplete edits without changing the draft');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $runEditorScript = static function (string $script, array $fields, array $overrides) use ($id): void
+    {
+        $values = ['id' => $id];
+        foreach ($fields as $name => $field) {
+            if (array_key_exists('value', $field)) {
+                $values[$name] = $field['value'];
+            }
+        }
+        extract(array_replace($values, $overrides), EXTR_SKIP);
+        eval($script);
+    };
+    $runEditorScript($fields['CreateRuleButton']['onClick'], $fields, ['EditorRule' => '', 'EditorEditToken' => '', 'EditorName' => 'Synthetic sequence',
+        'EditorEnabled'                                                             => true, 'EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorConditionType' => 'none',
+        'EditorSource'                                                              => '0x0000000000000001', 'EditorSourceChoice' => $trigger, 'EditorActions' => new ArrayIterator($steps)]);
+    $check($state()['operation']['status'] === 'draft_created', 'The actual form button serializes all list rows and creates the sequence');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $sequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $sequence = $sequenceDocument['automations'][array_key_last($sequenceDocument['automations'])];
+    $check(count($sequence['actions']) === 2 && $sequence['actions'][0]['values'] === ['state' => 'ON']
+        && $sequence['actions'][1]['values'] === ['state' => 'OFF'] && $sequence['actions'][1]['target']['id'] === '0x0000000000000003'
+        && $sequence['actions'][1]['delay_seconds'] === 1, 'Generated sequence preserves typed choices, order and relative delay');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Multi-action draft validates and persists in the real receiver');
+    $check($module->ActivateAutomations() !== '', 'Generated sequence activates through the module');
+    $startedAt = microtime(true);
+    $messages = $exchange(['control' => 'event', 'device' => '0x0000000000000001', 'payload' => ['action' => 'single']]);
+    $commands = array_values(array_filter($messages, static fn (object $message): bool => str_ends_with($message->topic, '/set')));
+    $check(count($commands) === 2 && $commands[0]->topic === 'synthetic/z2m/synthetic/light/set' && $commands[0]->payload->state === 'ON'
+        && $commands[1]->topic === 'synthetic/z2m/synthetic/second-light/set' && $commands[1]->payload->state === 'OFF'
+        && microtime(true) - $startedAt >= 0.9, 'The real receiver executes both generated steps in order with the requested wait');
+    $check($module->StopAutomations() !== '', 'Stop generated sequence after execution');
+    $module->LoadAutomationEditor();
+    $check($module->SelectAutomation($sequence['id']), 'Reopen stored sequence');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $check($fields['EditorActions']['values'] === $steps && $fields['EditorActions']['enabled'], 'All stored actions are editable and restored in order');
+    $sequenceToken = $fields['EditorEditToken']['value'];
+    $baseline = $fields['YamlInput']['value'];
+    $check($module->InspectEditorActions(json_encode(array_fill(0, 16, $steps[0])), 'add'), 'Sixteen actions are accepted at the schema boundary');
+    $check(!$module->SaveScheduledAutomation(
+        $sequence['id'],
+        $sequenceToken,
+        'Legacy overwrite',
+        true,
+        '0x0000000000000001',
+        $trigger,
+        '0x0000000000000002',
+        $action,
+        '{}'
+    ), 'Legacy single-action calls cannot flatten a multi-action rule');
+    $sequenceSent = count($parent->sent);
+    foreach (['add', 'edit', 'order', 'delete'] as $change) {
+        $check($module->InspectEditorActions(json_encode($steps), $change), 'Each list operation has a safe diagnostic entry');
+    }
+    foreach (['onAdd', 'onEdit', 'onDelete', 'onChangeOrder'] as $event) {
+        $runEditorScript($fields['EditorActions'][$event], $fields, ['EditorActions' => new ArrayIterator($steps)]);
+    }
+    $check(count($parent->sent) === $sequenceSent, 'List edits do not send commands to Z2M');
+    foreach (['[]', '{}', '{', json_encode(array_fill(0, 17, $steps[0])), json_encode([['Choice'  => 'forged', 'Delay' => 0]]),
+        json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => -1]]), json_encode([['Choice'   => $steps[0]['Choice'], 'Delay' => 86401]]),
+        json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => '12']]), json_encode([['Choice' => $steps[0]['Choice'], 'Delay' => 0, 'extra' => true]])] as $invalidSteps) {
+        $check(!$module->SaveScheduledAutomation($sequence['id'], $sequenceToken, 'Invalid sequence', true, '0x0000000000000001', $trigger, '', '', '{}', '', false, $invalidSteps), 'Invalid sequences are rejected');
+        $invalidFields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+        $check($invalidFields['YamlInput']['value'] === $baseline, 'Rejected action edits leave the exact draft unchanged');
+    }
+    $steps = array_reverse($steps);
+    $steps[0]['Delay'] = 2;
+    $steps[] = ['Choice' => '0x0000000000000002:' . $action, 'Delay' => 86400];
+    $runEditorScript($fields['UpdateRuleButton']['onClick'], $fields, ['EditorName' => 'Reordered sequence', 'EditorEnabled' => false,
+        'EditorTriggerType'                                                         => 'time', 'EditorAt' => '12:34', 'EditorActions' => new ArrayIterator($steps)]);
+    $check($state()['operation']['status'] === 'draft_updated', 'The actual update button applies the complete reordered sequence');
+    $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
+    $editedSequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $editedSequence = $editedSequenceDocument['automations'][array_key_last($editedSequenceDocument['automations'])];
+    $check($editedSequence['id'] === $sequence['id'] && count($editedSequence['actions']) === 3
+        && $editedSequence['actions'][0]['values'] === ['state' => 'OFF'] && $editedSequence['actions'][0]['delay_seconds'] === 2
+        && $editedSequence['actions'][2]['delay_seconds'] === 86400 && $editedSequence['triggers'][0]['at'] === '12:34:00'
+        && array_slice($editedSequenceDocument['automations'], 0, -1) === array_slice($sequenceDocument['automations'], 0, -1), 'Sequence edits preserve identity and unrelated rules');
+    $check(!$module->SaveScheduledAutomation($sequence['id'], $sequenceToken, 'Stale', true, '', '', '', '', '{}', '', false, json_encode($steps)), 'Stale tokens cannot replace a sequence');
+    $module->debugFails = true;
+    $check($module->SaveScheduledAutomation($sequence['id'], $fields['EditorEditToken']['value'], 'One remaining action', false, '', '', '', '', json_encode(['EditorTriggerType' => 'time']), '', false, json_encode([$steps[1]])), 'Deleting steps down to one remains supported');
+    $module->debugFails = false;
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Edited sequence validates and stores');
+    $module->LoadAutomationEditor();
     $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
@@ -293,7 +381,8 @@ try {
     $module->debugFails = false;
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
-    $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'EditorAt') && !str_contains($captured, 'activation_token')
+    $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'Synthetic sequence')
+        && !str_contains($captured, $steps[0]['Choice']) && !str_contains($captured, 'EditorAt') && !str_contains($captured, 'activation_token')
         && !str_contains($captured, $firstWindowToken) && !str_contains($captured, 'automations: []'), 'Debug must not include draft bodies, names or selection/activation tokens');
     foreach ($module->debugMessages as [$category, $body]) {
         $entry = json_decode($body, true, 512, JSON_THROW_ON_ERROR);

@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+`InspectEditorActions` erklärt Hinzufügen, Bearbeiten, Löschen und Umordnen der
+Aktionsliste. Gültige Listen melden Anzahl, Schrittnummer und Wartezeit in Sekunden;
+unvollständige Listen erhalten einen festen deutschen Korrekturhinweis. Es werden
+keine Gerätekennungen, Namen, Auswahlwerte oder Listeninhalte ausgegeben. Die
+Formularliste wird erst durch `SaveScheduledAutomation` in den lokalen Entwurf
+übernommen; auch dieser Ablauf meldet die vorbereiteten Schritte. Alle öffentlichen
+Einstiege verwenden den zentralen DebugFlowHelper mit Start/Ende, auch bei Ablehnung.
+
 `ConfigureEditorSchedule` protokolliert die gewählte Auslöser-/Bedingungsart und
 das Ein-/Ausschalten des Zeitfensters. `SaveScheduledAutomation` protokolliert
 Start/Ende, feste Ablehnungsgründe, Auslöserart und Anzahl der Bedingungen.
