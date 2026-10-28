@@ -27,8 +27,8 @@ trait SymconEventImport
                 }
                 $result = $this->EvaluateImportEvent($id, $record, $snapshot);
                 $device = $this->ImportSourceDevice($record['event']['TriggerVariableID']);
-                $rows[] = ['Name' => $record['name'], 'Device' => $device['name'], 'Instance' => $device['id'], 'Result' => $this->Translate($result['reason'])];
-                $options[] = ['caption' => $record['name'] . ' — ' . $device['name'] . ' (' . $device['id'] . ')', 'value' => $id];
+                $rows[] = ['Name' => $this->ImportEventName($id, $record), 'Device' => $device['name'], 'Instance' => $device['id'], 'Result' => $this->ImportAssessmentText($result['reason'], $result['arguments'] ?? [])];
+                $options[] = ['caption' => $this->ImportEventName($id, $record) . ' — ' . $device['name'] . ' (' . $device['id'] . ')', 'value' => $id];
                 if (count($rows) >= 256) {
                     break;
                 }
@@ -151,7 +151,7 @@ trait SymconEventImport
 
     private function EvaluateImportEvent(int $id, ?array $record, array $snapshot): array
     {
-        $reject = static fn (string $reason): array => ['reason' => $reason, 'rule' => null];
+        $reject = static fn (string $reason, array $arguments = []): array => ['reason' => $reason, 'arguments' => $arguments, 'rule' => null];
         if (!$this->ImportCatalogMatchesContext($snapshot)) {
             return $reject('Device data not loaded yet.');
         }
@@ -166,15 +166,19 @@ trait SymconEventImport
         if (($event['EventLimit'] ?? -1) !== 0 || ($event['EventConditions'] ?? null) !== [] || ($event['EventScript'] ?? '') !== '') {
             return $reject('Execution limits, additional conditions and PHP scripts cannot yet be imported.');
         }
-        $source = $this->ImportVariableBinding($snapshot, $event['TriggerVariableID'] ?? 0, 'Source');
+        $failure = [];
+        $source = $this->ImportVariableBinding($snapshot, $event['TriggerVariableID'] ?? 0, 'Source', $failure);
+        if ($source === null) {
+            return $reject($failure['reason'], $failure['arguments']);
+        }
         $action = $this->ResolveImportAction($record);
         if ($action === null) {
             return $reject('The event action target or nested status-variable action cannot be resolved.');
         }
         $parameters = $action['parameters'];
-        $target = $this->ImportVariableBinding($snapshot, $parameters['TARGET'] ?? 0, 'Target');
-        if ($source === null || $target === null) {
-            return $reject('Source or target cannot be uniquely assigned to this Z2M catalog.');
+        $target = $this->ImportVariableBinding($snapshot, $parameters['TARGET'] ?? 0, 'Target', $failure);
+        if ($target === null) {
+            return $reject($failure['reason'], $failure['arguments']);
         }
         $trigger = $this->ImportVariableValue($snapshot, $source, $event['TriggerValue'] ?? null, 'Source');
         if ($trigger === null) {
@@ -200,12 +204,13 @@ trait SymconEventImport
         if ($value === null || !$this->EditorValueAllowed($snapshot, $target['key'], $target['property'], $value, 'Target')) {
             return $reject('The target value or toggle command is not supported by this property.');
         }
-        if (!$this->ValidEditorName($record['name'])) {
+        $name = $this->ImportEventName($id, $record);
+        if (!$this->ValidEditorName($name)) {
             return $reject('The event name is not a valid automation name.');
         }
         return ['reason'  => 'Supported. Imported rules start disabled; the original event remains unchanged.',
             'fingerprint' => hash('sha256', json_encode([$record, $source, $target, $snapshot['scope'] ?? ''], JSON_THROW_ON_ERROR)),
-            'rule'        => ['id' => 'import_' . substr(hash('sha256', $this->InstanceID . ':' . $id), 0, 32), 'name' => $record['name'], 'enabled' => false,
+            'rule'        => ['id' => 'import_' . substr(hash('sha256', $this->InstanceID . ':' . $id), 0, 32), 'name' => $name, 'enabled' => false,
                 'triggers'         => [array_merge(
                     ['type' => 'device', 'device' => $source['key'], 'property' => $source['property'], 'operator' => 'eq', 'value' => $trigger],
                     $event['TriggerSubsequentExecution'] ? [] : ['on_change' => true]
@@ -214,6 +219,11 @@ trait SymconEventImport
             'summary' => $snapshot['devices'][$source['key']]['name'] . ' / ' . $source['property'] . ' = ' . $this->EditorValueLabel($trigger)
                 . ' → ' . $snapshot['devices'][$target['key']]['name'] . ' / ' . $target['property'] . ': ' . $this->EditorValueLabel($value)
                 . ' · ' . $this->Translate($event['TriggerSubsequentExecution'] ? 'On every matching report' : 'Only when the value changes')];
+    }
+
+    private function ImportEventName(int $id, array $record): string
+    {
+        return trim($record['name']) === '' ? sprintf($this->Translate('Imported automation %d'), $id) : $record['name'];
     }
 
     private function ResolveImportAction(array $record): ?array
@@ -270,40 +280,80 @@ trait SymconEventImport
         return ['id' => $id, 'parameters' => ['TARGET' => $target] + $parameters];
     }
 
-    private function ImportVariableBinding(array $snapshot, int $id, string $side): ?array
+    private function ImportVariableBinding(array $snapshot, int $id, string $side, array &$failure): ?array
     {
+        $label = $this->Translate($side === 'Source' ? 'Trigger variable' : 'Target variable');
+        $name = $this->Translate('Variable no longer available');
+        $reject = static function (string $reason) use (&$failure, $label, &$name): null
+        {
+            $failure = ['reason' => $reason, 'arguments' => [$label, $name]];
+            return null;
+        };
         try {
             if (!IPS_ObjectExists($id) || !IPS_VariableExists($id)) {
-                return null;
+                return $reject('%s "%s": The variable no longer exists.');
             }
             $object = IPS_GetObject($id);
             $variable = IPS_GetVariable($id);
             if (!is_array($object) || !is_array($variable)) {
-                return null;
+                return $reject('%s "%s": The variable could not be read. Check the event again.');
             }
+            $name = $object['ObjectName'];
             $instance = $object['ParentID'];
+            if (!IPS_InstanceExists($instance)) {
+                return $reject('%s "%s": The variable does not belong to a supported Zigbee2MQTT instance.');
+            }
+            $info = IPS_GetInstance($instance);
+            if (!isset(self::Z2M_MODULE_TYPES[$info['ModuleInfo']['ModuleID'] ?? ''])) {
+                return $reject('%s "%s": The variable does not belong to a supported Zigbee2MQTT instance.');
+            }
+            if (($info['ConnectionID'] ?? 0) !== $this->GetParentID()) {
+                return $reject('%s "%s": The device belongs to another MQTT connection.');
+            }
             $scope = $this->ReadZ2MInstanceScope($instance);
-            if ($scope === null || $scope['topic'] !== $this->ReadPropertyString('BaseTopic')
-                || ($scope['type'] !== 'device' && !($side === 'Target' && $scope['type'] === 'group'))) {
-                return null;
+            if ($scope === null) {
+                return $reject('%s "%s": The Zigbee2MQTT instance has an invalid base topic or device identity.');
+            }
+            if ($scope['topic'] !== $this->ReadPropertyString('BaseTopic')) {
+                return $reject('%s "%s": The device uses another Zigbee2MQTT base topic.');
+            }
+            if ($scope['type'] !== 'device' && !($side === 'Target' && $scope['type'] === 'group')) {
+                return $reject('%s "%s": This Zigbee2MQTT instance type is not supported for this use.');
             }
             $key = $scope['key'];
             $property = $object['ObjectIdent'];
-            if (!isset($this->EditorProperties($snapshot, $key, $side)[$property])) {
-                return null;
+            if (!isset($snapshot['devices'][$key])) {
+                return $reject('%s "%s": The device is missing from the loaded device data. Load the device data again.');
+            }
+            $meta = $snapshot['devices'][$key]['properties'][$property] ?? null;
+            if ($meta === null) {
+                return $reject('%s "%s": This variable is not supported by the import. Its device belongs to the correct MQTT connection and base topic.');
+            }
+            if (($meta['access'] & ($side === 'Target' ? 2 : 1)) === 0) {
+                return $reject($side === 'Target'
+                    ? '%s "%s": This property can only be read in Zigbee2MQTT and cannot be used as an action.'
+                    : '%s "%s": Zigbee2MQTT does not provide a readable value for this property.');
             }
             if ($side === 'Target') {
+                if (($variable['VariableIsLocked'] ?? false) || $variable['VariableCustomAction'] !== 0 || $variable['VariableAction'] !== $instance) {
+                    return $reject('%s "%s": The variable is locked or does not use the original Zigbee2MQTT action.');
+                }
                 $binding = $this->EditorActionVariable($snapshot, $key, $property);
-                if (($binding['id'] ?? null) !== $id || $variable['VariableCustomAction'] !== 0 || $variable['VariableAction'] !== $instance) {
-                    return null;
+                if (($binding['id'] ?? null) !== $id) {
+                    return $reject('%s "%s": Multiple or conflicting Symcon variables refer to the same Zigbee2MQTT property.');
                 }
             } elseif (($this->EditorActionVariables()[$key][$property]['id'] ?? null) !== $id) {
-                return null;
+                return $reject('%s "%s": Multiple or conflicting Symcon variables refer to the same Zigbee2MQTT property.');
             }
             return ['key' => $key, 'property' => $property, 'type' => $variable['VariableType'], 'variable' => $id];
         } catch (Throwable) {
-            return null;
+            return $reject('%s "%s": The variable could not be read. Check the event again.');
         }
+    }
+
+    private function ImportAssessmentText(string $reason, array $arguments = []): string
+    {
+        return vsprintf($this->Translate($reason), $arguments);
     }
 
     private function ImportVariableValue(array $snapshot, array $binding, mixed $value, string $side): mixed
@@ -397,7 +447,7 @@ trait SymconEventImport
             $text = $this->GetBuffer('TransportState');
             $transport = $text === '' ? [] : json_decode($text, true, 32, JSON_THROW_ON_ERROR);
         }
-        $caption = $this->Translate($message) . (isset($result['summary']) ? "\n" . $result['summary'] : '');
+        $caption = $this->ImportAssessmentText($message, $result['arguments'] ?? []) . (isset($result['summary']) ? "\n" . $result['summary'] : '');
         $notice = $this->EventImportBuffer('EventImportNotice');
         if (($notice['context'] ?? null) === $this->EventImportContext()) {
             $caption = $this->Translate('Device data could not be loaded:') . ' ' . $this->Translate(ExtensionContract::ErrorText($notice['error']));

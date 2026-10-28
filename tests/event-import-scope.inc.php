@@ -77,6 +77,8 @@ $check(!$module->PreviewEventImport(910011) && !$otherModule->PreviewEventImport
 $crossTarget = $makeRecord($sourceVariable, $otherTarget);
 $module->importEvents[910014] = $crossTarget;
 $check(!$module->PreviewEventImport(910014), 'A target on another gateway is never imported from a local source');
+$scopeMessage = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'])['ImportMessage']['caption'];
+$check(str_contains($scopeMessage, 'another MQTT connection'), 'An actual gateway mismatch reports the target connection rather than an unsupported source property');
 $check($GLOBALS['invalidImportKernelReads'] === 0, 'Unrelated category variables and modules never cause invalid instance or MQTTBaseTopic reads');
 $firstMqtt = formFields($firstForm['elements']);
 $secondMqtt = formFields($secondForm['elements']);

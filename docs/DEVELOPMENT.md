@@ -851,3 +851,23 @@ Variablennamen, Fehlercodes, Platzhalter und Debug-Strukturen bleiben stabil.
 Für längere Meldungen verwenden Formular-Labels die verfügbare Breite.
 Die Übersetzungsprüfung umfasst gültiges JSON und unveränderte sprintf-Argumente.
 Die Fachlogik und die Z2M-Erweiterung wurden dabei nicht geändert.
+
+## Präzise Importdiagnose
+
+Die Live-Diagnose wurde ausschließlich lesend durchgeführt. Eine gültige
+MQTT-Verbindung ist kein Nachweis für eine unterstützte einzelne Variable.
+Die Bindungsprüfung meldet deshalb getrennt: fehlende Variable, fremdes Modul,
+fremde Verbindung, anderes Topic, ungültige Gerätekennung, fehlende Gerätedaten,
+nicht unterstützte Eigenschaft, fehlenden Lese-/Schreibzugriff und widersprüchliche
+Variablenzuordnung. Lesbare Sensoren benötigen als Auslöser keine Schaltaktion.
+Die vorhandenen Zulässigkeitsprüfungen werden dabei nicht gelockert.
+Liste und Vorschau verwenden denselben lokalisierten Text mit getrennten
+Formatargumenten für Variablenart und Anzeigenamen. Debug protokolliert nur den
+stabilen Meldungsschlüssel; private Variablennamen bleiben aus den Debug-Daten.
+
+Namenlose native Ereignisse erhalten erst in Darstellung und Entwurf einen
+stabilen, bearbeitbaren Ersatznamen aus der Ereignisnummer. Ursprüngliche
+Ereignisse bleiben unverändert. Synthetische Integrationstests prüfen diese
+Fälle einschließlich nativer verschachtelter Tasteraktionen, fehlender
+Eigenschaften am richtigen Gateway und tatsächlich fremder Verbindungen.
+Keine produktiven Änderungen oder Schaltbefehle gehören zu diesem Nachweis.

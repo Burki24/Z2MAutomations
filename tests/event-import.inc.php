@@ -125,6 +125,30 @@ $secondRule = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_O
 $secondRule = $secondRule[array_key_last($secondRule)];
 $check($secondRule['name'] === $importedRule['name'] && $secondRule['id'] !== $importedRule['id']
     && $secondRule['actions'][0]['values'] === ['state_l2' => 'ON'], 'Same-name events remain distinct and boolean values map to the exact channel command');
+// A readable maintenance variable on the correct gateway is not a catalog property.
+// Its events may live under another device's action variable.
+$maintenanceVariable = IPS_CreateVariable(3);
+IPS_SetParent($maintenanceVariable, $syntheticDevices[1]);
+IPS_SetIdent($maintenanceVariable, 'maintenance_status');
+IPS_SetName($maintenanceVariable, 'Synthetic maintenance value');
+$unsupportedSource = $sourceRecord;
+$unsupportedSource['event']['TriggerVariableID'] = $maintenanceVariable;
+$module->importEvents[900020] = $unsupportedSource;
+$check(!$module->PreviewEventImport(900020), 'Unsupported source properties remain non-importable on a matching gateway');
+$maintenanceMessage = $importFields()['ImportMessage']['caption'];
+$check(str_contains($maintenanceMessage, 'Trigger variable "Synthetic maintenance value"')
+    && str_contains($maintenanceMessage, 'not supported by the import')
+    && str_contains($maintenanceMessage, 'correct MQTT connection and base topic'), 'The message names the unsupported source rather than blaming the gateway');
+$module->ScanEventImports();
+$maintenanceRows = $importFields()['ImportEvents']['values'];
+$check(count(array_filter($maintenanceRows, static fn (array $row): bool => $row['Result'] === $maintenanceMessage)) === 1, 'List and preview render the same specific failure with the actual variable name');
+$readonlyTarget = $sourceRecord;
+$readonlyTarget['event']['EventActionParameters'] = ['TARGET' => $sourceVariable];
+$module->importEvents[900021] = $readonlyTarget;
+$check(!$module->PreviewEventImport(900021) && str_contains($importFields()['ImportMessage']['caption'], 'can only be read'), 'A read-only target is identified as such, without a false connection failure');
+$diagnosticDebug = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
+$check(!str_contains($diagnosticDebug, 'Synthetic maintenance value'), 'Failure diagnostics do not leak private variable names into debug');
+unset($module->importEvents[900020], $module->importEvents[900021]);
 // Native events supply their parent as TARGET, including status-variable wrappers.
 $implicit = $sourceRecord;
 $implicit['parent'] = IPS_GetObjectIDByIdent('cover_state', $syntheticDevices[4]);
@@ -163,6 +187,22 @@ $fields = $importFields();
 $wrappedRules = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'];
 $check($wrappedRules[array_key_last($wrappedRules)]['actions'][0]['values'] === ['state' => 'OFF'], 'Nested native boolean action becomes the exact Z2M OFF command');
 $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Both native layouts validate and persist through the real extension');
+// Native Symcon events may have an empty name; the module supplies a stable editable name.
+$module->LoadAutomationEditor();
+$unnamed = $wrapped;
+$unnamed['name'] = '';
+$unnamed['event']['EventActionParameters']['ACTION'] = json_encode(['actionID' => '{EF078D00-FBD5-8857-F5DC-F5B54B107DD3}', 'parameters' => new stdClass()], JSON_THROW_ON_ERROR);
+$module->importEvents[900030] = $unnamed;
+$check($module->PreviewEventImport(900030), 'An unnamed native button event remains importable');
+$fields = $importFields();
+$check($module->ImportSymconEvent(900030, $fields['ImportToken']['value'], $fields['YamlInput']['value'], true), 'An unnamed supported event imports without editing the original event');
+$unnamedRules = json_decode($importFields()['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'];
+$check($unnamedRules[array_key_last($unnamedRules)]['name'] === 'Imported automation 900030'
+    && $unnamedRules[array_key_last($unnamedRules)]['actions'][0]['type'] === 'toggle'
+    && !$unnamedRules[array_key_last($unnamedRules)]['enabled'] && $module->importEvents[900030]['name'] === '', 'Only the disabled draft receives a fallback name; the native event stays unchanged');
+$module->ScanEventImports();
+$check(count(array_filter($importFields()['ImportEvents']['values'], static fn (array $row): bool => $row['Name'] === 'Imported automation 900030')) === 1, 'Overview gives unnamed events the same understandable name');
+unset($module->importEvents[900030]);
 foreach (['bad JSON', json_encode(['actionID' => '{46B65CA6-3098-4982-9A6C-B89DADBB0A96}', 'parameters' => ['TARGET' => $targetVariable, 'VALUE' => false]])] as $badNested) {
     $module->importEvents[900012] = $wrapped;
     $module->importEvents[900012]['event']['EventActionParameters']['ACTION'] = $badNested;

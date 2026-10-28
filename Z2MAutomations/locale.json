@@ -300,7 +300,24 @@
             "The event action target or nested status-variable action cannot be resolved.": "Nicht importierbar: Es konnte nicht sicher erkannt werden, welches Gerät und welche Eigenschaft durch die Aktion geschaltet werden sollen.",
             "Only when the value changes": "Nur bei Wertänderung",
             "Value change": "Wertänderung",
-            "On every matching report": "Bei jeder Meldung mit dem gewählten Wert"
+            "On every matching report": "Bei jeder Meldung mit dem gewählten Wert",
+            "Trigger variable": "Auslösende Variable",
+            "Target variable": "Zu schaltende Variable",
+            "Variable no longer available": "nicht mehr vorhanden",
+            "%s \"%s\": The variable no longer exists.": "Nicht importierbar: %s „%s“ ist nicht mehr vorhanden.",
+            "%s \"%s\": The variable could not be read. Check the event again.": "Noch nicht prüfbar: %s „%s“ konnte nicht gelesen werden. Bitte das Ereignis erneut prüfen.",
+            "%s \"%s\": The variable does not belong to a supported Zigbee2MQTT instance.": "Nicht importierbar: %s „%s“ gehört zu keinem Zigbee2MQTT-Gerät, das dieses Modul unterstützt.",
+            "%s \"%s\": The device belongs to another MQTT connection.": "Nicht importierbar: %s „%s“ gehört zu einem Gerät an einer anderen MQTT-Verbindung.",
+            "%s \"%s\": The Zigbee2MQTT instance has an invalid base topic or device identity.": "Nicht importierbar: Für %s „%s“ fehlen gültige Zigbee2MQTT-Geräteeinstellungen. Bitte Basistopic und Gerätekennung in der Geräteinstanz prüfen.",
+            "%s \"%s\": The device uses another Zigbee2MQTT base topic.": "Nicht importierbar: %s „%s“ gehört zu einem Gerät mit einem anderen Zigbee2MQTT-Basistopic.",
+            "%s \"%s\": This Zigbee2MQTT instance type is not supported for this use.": "Nicht importierbar: %s „%s“ gehört zu einer Zigbee2MQTT-Instanz, die für diese Aufgabe noch nicht unterstützt wird.",
+            "%s \"%s\": The device is missing from the loaded device data. Load the device data again.": "Noch nicht prüfbar: Das Gerät zu %s „%s“ fehlt in den geladenen Gerätedaten. Bitte ungespeicherte Änderungen sichern und die Gerätedaten erneut laden.",
+            "%s \"%s\": This variable is not supported by the import. Its device belongs to the correct MQTT connection and base topic.": "Nicht importierbar: %s „%s“ wird vom Import noch nicht unterstützt. Das Gerät gehört zur richtigen MQTT-Verbindung und zum richtigen Basistopic.",
+            "%s \"%s\": This property can only be read in Zigbee2MQTT and cannot be used as an action.": "Nicht importierbar: %s „%s“ kann in Zigbee2MQTT nur angezeigt werden. Sie kann nicht durch eine Automation geschaltet werden.",
+            "%s \"%s\": Zigbee2MQTT does not provide a readable value for this property.": "Nicht importierbar: Für %s „%s“ liefert Zigbee2MQTT keinen lesbaren Wert. Sie kann nicht als Auslöser verwendet werden.",
+            "%s \"%s\": The variable is locked or does not use the original Zigbee2MQTT action.": "Nicht importierbar: %s „%s“ ist gesperrt oder verwendet nicht die ursprüngliche Schaltfunktion der Zigbee2MQTT-Geräteinstanz.",
+            "%s \"%s\": Multiple or conflicting Symcon variables refer to the same Zigbee2MQTT property.": "Nicht importierbar: Für %s „%s“ gibt es mehrere oder widersprüchliche Zuordnungen zur gleichen Zigbee2MQTT-Geräteeigenschaft. Bitte doppelte Geräteinstanzen prüfen.",
+            "Imported automation %d": "Importierte Automation %d"
         }
     }
 }

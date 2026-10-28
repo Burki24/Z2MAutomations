@@ -41,6 +41,17 @@ weiter angeboten. Es sind keine konkreten Instanz-IDs im Modul hinterlegt.
 
 ## Vorhandene Symcon-Ereignisse importieren
 
+Die Prüfung unterscheidet zwischen dem Gerät und der einzelnen Variable:
+Ein Gerät kann richtig verbunden sein, obwohl eine seiner Variablen noch nicht
+importiert werden kann. In diesem Fall nennt die Meldung die betroffene Variable.
+Die **auslösende Variable** wird überwacht; die **zu schaltende Variable** ist das
+Ziel der Aktion. Das Ereignis kann im Objektbaum beim Ziel liegen und trotzdem
+eine Variable eines anderen Geräts überwachen.
+
+Ein leerer Ereignisname verhindert den Import nicht. Das Modul vergibt dann
+„Importierte Automation“ mit der Ereignisnummer als Namen. Dieser lässt sich
+anschließend im Entwurf ändern; das ursprüngliche Ereignis bleibt unverändert.
+
 Die Übersicht zeigt Ereignisname, **auslösendes Gerät** und dessen
 **Symcon-Instanz-ID**. Die Liste bietet Platz für 15 sichtbare Einträge;
 weitere Einträge sind durch Scrollen erreichbar. Auch in der Ereignisauswahl stehen diese Angaben, damit

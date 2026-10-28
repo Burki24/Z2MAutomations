@@ -2,6 +2,13 @@
 
 ## Fixes
 
+- Die Importprüfung unterscheidet nicht unterstützte Variablen, fehlende
+  Gerätedaten, andere MQTT-Verbindungen und fehlende Schaltrechte. Liste und
+  Vorschau nennen die tatsächlich geprüfte Variable. Ein passendes Gateway wird
+  nicht mehr fälschlich als Zuordnungsproblem dargestellt.
+- Namenlose Symcon-Ereignisse erhalten beim Import einen bearbeitbaren Namen.
+  Das ursprüngliche Ereignis wird nicht umbenannt; neue Regeln bleiben deaktiviert.
+
 - Deutsche Status-, Fehler- und Hilfetexte für Einrichtung, Bearbeitung,
   Prüfung, Speicherung, Ausführung und Ereignisimport verständlicher formuliert.
   Meldungen nennen Ergebnis und nächsten Schritt; längere Hinweise nutzen die
