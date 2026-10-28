@@ -9,6 +9,8 @@ require_once __DIR__ . '/../libs/helper/ConfigurationFormHelper.php';
 require_once __DIR__ . '/../libs/helper/DebugFlowHelper.php';
 require_once __DIR__ . '/../libs/ModuleDiagnostics.php';
 require_once __DIR__ . '/../libs/AutomaticStatusRefresh.php';
+require_once __DIR__ . '/../libs/EditorGroupTargets.php';
+require_once __DIR__ . '/../libs/SymconEventImport.php';
 require_once __DIR__ . '/../libs/Z2MProtocol.php';
 require_once __DIR__ . '/../libs/ExtensionContract.php';
 require_once __DIR__ . '/../libs/ExtensionIntegration.php';
@@ -34,6 +36,8 @@ class Z2MAutomations extends IPSModuleStrict
     use Burki24\SymconModuleHelper\DebugFlowHelper;
     use Z2MAutomations\ModuleDiagnostics;
     use Z2MAutomations\AutomaticStatusRefresh;
+    use Z2MAutomations\EditorGroupTargets;
+    use Z2MAutomations\SymconEventImport;
     use Z2MAutomations\ExtensionIntegration;
     use Z2MAutomations\AutomationEditor;
     use Z2MAutomations\AutomationEditorManagement;
@@ -144,6 +148,7 @@ class Z2MAutomations extends IPSModuleStrict
             unset($field);
             $this->FillEditorForm($form, $state);
             $this->PrepareEditorItemForms($form);
+            $this->FillEventImportForm($form);
             $this->QueueAutomaticStatusRefresh('Formular geöffnet');
             return $this->EncodeConfigurationForm($form);
         });

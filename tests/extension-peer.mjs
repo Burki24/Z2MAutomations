@@ -32,7 +32,7 @@ devices.set('0x0000000000000004', {ID: '0x0000000000000004', ieeeAddr: '0x000000
     {property: 'level', label: 'Level', type: 'numeric', access: 3, value_min: 0, value_max: 100, value_step: 5},
     {property: 'write_only', label: 'Write only', type: 'numeric', access: 2, value_min: 10, value_max: 50, value_step: 10},
     {property: 'display_flag', label: 'Display flag', type: 'binary', access: 3, value_on: true, value_off: false}]});
-const zigbee = {resolveEntity: id => devices.get(id), devicesIterator: () => devices.values(), groupsIterator: () => [][Symbol.iterator]()};
+const zigbee = {resolveEntity: id => devices.get(id), devicesIterator: () => devices.values(), groupsIterator: () => [{ID: 7, name: 'synthetic/group', isDevice: () => false}].values()};
 const bus = {onMQTTMessage: (_owner, callback) => { listener = callback; },
     emitMQTTMessage: event => {
         messages.push({topic: event.topic, payload: JSON.parse(event.message), retain: false});
@@ -40,7 +40,7 @@ const bus = {onMQTTMessage: (_owner, callback) => { listener = callback; },
     onPublishEntityState: (_owner, callback) => { stateListener = callback; },
     removeListeners: () => { listener = undefined; stateListener = undefined; }};
 const start = async () => {
-    receiver = new Receiver(zigbee, mqtt, null, null, bus, null, null, null,
+    receiver = new Receiver(zigbee, mqtt, {get: () => ({state: 'ON'})}, null, bus, null, null, null,
         {get: () => ({mqtt: {base_topic: base}})}, {error: () => {}});
     await receiver.start();
 };

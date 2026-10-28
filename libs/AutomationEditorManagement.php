@@ -65,8 +65,7 @@ trait AutomationEditorManagement
                     return $this->RejectEditorChange($state, 'editor_invalid');
                 }
                 $rule['triggers'][0] = array_replace($rule['triggers'][0], ['device' => $Source, 'property' => $source['property'], 'value' => $source['value']]);
-                $rule['actions'][0]['target']['id'] = $Target;
-                $rule['actions'][0]['values'] = [$target['property'] => $target['value']];
+                $rule['actions'][0] = $this->BuildEditorAction($Target, $target);
             } elseif ($Source !== '' || $Trigger !== '' || $Target !== '' || $Action !== '') {
                 return $this->RejectEditorChange($state, 'editor_advanced');
             }
@@ -157,7 +156,7 @@ trait AutomationEditorManagement
         $trigger = $rule['triggers'][0];
         $action = $rule['actions'][0];
         if (($trigger['type'] ?? null) !== 'device' || ($trigger['operator'] ?? null) !== 'eq' || ($trigger['for_seconds'] ?? 0) !== 0
-            || ($action['type'] ?? null) !== 'set' || ($action['target']['type'] ?? null) !== 'device' || ($action['delay_seconds'] ?? 0) !== 0
+            || ($action['type'] ?? null) !== 'set' || !in_array($action['target']['type'] ?? '', ['device', 'group'], true) || ($action['delay_seconds'] ?? 0) !== 0
             || count($action['values'] ?? []) !== 1) {
             return null;
         }
@@ -173,9 +172,9 @@ trait AutomationEditorManagement
         };
         $property = array_key_first($action['values']);
         $sourceChoice = $find($snapshot['devices'][$trigger['device']]['triggers'] ?? [], $trigger['property'], $trigger['value']);
-        $targetChoice = $find($snapshot['devices'][$action['target']['id']]['actions'] ?? [], $property, $action['values'][$property]);
+        $targetChoice = $find($snapshot['devices'][$this->EditorTargetKey($action['target'])]['actions'] ?? [], $property, $action['values'][$property]);
         return $sourceChoice === '' || $targetChoice === '' ? null : ['EditorSource' => $trigger['device'], 'EditorSourceChoice' => $sourceChoice,
-            'EditorTarget'                                                           => $action['target']['id'], 'EditorTargetChoice' => $targetChoice];
+            'EditorTarget'                                                           => $this->EditorTargetKey($action['target']), 'EditorTargetChoice' => $targetChoice];
     }
 
     private function EditorSelectionFields(?array $draft): array

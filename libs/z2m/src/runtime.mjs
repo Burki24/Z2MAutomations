@@ -18,9 +18,10 @@ function compare(actual, clause) {
 }
 
 export class AutomationRuntime {
-    constructor({zigbee, dispatch, logger, clock = nativeClock, available = true}) {
+    constructor({zigbee, dispatch, logger, clock = nativeClock, available = true, readState}) {
         this.zigbee = zigbee;
         this.dispatch = dispatch;
+        this.readState = readState;
         this.logger = logger;
         this.clock = clock;
         this.available = available;
@@ -76,7 +77,10 @@ export class AutomationRuntime {
                 if (!references.has(clause.device)) references.set(clause.device, new Set());
                 references.get(clause.device).add(clause.property);
             }
-            for (const action of rule.actions) this.target(action.target);
+            for (const action of rule.actions) {
+                this.target(action.target);
+                if (action.type === 'toggle' && typeof this.readState !== 'function') throw new RuntimeError('runtime_unavailable');
+            }
         }
         if (this.active?.checksum === candidate.checksum) return;
         this.deactivate();
@@ -217,16 +221,23 @@ export class AutomationRuntime {
             if (!this.active || this.generation !== generation) return;
             if (!this.conditions(rule)) { this.log('AKTION', 'Bedingung vor Aktion nicht mehr erfüllt.', {Regel: rule.id}); return; }
             const entity = this.target(action.target);
+            let values = action.values;
+            if (action.type === 'toggle') {
+                const current = this.readState(entity)?.[action.property];
+                if (current !== 'ON' && current !== 'OFF') throw new RuntimeError('state_unavailable');
+                values = {[action.property]: current === 'ON' ? 'OFF' : 'ON'};
+                this.log('AKTION', 'Umschaltziel aus dem aktuellen Z2M-Zustand ermittelt.', {Regel: rule.id, Zielart: action.target.type});
+            }
             const now = this.clock.now();
             this.sentAt = this.sentAt.filter(time => now - time < 1000);
             if (this.sentAt.length >= RUNTIME_LIMITS.commandsPerSecond) throw new RuntimeError('rate_limited');
             this.sentAt.push(now);
-            this.log('SENDEN', 'Set-Aktion an native Z2M-Befehlsverarbeitung übergeben; Gerätewirkung nicht bestätigt.', {Regel: rule.id, Zielart: action.target.type, Eigenschaften: Object.keys(action.values).length});
+            this.log('SENDEN', 'Set-Aktion an native Z2M-Befehlsverarbeitung übergeben; Gerätewirkung nicht bestätigt.', {Regel: rule.id, Zielart: action.target.type, Eigenschaften: Object.keys(values).length});
             let timeout;
             try {
                 await Promise.race([
                     Promise.resolve().then(() => {
-                        if (this.active && this.generation === generation) return this.dispatch(entity.name + '/set', JSON.stringify(action.values));
+                        if (this.active && this.generation === generation) return this.dispatch(entity.name + '/set', JSON.stringify(values));
                     }),
                     new Promise((_, reject) => { timeout = this.clock.setTimeout(() => reject(new RuntimeError('action_timeout')), RUNTIME_LIMITS.publishTimeoutMs); })
                 ]);

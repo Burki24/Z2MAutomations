@@ -5,7 +5,7 @@ import {readFile, writeFile, readdir, mkdtemp, mkdir, symlink, copyFile, rm} fro
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
-import Extension, {validateYaml, LIMITS, buildEditorCatalog} from '../libs/z2m/z2m-automations.mjs';
+import Extension, {validateYaml, LIMITS, buildEditorCatalog, buildEditorGroups} from '../libs/z2m/z2m-automations.mjs';
 
 const emptyYaml = revision => `schema_version: 1\nrevision: ${revision}\nautomations: []\n`;
 const fixtureYaml = await readFile(new URL('../libs/z2m/examples/automations.yaml', import.meta.url), 'utf8');
@@ -398,5 +398,32 @@ test('MQTT store validates YAML, persists it and reloads it after restart', asyn
         await restarted.stop();
     } finally {
         await rm(directory, {recursive: true, force: true});
+    }
+});
+
+
+test('editor group catalog contains bounded stable identities without raw member data', () => {
+    const group = {ID: 7, name: 'Synthetic group', private: 'raw-secret'};
+    const groups = buildEditorGroups({groupsIterator: () => [group, group, {ID: 0, name: 'bad'}, {ID: 8, name: 'bad#topic'}].values()});
+    assert.deepEqual(groups, [{id: 7, name: 'Synthetic group'}]);
+    assert.deepEqual(buildEditorGroups({}), []);
+    let visited = 0;
+    const many = {groupsIterator: function* () { for (let id = 1; id < 1000; id++) { visited++; yield {ID: id, name: 'Synthetic group'}; } }};
+    assert.equal(buildEditorGroups(many).length, 256);
+    assert.ok(visited <= 257);
+});
+
+
+test('schema keeps fixed set and cache-based toggle actions distinct', () => {
+    const document = {schema_version: 1, revision: 1, automations: [{id: 'synthetic_import', name: 'Synthetic import', enabled: false,
+        triggers: [{type: 'device', device: '0x0000000000000001', property: 'action', operator: 'eq', value: 'single'}],
+        conditions: [], actions: [{type: 'toggle', target: {type: 'group', id: 7}, property: 'state'}]}]};
+    assert.equal(validateYaml(JSON.stringify(document)).document.automations[0].actions[0].type, 'toggle');
+    for (const action of [{type: 'toggle', target: {type: 'group', id: 7}, property: 'brightness'},
+        {type: 'toggle', target: {type: 'group', id: 7}, property: 'state', values: {state: 'ON'}},
+        {type: 'set', target: {type: 'group', id: 7}, property: 'state'},
+        {type: 'toggle', target: {type: 'group', id: 7}}]) {
+        document.automations[0].actions = [action];
+        assert.throws(() => validateYaml(JSON.stringify(document)), error => error.code === 'invalid_schema');
     }
 });

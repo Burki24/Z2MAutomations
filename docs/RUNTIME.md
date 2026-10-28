@@ -126,3 +126,13 @@ Geprüfte native Schnittstellen als Informationsquelle, ohne Übernahme von Code
 [Z2M EventBus](https://github.com/Koenkk/zigbee2mqtt/blob/master/lib/eventBus.ts),
 [Controller-Ereignis](https://github.com/Koenkk/zigbee2mqtt/blob/master/lib/controller.ts),
 [native Set-Verarbeitung](https://github.com/Koenkk/zigbee2mqtt/blob/master/lib/extension/publish.ts).
+
+## Umschalten
+
+Eine `toggle`-Aktion liest unmittelbar vor ihrer Übergabe den aktuellen
+Z2M-Cachezustand ihrer `property` (state bzw. einzelner state-Kanal).
+ON wird zu OFF, OFF zu ON. Das gilt auch für den Aggregatzustand einer Gruppe;
+alle Mitglieder erhalten denselben Zielwert. Ohne bekannten Zustand endet die
+Aktionsfolge mit `state_unavailable`. Die Laufzeit wartet weiterhin nicht auf
+eine physische Gerätebestätigung. Ein abweichender oder veralteter Symcon-Wert
+wird nicht zur Berechnung verwendet.

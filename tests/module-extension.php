@@ -42,6 +42,7 @@ IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/Z2MDevice', $library['id
 $metadata = json_decode(file_get_contents($root . '/Z2MAutomations/module.json'), true, 512, JSON_THROW_ON_ERROR);
 class ObservedAutomationModule extends Z2MAutomations
 {
+    public array $importEvents = [];
     public array $debugMessages = [];
     public bool $debugFails = false;
     public array $formUpdates = [];
@@ -51,6 +52,14 @@ class ObservedAutomationModule extends Z2MAutomations
         $previous = $this->GetBuffer('TransportState');
         $this->SetBuffer('TransportState', $value);
         return $previous;
+    }
+    protected function ImportEventIDs(): array
+    {
+        return array_keys($this->importEvents);
+    }
+    protected function ReadImportEvent(int $id): ?array
+    {
+        return $this->importEvents[$id] ?? null;
     }
 
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
@@ -729,6 +738,7 @@ try {
     $check($module->ActivateAutomations() !== '' && $state()['operation']['status'] === 'activated', 'A failing diagnostic channel cannot suppress activation');
     $check($module->StopAutomations() !== '' && $state()['operation']['status'] === 'stopped', 'A failing diagnostic channel cannot suppress stop');
     $module->debugFails = false;
+    require __DIR__ . '/event-import.inc.php';
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
     $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'Synthetic sequence')

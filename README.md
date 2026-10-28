@@ -21,7 +21,9 @@ Revision nach ausdrücklicher Aktivierung ausführen. Aktivierung und Stopp werd
 im Modul bedient und von Z2M bestätigt. Ein erster Klick-Editor lädt Geräte aus
 Z2M und erstellt Geräte- oder Zeitautomationen mit Bedingungen und bis zu 16
 geordneten Geräteaktionen. Die Wartezeit ist pro Schritt einstellbar;
-YAML-Kenntnisse sind dafür nicht erforderlich.
+YAML-Kenntnisse sind dafür nicht erforderlich. Unterstützte ausgelöste
+Symcon-Ereignisse lassen sich nach Prüfung und Vorschau als deaktivierte Regeln
+importieren. Gruppen und zustandsabhängiges Umschalten sind als Aktionsziele verfügbar.
 [Bedienung](Z2MAutomations/README.md), [Ausführung und Grenzen](docs/RUNTIME.md).
 Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
 eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.

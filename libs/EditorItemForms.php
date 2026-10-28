@@ -175,7 +175,7 @@ trait EditorItemForms
     private function EditorValueLabel(mixed $value): string
     {
         return $this->Translate(match ($value) {
-            'ON' => 'On', 'OFF' => 'Off', 'single' => 'Single press', 'double' => 'Double press', 'hold' => 'Hold', 'release' => 'Release',
+            'ON' => 'On', 'OFF' => 'Off', 'TOGGLE' => 'Toggle', 'single' => 'Single press', 'double' => 'Double press', 'hold' => 'Hold', 'release' => 'Release',
             true => 'Yes', false => 'No', default => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
         });
     }

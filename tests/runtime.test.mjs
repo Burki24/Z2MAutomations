@@ -59,10 +59,11 @@ async function harness(directory = null, nativeDispatch = true) {
         messages.push(message);
     }};
     const logger = Object.fromEntries(['debug', 'info', 'warning', 'error'].map(level => [level, text => { logs.push(text); if (h.logFault) throw new Error('sink unavailable'); }]));
-    const extension = new Extension(zigbee, mqtt, null, null, bus, null, null, null,
+    const targetStates = new Map([[targetID, {state: 'OFF'}], [7, {state: 'ON'}]]);
+    const extension = new Extension(zigbee, mqtt, {get: entity => targetStates.get(entity.ID)}, null, bus, null, null, null,
         {get: () => ({mqtt: {base_topic: 'synthetic/z2m'}})}, logger, {directory, clock});
     let sequence = 0;
-    const h = {extension, directory, clock, devices, group, commands, messages, logs, sendFault: false, logFault: false,
+    const h = {extension, directory, clock, devices, group, targetStates, commands, messages, logs, sendFault: false, logFault: false,
         request: async (operation, data = {}, extra = {}) => {
             const transaction = 'runtime-' + ++sequence;
             await receive({topic: 'synthetic/z2m/symcon/automations/request/' + operation,
@@ -422,5 +423,46 @@ test('diagnostic start/end pairs remain balanced for rejected activation and fai
         assert.ok(h.logs.some(line => line.includes('action_failed')));
         assert.equal(h.logs.some(line => line.includes(h.session)), false);
         assert.equal(h.logs.some(line => line.includes('synthetic-private-body')), false);
+    } finally { await h.close(); }
+});
+
+
+test('toggle uses current Z2M aggregate state and sends a uniform command for groups', async () => {
+    const h = await harness();
+    try {
+        const r = rule();
+        r.actions = [{type: 'toggle', target: {type: 'group', id: 7}, property: 'state'}];
+        assert.equal((await h.store(yaml([r]))).status, 'ok');
+        assert.equal((await h.activate()).status, 'ok');
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.deepEqual(h.commands.map(command => command.data), [{state: 'OFF'}]);
+        assert.equal(h.commands[0].topic, 'synthetic/group/set');
+        h.targetStates.set(7, {state: 'OFF'});
+        await h.clock.advance(1001);
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.deepEqual(h.commands.at(-1).data, {state: 'ON'});
+        h.targetStates.delete(7);
+        await h.clock.advance(1001);
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 2);
+        assert.equal(h.extension.status().runtime_error, 'state_unavailable');
+        assert.ok(h.logs.some(text => text.includes('Umschaltziel')));
+        assert.equal(JSON.stringify(h.commands).includes('TOGGLE'), false);
+    } finally { await h.close(); }
+});
+
+test('toggle reads the exact device channel and fails activation without the state interface', async () => {
+    const h = await harness();
+    try {
+        const r = rule();
+        r.actions = [{type: 'toggle', target: {type: 'device', id: targetID}, property: 'state_l2'}];
+        h.targetStates.set(targetID, {state: 'ON', state_l2: 'OFF'});
+        assert.equal((await h.store(yaml([r]))).status, 'ok');
+        assert.equal((await h.activate()).status, 'ok');
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.deepEqual(h.commands[0].data, {state_l2: 'ON'});
+        await h.deactivate();
+        h.extension.runtime.readState = undefined;
+        assert.equal((await h.activate()).error.code, 'runtime_unavailable');
     } finally { await h.close(); }
 });

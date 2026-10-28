@@ -186,7 +186,7 @@ trait AutomationEditorSchedule
             if ($target === null) {
                 return null;
             }
-            $actions = [['type' => 'set', 'target' => ['type' => 'device', 'id' => $targetID], 'values' => [$target['property'] => $target['value']], 'delay_seconds' => $v['EditorDelay']]];
+            $actions = [$this->BuildEditorAction($targetID, $target, $v['EditorDelay'])];
         } else {
             $reason = 'editor_actions';
             $actions = $this->BuildEditorActions($actionSteps, $reason);
@@ -314,11 +314,12 @@ trait AutomationEditorSchedule
         } else {
             return null;
         }
-        if ($a['type'] !== 'set' || $a['target']['type'] !== 'device' || count($a['values']) !== 1) {
+        $values = $this->EditorActionValues($a);
+        if (!in_array($a['type'], ['set', 'toggle'], true) || !in_array($a['target']['type'], ['device', 'group'], true) || count($values) !== 1) {
             return null;
         }
-        $property = array_key_first($a['values']);
-        $targetChoice = $this->EditorValueKey($snapshot, $a['target']['id'], $property, $a['values'][$property], 'Target') ?? '';
+        $property = array_key_first($values);
+        $targetChoice = $this->EditorValueKey($snapshot, $this->EditorTargetKey($a['target']), $property, $values[$property], 'Target') ?? '';
         if ($targetChoice === '') {
             return null;
         }
@@ -349,7 +350,7 @@ trait AutomationEditorSchedule
                 return null;
             }
         }
-        return $v + ['EditorSource' => $source, 'EditorSourceChoice' => $sourceChoice, 'EditorTarget' => $a['target']['id'], 'EditorTargetChoice' => $targetChoice];
+        return $v + ['EditorSource' => $source, 'EditorSourceChoice' => $sourceChoice, 'EditorTarget' => $this->EditorTargetKey($a['target']), 'EditorTargetChoice' => $targetChoice];
     }
 
     private function ScheduleVisibility(array $v): array

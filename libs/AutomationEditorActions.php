@@ -64,10 +64,24 @@ trait AutomationEditorActions
             if ($choice === null) {
                 return null;
             }
-            $actions[] = ['type' => 'set', 'target' => ['type' => 'device', 'id' => $device],
-                'values'         => [$choice['property'] => $choice['value']], 'delay_seconds' => $row['Delay']];
+            $actions[] = $this->BuildEditorAction($device, $choice, $row['Delay']);
         }
         return $actions;
+    }
+
+    private function BuildEditorAction(string $key, array $choice, int $delay = 0): array
+    {
+        $target = $this->EditorTargetIdentity($key);
+        $meta = $this->EditorProperties($this->EditorSnapshot(), $key, 'Target')[$choice['property']] ?? [];
+        return $choice['value'] === 'TOGGLE' && ($meta['type'] ?? '') === 'binary'
+            && preg_match('/\Astate(?:_[A-Za-z0-9_]+)?\z/D', $choice['property']) === 1
+            ? ['type' => 'toggle', 'target' => $target, 'property' => $choice['property'], 'delay_seconds' => $delay]
+            : ['type' => 'set', 'target' => $target, 'values' => [$choice['property'] => $choice['value']], 'delay_seconds' => $delay];
+    }
+
+    private function EditorActionValues(array $action): array
+    {
+        return ($action['type'] ?? '') === 'toggle' ? [$action['property'] => 'TOGGLE'] : ($action['values'] ?? []);
     }
 
     private function EditorActionRows(array $rule): ?array
@@ -79,22 +93,29 @@ trait AutomationEditorActions
         $snapshot = $this->EditorSnapshot();
         $rows = [];
         foreach ($actions as $action) {
-            if (($action['type'] ?? null) !== 'set' || ($action['target']['type'] ?? null) !== 'device'
-                || count($action['values'] ?? []) !== 1 || !is_int($action['delay_seconds'] ?? 0)
+            $values = $this->EditorActionValues($action);
+            if (!in_array($action['type'] ?? '', ['set', 'toggle'], true) || !in_array($action['target']['type'] ?? '', ['device', 'group'], true)
+                || count($values) !== 1 || !is_int($action['delay_seconds'] ?? 0)
                 || ($action['delay_seconds'] ?? 0) < 0 || ($action['delay_seconds'] ?? 0) > 86400) {
                 return null;
             }
-            $device = $action['target']['id'];
-            $property = array_key_first($action['values']);
+            $device = $this->EditorTargetKey($action['target']);
+            $property = array_key_first($values);
+            if ($action['type'] === 'set' && ($values[$property] ?? null) === 'TOGGLE'
+                && $this->BuildEditorAction($device, ['property' => $property, 'value' => 'TOGGLE'])['type'] === 'toggle') {
+                // Preserve an explicitly authored native TOGGLE as an advanced rule;
+                // editing must not change it into aggregate-state inversion.
+                return null;
+            }
             $found = null;
             foreach ($snapshot['devices'][$device]['actions'] ?? [] as $key => $choice) {
-                if ($choice['property'] === $property && $choice['value'] === $action['values'][$property]) {
+                if ($choice['property'] === $property && $choice['value'] === $values[$property]) {
                     $found = $device . ':' . $key;
                     break;
                 }
             }
             if ($found === null) {
-                $key = $this->EditorValueKey($snapshot, $device, $property, $action['values'][$property], 'Target');
+                $key = $this->EditorValueKey($snapshot, $device, $property, $values[$property], 'Target');
                 $found = $key === null ? null : $device . ':' . $key;
             }
             if ($found === null) {

@@ -1,0 +1,10 @@
+{
+    "id": "{11BF3773-E940-469B-9DD7-FB9ACD7199A2}",
+    "name": "SyntheticZ2MGroup",
+    "type": 3,
+    "vendor": "Test",
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "SZGR"
+}

@@ -158,6 +158,20 @@ export function buildEditorCatalog(zigbee) {
     return candidates.filter(({entry, failed}) => !failed && (entry.triggers.length || entry.actions.length || entry.numeric.length || entry.properties.length)).map(({entry}) => entry);
 }
 
+// Only stable group identity and display name cross the editor boundary.
+export function buildEditorGroups(zigbee) {
+    const groups = [], seen = new Set();
+    let visited = 0;
+    for (const group of zigbee?.groupsIterator?.() ?? []) {
+        if (++visited > 256) break;
+        if (!Number.isInteger(group.ID) || group.ID < 1 || group.ID > 65535 || seen.has(group.ID)
+            || typeof group.name !== 'string' || !group.name || /[\x00-\x1f\x7f+#]/.test(group.name)) continue;
+        seen.add(group.ID);
+        groups.push({id: group.ID, name: [...group.name].slice(0, 120).join('')});
+    }
+    return groups;
+}
+
 class ConfigurationStore {
     constructor(directory, io = fs) {
         this.directory = directory;
@@ -280,6 +294,7 @@ export default class Z2MAutomationsExtension {
         this.logger = logger;
         this.zigbee = _zigbee;
         this.runtime = new AutomationRuntime({zigbee: _zigbee, logger, clock: options.clock,
+            readState: typeof _state?.get === 'function' ? entity => _state.get(entity) : undefined,
             dispatch: (topic, message) => this.eventBus.emitMQTTMessage({topic: this.baseTopic + '/' + topic, message}),
             available: typeof eventBus.onPublishEntityState === 'function' && typeof eventBus.emitMQTTMessage === 'function'});
         // A real deployed file is in data/external_extensions, including Z2M temporary import copies.
@@ -381,7 +396,7 @@ export default class Z2MAutomationsExtension {
                     data = {...this.status(), activation_token: this.activationToken.value};
                 }
                 if (operation === 'get') data = {...this.store.metadata(), executing: this.runtime.metadata().executing, yaml: this.store.current?.yaml ?? null};
-                if (operation === 'editor') data = {...this.status(), editor_version: 1, devices: buildEditorCatalog(this.zigbee), yaml: this.store.current?.yaml ?? null,
+                if (operation === 'editor') data = {...this.status(), editor_version: 1, devices: buildEditorCatalog(this.zigbee), groups: buildEditorGroups(this.zigbee), yaml: this.store.current?.yaml ?? null,
                     configuration: this.store.current?.document ?? {schema_version: 1, revision: 0, automations: []}};
                 if (operation === 'validate') {
                     const candidate = validateYaml(request.yaml);

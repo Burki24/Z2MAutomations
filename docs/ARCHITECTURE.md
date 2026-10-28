@@ -1,5 +1,17 @@
 # Architektur
 
+## Symcon-Ereignisimport
+
+Ein lesender Import übersetzt ausdrücklich unterstützte Kernel-Ereignisse über
+Variablen-IDs in lokale Regeln. Er führt keinen Quellcode aus und verändert weder
+Originalereignisse noch Z2M. Quelle und Ziel müssen zur geladenen Geräte-/Gruppen-
+Identität passen; unbekannte Semantik wird vollständig abgewiesen. Vorschau,
+Konfliktprüfung und deterministische Import-ID sichern die Übernahme ab.
+Der bestehende Klick-Editor verwaltet importierte Regeln einschließlich Gruppen.
+Umschalten besitzt eine eigene Schema-1-Aktionsvariante und liest den aktuellen
+Z2M-Zielzustand unmittelbar vor der nativen Set-Übergabe. Siehe ADR 0008.
+
+
 ## Einmalige automatische Statusprüfung
 
 `ApplyChanges`, Formularabruf und Wiederverbindung planen einen einmaligen

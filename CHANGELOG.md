@@ -2,6 +2,12 @@
 
 ## Fixes
 
+- Unterstützte ausgelöste Symcon-Ereignisse lassen sich mit Prüfung und Vorschau
+  als deaktivierte Regeln in den Klick-Editor importieren. Originalereignisse
+  bleiben unverändert; geänderte Vorschauen und doppelte Imports werden abgewiesen.
+- Gruppen stehen als schaltbare Aktionsziele bereit. Umschaltaktionen verwenden
+  den aktuellen Z2M-Zustand und melden unbekannte Zustände verständlich als Fehler.
+
 - Modulupdate, Formularöffnung und MQTT-Wiederverbindung lösen eine verzögerte
   einmalige Prüfung von Zigbee2MQTT und Erweiterungsstatus aus. Laufende Aufträge
   haben Vorrang; deutsche Debug-Ausgaben erklären Ablauf und Fehler.

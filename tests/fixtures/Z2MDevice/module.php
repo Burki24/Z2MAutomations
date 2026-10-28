@@ -13,6 +13,7 @@ class SyntheticZ2MDevice extends IPSModuleStrict
             $this->RegisterVariableBoolean($ident, 'Synthetic ' . strtoupper($ident), [], 0);
             $this->EnableAction($ident);
         }
+        $this->RegisterVariableString('action', 'Synthetic button action', [], 0);
         $this->RegisterVariableInteger('level', 'Synthetic level', [], 0);
         $this->EnableAction('level');
         $this->RegisterVariableInteger('write_only', 'Synthetic write only', [], 0);

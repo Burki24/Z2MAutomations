@@ -9,8 +9,9 @@ trait ModuleDiagnostics
     private function TraceModuleCall(string $function, int $line, callable $callback): mixed
     {
         $this->editorActionVariables = null;
+        $this->editorGroupBindings = [];
         $void = in_array($function, ['RefreshStatus', 'Create', 'ApplyChanges', 'MessageSink', 'ExpireRequest', 'SelectEditorDevice', 'ShowYamlEditor', 'ConfigureEditorSchedule', 'ConfigureEditorItem', 'SelectEditorConditionProperty'], true);
-        $results = in_array($function, ['InspectEditorConditions', 'InspectEditorTriggers', 'OpenAutomationEditor', 'CreateSimpleAutomation', 'SelectAutomation', 'UpdateAutomation', 'DeleteAutomation', 'SaveScheduledAutomation', 'InspectEditorActions'], true)
+        $results = in_array($function, ['ScanEventImports', 'PreviewEventImport', 'ImportSymconEvent', 'InspectEditorConditions', 'InspectEditorTriggers', 'OpenAutomationEditor', 'CreateSimpleAutomation', 'SelectAutomation', 'UpdateAutomation', 'DeleteAutomation', 'SaveScheduledAutomation', 'InspectEditorActions'], true)
             ? ['Editoraktion abgelehnt; Grund siehe Ablauf.', 'Editoraktion abgeschlossen; Z2M noch unverändert.'] : null;
         return $this->DebugFlowCall($function, $line, \Closure::fromCallable($callback), $void, [], $results);
     }

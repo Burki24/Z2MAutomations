@@ -1,5 +1,17 @@
 # Debug und MQTT-Diagnose
 
+## Ereignisimport
+
+`ScanEventImports`, `PreviewEventImport` und `ImportSymconEvent` verwenden den
+kanonischen START-/ENDE-Ablauf. Deutsche Meldungen nennen geprüfte bzw.
+zugeordnete Anzahlen, die Importfähigkeit und feste Ablehnungsgründe. Ereignisnamen,
+Auslösewerte, Skriptinhalte und Vorschautokens werden nicht protokolliert.
+Die Übernahme bestätigt ausdrücklich die deaktivierte lokale Regel und die
+unveränderten Originale. Der Katalog-Debug zählt zusätzlich bestätigte Gruppen.
+Die Z2M-Laufzeit meldet, wenn ein Umschaltziel aus dem Cache ermittelt wurde;
+`state_unavailable` erklärt fehlende Zustände ohne Gerätedaten im Protokoll.
+
+
 ## Automatische Statusprüfung
 
 `RefreshStatus` ist der öffentliche Timer-Einstieg mit nativem Debug-Ablauf.

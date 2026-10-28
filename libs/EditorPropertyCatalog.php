@@ -58,7 +58,17 @@ trait EditorPropertyCatalog
 
     private function EditorProperties(array $snapshot, string $device, string $side): array
     {
-        return array_filter($snapshot['devices'][$device]['properties'] ?? [], fn (array $p): bool => ($p['access'] & ($side === 'Target' ? 2 : 1)) !== 0
+        $properties = $snapshot['devices'][$device]['properties'] ?? [];
+        if ($side === 'Target') {
+            foreach ($properties as &$meta) {
+                if ($meta['type'] === 'binary' && preg_match('/\Astate(?:_[A-Za-z0-9_]+)?\z/D', $meta['property']) === 1
+                    && in_array('ON', $meta['values'], true) && in_array('OFF', $meta['values'], true)) {
+                    $meta['values'][] = 'TOGGLE';
+                }
+            }
+            unset($meta);
+        }
+        return array_filter($properties, fn (array $p): bool => ($p['access'] & ($side === 'Target' ? 2 : 1)) !== 0
             && ($side !== 'Target' || $this->EditorActionVariable($snapshot, $device, $p['property']) !== null));
     }
 

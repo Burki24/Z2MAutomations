@@ -13,7 +13,7 @@ final class ExtensionContract
     public const PREFIX = 'symcon/automations/';
     public const MAX_YAML_BYTES = 131072;
     public const ERROR_CODES = ['invalid_request', 'invalid_yaml', 'invalid_schema', 'invalid_semantics', 'session_mismatch', 'revision_conflict', 'revision_reused', 'storage_unavailable', 'storage_error', 'busy', 'not_ready', 'activation_expired', 'checksum_mismatch', 'unknown_entity', 'runtime_unavailable'];
-    public const RUNTIME_ERRORS = ['', 'unknown_entity', 'action_failed', 'action_timeout', 'rate_limited'];
+    public const RUNTIME_ERRORS = ['', 'unknown_entity', 'action_failed', 'action_timeout', 'rate_limited', 'state_unavailable'];
 
     public static function ValidYamlText(string $yaml): bool
     {
@@ -103,6 +103,7 @@ final class ExtensionContract
             'not_ready'            => 'The extension is not ready to accept requests.',
             'activation_expired'   => 'The activation approval expired. Refresh the state and activate again.',
             'checksum_mismatch'    => 'The stored configuration changed before activation.',
+            'state_unavailable'    => 'The current Z2M target state is unknown. Toggle was not executed.',
             'unknown_entity'       => 'A configured device or group is unavailable in Z2M.',
             'runtime_unavailable'  => 'Update the bundled extension to use execution controls.',
             'runtime_mismatch'     => 'Z2M did not confirm the requested execution state. Refresh the status.',

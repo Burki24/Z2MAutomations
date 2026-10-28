@@ -1,5 +1,50 @@
 # Z2MAutomations
 
+## Vorhandene Symcon-Ereignisse importieren
+
+1. Modul und mitgelieferte Z2M-Erweiterung auf denselben aktuellen Stand bringen.
+2. **Geräte und gespeicherte Automationen laden**. Das ersetzt den lokalen Entwurf;
+   vorherige Änderungen deshalb zuerst übernehmen bzw. speichern.
+3. **Symcon-Ereignisse importieren** öffnen und **Vorhandene Ereignisse prüfen** wählen.
+4. Ein Ereignis auswählen und die Vorschau mit Auslöser, Ziel und Aktion prüfen.
+5. **Ereignis in den Entwurf übernehmen** wählen. Die deaktivierte Regel öffnet
+   sich vorbefüllt im Bereich der geräteausgelösten Automationen und lässt sich
+   dort ohne YAML bearbeiten. Anschließend gemeinsam prüfen und speichern.
+
+Der erste Import unterstützt ausgelöste Ereignisse **bei bestimmtem Wert** mit
+**mehrmaliger Auslösung bei wiederholt erfüllter Bedingung**, ohne zusätzliche
+Bedingungen oder Ausführungsbegrenzung. Unterstützt sind native feste boolesche
+bzw. unmittelbar zuordenbare Text-/Auswahlwerte sowie **Wert umschalten** für
+Ein-/Aus-Zustände. Zahlenwerte mit möglicher Symcon-Skalierung, Prozent-/Farbaktionen,
+PHP-Code, Ablaufpläne und weitere Aktionsarten werden mit Begründung abgewiesen.
+Es wird keine teilweise vereinfachte Regel erzeugt.
+
+Die Zuordnung verwendet die referenzierten Variablen-IDs, den Instanztyp, das
+konfigurierte Basistopic und die Z2M-Geräte-/Gruppenkennung. Namen sind nur Anzeige.
+Aktionsziele benötigen eine native schaltbare Variable ohne eigene Aktionsskripte
+und eine passende schreibbare Katalogeigenschaft. Sensoren bleiben lesbare Quellen.
+Gruppen sind als Aktionsziele für ihren Ein-/Aus-Zustand verfügbar.
+
+**Wert umschalten** verwendet unmittelbar vor der Aktion den in Z2M bekannten
+Zustand der Gruppe bzw. des Gerätekanals und sendet den entgegengesetzten
+Ein-/Aus-Wert. Bei unbekanntem Zustand wird der Schritt mit Fehler abgebrochen.
+Es wird kein möglicherweise veralteter Symcon-Wert übernommen und kein pauschaler
+TOGGLE-Befehl an alle Gruppenmitglieder gesendet.
+
+Das ursprüngliche Symcon-Ereignis wird weder geändert noch deaktiviert.
+**Vor Aktivierung der importierten Regel in Z2M das Originalereignis deaktivieren**,
+damit beide Systeme die Aktion nicht doppelt ausführen. Die allgemeinen
+Laufzeitgrenzen gelten weiter, insbesondere eine Sekunde Sperrzeit pro Regel und
+keine parallelen Läufe derselben Regel. Das ist keine Garantie identischer
+Ausführungshäufigkeit wie in Symcon.
+
+Die Vorschau wird vor der Übernahme erneut geprüft. Geänderte Ereignisse,
+Zuordnungen oder ungespeicherte YAML-Änderungen werden nicht stillschweigend
+übernommen. Ein bereits importiertes Ereignis erzeugt keine zweite Regel.
+Die Suche berücksichtigt höchstens 4096 Ereignisse und zeigt maximal 256 passende
+Quellen aus dem geladenen Katalog; eine erreichte Grenze wird angezeigt.
+
+
 ## Automatische Statusprüfung
 
 Nach Anwenden der Einstellungen bzw. einem Modulupdate und beim Öffnen des

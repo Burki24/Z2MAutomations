@@ -8,6 +8,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Erster Import ausgelöster nativer Symcon-Ereignisse implementiert: lesende Suche,
+  Vorschau, erneute Prüfung und deaktivierte lokale Übernahme, ohne Originaländerung.
+  Bestimmter Wert mit Wiederholung, native boolesche/Textwerte und Umschalten;
+  Bedingungen, Begrenzung, Skripte und ungesicherte Zahlenskalierung werden abgewiesen.
+  Gruppen werden mit der Editorantwort geladen und sind Aktionsziele mit nativer
+  schaltbarer Variable. Neue Schema-1-Aktion `toggle` kehrt den Z2M-Cachezustand um;
+  fehlender Zustand führt zu `state_unavailable`. Siehe ADR 0008.
+  Neuer Modul- und Erweiterungsstand noch nicht live installiert.
+
 - Messwertvergleiche im Geräteauslöser-Dialog und mehrere UND-verknüpfte
   Gerätebedingungen im Geräte- und Zeiteditor implementiert. Vergleich,
   Schwellenwert, Mindestdauer und sämtliche Bedingungen werden vorbelegt.

@@ -4,7 +4,7 @@ Die eigene Erweiterung empfängt Automationen über MQTT, validiert YAML und
 Schema und speichert die letzte gültige Fassung im persistenten Z2M-Datenordner.
 Eine gespeicherte Revision kann anschließend ausdrücklich aktiviert werden.
 Die Engine unterstützt das bestehende Schema mit Geräte-/Zeittriggern,
-Bedingungen und geordneten Set-Aktionen. Speichern allein aktiviert nichts.
+Bedingungen und geordneten Set-/Umschaltaktionen. Speichern allein aktiviert nichts.
 Das Symcon-Modul bietet Aktivierungs-/Stoppbuttons und einen ersten Klick-Editor.
 Die Erweiterung stellt dafür einen begrenzten Gerätekatalog aus diskreten Exposes
 und die bereits gespeicherte Konfiguration bereit. Nach der Aktivierung laufen
@@ -36,3 +36,14 @@ Details: [YAML-Vertrag](../../docs/YAML_SCHEMA.md),
 
 Verträge und Zuständigkeiten stehen in [Architektur](../../docs/ARCHITECTURE.md).
 Keine Implementierung aus fremden Automationsprojekten übernehmen.
+
+## Gruppen und Umschalten
+
+Editorantworten enthalten zusätzlich bis zu 256 Gruppen mit stabiler ID und
+Anzeigename. Symcon prüft die zugehörige native Aktionsvariable und bietet
+Ein-/Aus-Aktionen an. Die neue Schema-1-Variante `{type: toggle, target, property}`
+verwendet `state.get(entity)` des Z2M-Hosts. Ein bekannter ON/OFF-Zustand wird
+invertiert und als normaler Set-Wert übergeben. Ohne Cachewert endet die Folge mit
+`state_unavailable`; ohne Host-Schnittstelle wird die Aktivierung abgewiesen.
+Gruppen werden anhand ihres Aggregatzustands einheitlich ein-/ausgeschaltet.
+`toggle` besitzt keine `values`, `set` keine `property`.

@@ -1,3 +1,33 @@
+## Ereignisimport und Umschaltaktionen
+
+Der native Bereich `EventImportSection` führt Suche, Vorschau und deaktivierte
+Übernahme aus. `SymconEventImport` liest nur Kernel-Ereignisse; es wertet keine
+Skripte aus und ruft keine Aktionsausführung auf. `ReadImportEvent` und
+`ImportEventIDs` sind die schmalen geschützten Kernel-Testgrenzen.
+Eine Vorschau bindet Ereignisinhalt, Variablenzuordnung und Scope; beim Import
+werden diese neu ermittelt. Entwurfskonflikte nutzen den vorhandenen Editorvertrag.
+Deterministische Import-IDs verhindern Duplikate, ohne Symcon-IDs in YAML zu speichern.
+
+Die native Action-ID-Zulassung basiert auf den Symcon-Aktionsmetadaten und deren
+Parametern (`TARGET`, ggf. `VALUE`). Unbekannte Action-IDs oder zusätzliche Parameter
+werden abgewiesen. Boolesche ON/OFF-Metadaten werden ausdrücklich übersetzt;
+Zahlenwerte bleiben wegen möglicher Modulskalierung außerhalb des Importumfangs.
+Keine Helper-Erweiterung: Ereignisprüfung und Z2M-Zuordnung sind librarylokal.
+
+`EditorGroupTargets` ergänzt die bestätigten Gruppen aus der begrenzten
+Editorantwort als interne Zielschlüssel `group.<Z2M-ID>`. Im YAML bleiben sie
+native `target: {type: group, id: <Z2M-ID>}`. Gruppen bieten keine Sensorquellen.
+Der Klick-Editor erzeugt für Umschalten eine eigene `toggle`-Aktion mit `property`;
+`set` behält `values`. Kein neues Schemaformat und keine Metadatenversion geändert.
+Die Host-Schnittstelle `state.get(entity)` wird nur zur Umschaltausführung genutzt.
+
+Offline-Nachweis: `tests/event-import.inc.php` im realen PHP-/JS-Harness prüft die
+Formularcallbacks, Vorschau, Import, Vorbelegung, erneute Bearbeitung, Validierung,
+Speicherung, Reload, Konflikte, Duplikate und bereinigte Debug-Ausgaben.
+Zusätzliche Schema-/Runtime-Tests prüfen Gruppen-/Kanal-Umschalten, fehlenden Cache
+und fehlende Host-Schnittstelle. Praxisprüfung auf Testinstallation steht aus;
+für Gruppenimport und Umschalten müssen Modul und Erweiterung aktualisiert werden.
+
 ## Einmalige automatische Statusprüfung
 
 `ApplyChanges`, Formularabruf und Wiederverbindung planen einen einmaligen

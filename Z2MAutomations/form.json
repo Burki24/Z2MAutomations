@@ -93,6 +93,75 @@
         },
         {
             "type": "ExpansionPanel",
+            "name": "EventImportSection",
+            "caption": "Import Symcon events",
+            "expanded": false,
+            "items": [
+                {
+                    "type": "Label",
+                    "caption": "Import supported events as disabled drafts. Original events remain unchanged. Disable the original event before activation in Z2M to avoid duplicate execution. Runtime limits and the one-second cooldown also apply to imported rules."
+                },
+                {
+                    "type": "Button",
+                    "caption": "Check existing events",
+                    "onClick": "Z2MA_ScanEventImports($id);"
+                },
+                {
+                    "type": "List",
+                    "name": "ImportEvents",
+                    "caption": "Checked events",
+                    "width": "100%",
+                    "rowCount": 5,
+                    "columns": [
+                        {
+                            "name": "Name",
+                            "caption": "Event",
+                            "width": "180px"
+                        },
+                        {
+                            "name": "Result",
+                            "caption": "Import assessment",
+                            "width": "auto"
+                        }
+                    ],
+                    "values": []
+                },
+                {
+                    "type": "Select",
+                    "name": "ImportEventID",
+                    "caption": "Event to import",
+                    "options": [
+                        {
+                            "caption": "Choose event",
+                            "value": 0
+                        }
+                    ],
+                    "value": 0,
+                    "onChange": "Z2MA_PreviewEventImport($id, $ImportEventID);"
+                },
+                {
+                    "type": "ValidationTextBox",
+                    "name": "ImportToken",
+                    "caption": "Preview token",
+                    "value": "",
+                    "visible": false
+                },
+                {
+                    "type": "Label",
+                    "name": "ImportMessage",
+                    "caption": "Check existing Symcon events, then select one for preview."
+                },
+                {
+                    "type": "Button",
+                    "name": "ImportButton",
+                    "caption": "Import event into draft",
+                    "enabled": false,
+                    "onClick": "Z2MA_ImportSymconEvent($id, $ImportEventID, $ImportToken, $YamlInput, true);"
+                }
+            ]
+        },
+        {
+            "type": "ExpansionPanel",
             "name": "EditorDeviceSection",
             "caption": "Device-triggered automations",
             "expanded": true,

@@ -89,8 +89,7 @@ trait AutomationEditor
                 $draft['configuration']['revision'] = $draft['baseRevision'] + 1;
                 $draft['configuration']['automations'][] = ['id' => 'rule_' . bin2hex(random_bytes(8)), 'name' => $name, 'enabled' => $Enabled,
                     'triggers'                                   => [['type' => 'device', 'device' => $Source, 'property' => $source['property'], 'operator' => 'eq', 'value' => $source['value']]],
-                    'conditions'                                 => [], 'actions' => [['type' => 'set', 'target' => ['type' => 'device', 'id' => $Target],
-                        'values'                                                              => [$target['property'] => $target['value']]]]];
+                    'conditions'                                 => [], 'actions' => [$this->BuildEditorAction($Target, $target)]];
                 $yaml = json_encode($draft['configuration'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
                 if (!ExtensionContract::ValidYamlText($yaml)) {
                     $state['lastError'] = 'editor_invalid';
@@ -171,6 +170,11 @@ trait AutomationEditor
                 $devices[$device->id]['numeric'][$number->property] = $number->unit;
             }
         }
+        $groups = $this->ReadEditorGroups($data);
+        if ($groups === null) {
+            $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
+            return;
+        }
         // JSON is a valid YAML document; the authoritative schema check stays in Z2M.
         $yaml = $metadata['storedRevision'] === 0
             ? json_encode($configuration, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n"
@@ -180,7 +184,7 @@ trait AutomationEditor
             $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
             return;
         }
-        $this->WriteAttributeString('EditorSnapshot', json_encode(['scope' => $state['scope'], 'devices' => $devices], JSON_THROW_ON_ERROR));
+        $this->WriteAttributeString('EditorSnapshot', json_encode(['scope' => $state['scope'], 'devices' => $devices, 'groups' => $groups], JSON_THROW_ON_ERROR));
         $this->WriteAttributeString('EditorSource', '');
         $this->WriteAttributeString('EditorTarget', '');
         $draft = ['scope'  => $state['scope'], 'session' => $metadata['session'], 'baseRevision' => $metadata['storedRevision'],
@@ -200,7 +204,7 @@ trait AutomationEditor
             $readable += count($this->EditorProperties($filtered, $id, 'Source'));
             $writable += count($this->EditorProperties($filtered, $id, 'Target'));
         }
-        $this->DebugEvent('EMPFANG', 'Gerätekatalog übernommen; Aktionsziele anhand aktiver Symcon-Aktionen geprüft.', ['Geräte' => count($devices), 'Automationen' => $metadata['automationCount'], 'LesbareEigenschaften' => $readable, 'SchaltbareEigenschaften' => $writable]);
+        $this->DebugEvent('EMPFANG', 'Gerätekatalog übernommen; Aktionsziele anhand aktiver Symcon-Aktionen geprüft.', ['Geräte' => count($devices), 'Gruppen' => count($groups), 'Automationen' => $metadata['automationCount'], 'LesbareEigenschaften' => $readable, 'SchaltbareEigenschaften' => $writable]);
         $this->FinishExtensionWorkflow($state, 'editor_loaded');
     }
 
@@ -219,7 +223,7 @@ trait AutomationEditor
     private function EditorSnapshot(): array
     {
         $json = $this->ReadAttributeString('EditorSnapshot');
-        return $json === '' ? [] : $this->FilterEditorActions(json_decode($json, true, 32, JSON_THROW_ON_ERROR));
+        return $json === '' ? [] : $this->FilterEditorActions($this->AddEditorGroupTargets(json_decode($json, true, 32, JSON_THROW_ON_ERROR)));
     }
 
     private function EditorDevices(array $snapshot, string $side): array
@@ -337,7 +341,7 @@ trait AutomationEditor
                 continue;
             }
             $source = is_array($rule['triggers'][0] ?? null) && is_string($rule['triggers'][0]['device'] ?? null) ? $rule['triggers'][0]['device'] : '';
-            $target = is_array($rule['actions'][0]['target'] ?? null) && is_string($rule['actions'][0]['target']['id'] ?? null) ? $rule['actions'][0]['target']['id'] : '';
+            $target = isset($rule['actions'][0]['target']) ? $this->EditorTargetKey($rule['actions'][0]['target']) : '';
             $sourceLabel = ($rule['triggers'][0]['type'] ?? '') === 'time'
                 ? sprintf($this->Translate('Daily at %s (%s)'), $rule['triggers'][0]['at'], $rule['triggers'][0]['timezone'])
                 : ($snapshot['devices'][$source]['name'] ?? $this->Translate('Advanced rule'));

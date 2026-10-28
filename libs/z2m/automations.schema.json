@@ -319,44 +319,75 @@
             ]
         },
         "action": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "type": {
-                    "const": "set"
-                },
-                "target": {
-                    "$ref": "#/definitions/target"
-                },
-                "values": {
+            "oneOf": [
+                {
                     "type": "object",
-                    "minProperties": 1,
-                    "maxProperties": 32,
-                    "propertyNames": {
-                        "type": "string",
-                        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
-                        "not": {
-                            "enum": [
-                                "__proto__",
-                                "constructor",
-                                "prototype"
-                            ]
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "const": "set"
+                        },
+                        "target": {
+                            "$ref": "#/definitions/target"
+                        },
+                        "values": {
+                            "type": "object",
+                            "minProperties": 1,
+                            "maxProperties": 32,
+                            "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+                                "not": {
+                                    "enum": [
+                                        "__proto__",
+                                        "constructor",
+                                        "prototype"
+                                    ]
+                                }
+                            },
+                            "additionalProperties": {
+                                "$ref": "#/definitions/jsonValue"
+                            }
+                        },
+                        "delay_seconds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 86400
                         }
                     },
-                    "additionalProperties": {
-                        "$ref": "#/definitions/jsonValue"
-                    }
+                    "required": [
+                        "type",
+                        "target",
+                        "values"
+                    ]
                 },
-                "delay_seconds": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 86400
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "type": {
+                            "const": "toggle"
+                        },
+                        "target": {
+                            "$ref": "#/definitions/target"
+                        },
+                        "property": {
+                            "type": "string",
+                            "pattern": "^state(?:_[A-Za-z0-9_]+)?$",
+                            "maxLength": 64
+                        },
+                        "delay_seconds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 86400
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "target",
+                        "property"
+                    ]
                 }
-            },
-            "required": [
-                "type",
-                "target",
-                "values"
             ]
         },
         "automation": {
