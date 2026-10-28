@@ -23,7 +23,7 @@ seiner Socket-Verbindung eingerichtet. Die Library benötigt keine eigene Kopie.
 
 ## Erweiterung installieren
 
-Z2M muss online melden; bridge/info muss aktiviertes externes JavaScript bestätigen.
+Z2M muss online melden. Eine durch bridge/info bestätigte Deaktivierung von externem JavaScript blockiert die Installation; fehlende Metadaten werden durch den offiziellen Installationsablauf geklärt.
 Der geprüfte Erweiterungsvertrag setzt Z2M 2.14.2 mit Node ab 22.2, js-yaml 5.4.2
 und Ajv 8.20.0 voraus. Die real unterstützten Z2M-Installationen sind noch nicht
 praktisch abgenommen.
@@ -381,3 +381,8 @@ auch die anschließende Empfängerprüfung voraus. Zeitüberschreitungen und ber
 vor dem Versand erkannte Fehler erscheinen ebenfalls im Popup. Programmatische
 InstallExtension-Aufrufe bleiben standardmäßig ohne Popup; Notify=true aktiviert
 es für ein geöffnetes Formular.
+
+Fehlen nach einem Modulupdate noch bridge/info-Metadaten, darf die offizielle
+Z2M-Schnittstelle den Installationsauftrag prüfen. Eine ausdrücklich gemeldete
+Deaktivierung blockiert weiterhin vor dem Versand. Die Library aktiviert externes
+JavaScript nicht selbst; Erfolg benötigt immer die bestätigte Empfängerbereitschaft.

@@ -106,6 +106,7 @@ foreach ([1, 2, 3, 4] as $n) {
 }
 $parent->publish('synthetic/z2m/bridge/state', ['state' => 'online']);
 $state = static fn (): array => json_decode($module->GetTransportState(), true, 512, JSON_THROW_ON_ERROR);
+$parent->publish('synthetic/z2m/bridge/info', ['version' => '2.14.2', 'config' => ['advanced' => ['enable_external_js' => false]]]);
 $check($module->InstallExtension(true) === '' && $state()['lastError'] === 'external_js_disabled', 'Never enable external JavaScript automatically');
 $parent->publish('synthetic/z2m/bridge/info', ['version' => '2.14.2', 'config' => ['advanced' => ['enable_external_js' => true]]]);
 $peer = proc_open(['node', __DIR__ . '/extension-peer.mjs'], [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, $root);
@@ -135,8 +136,12 @@ $parent->onPublish = static function (array $packet) use ($exchange, $deliver): 
     $deliver($exchange(['topic' => $packet['Topic'], 'payload' => $packet['Payload']]));
 };
 try {
+    $cachedTransport = json_decode($module->ReplaceTransportBuffer(''), true, 32, JSON_THROW_ON_ERROR);
+    $cachedTransport['externalJS'] = null;
+    $cachedTransport['version'] = '';
+    $module->ReplaceTransportBuffer(json_encode($cachedTransport, JSON_THROW_ON_ERROR));
     $install = $module->InstallExtension(true);
-    $check($install !== '' && $state()['operation']['status'] === 'installed' && $state()['extensionConfirmed'], 'Installation completes only after a correlated receiver probe');
+    $check($install !== '' && $state()['operation']['status'] === 'installed' && $state()['extensionConfirmed'], 'Installation with unknown bridge info completes only after a correlated receiver probe');
     $check($module->formUpdates['InstallResultPopup']['visible'] === true && str_contains($module->formUpdates['InstallResultMessage']['caption'], 'confirmed readiness'), 'Installation popup follows the correlated receiver confirmation');
     $sent = $parent->sent;
     $packet = $sent[0];
@@ -809,6 +814,9 @@ $validate = static function () use ($controlled, $source, $replyStatus, $remote,
     $check($controlledState()['operation']['status'] === 'validated', 'Obtain current validation receipt');
 };
 
+$unknownTransport = json_decode($controlled->ReplaceTransportBuffer(''), true, 32, JSON_THROW_ON_ERROR);
+$unknownTransport['externalJS'] = null;
+$controlled->ReplaceTransportBuffer(json_encode($unknownTransport, JSON_THROW_ON_ERROR));
 $install = $controlled->InstallExtension(true);
 $check(!isset($controlled->formUpdates['InstallResultPopup']), 'Sending an installation does not show an early success popup');
 $count = count($parent->sent);

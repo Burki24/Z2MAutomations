@@ -131,3 +131,8 @@ Die Installation protokolliert zusätzlich die Übergabe der Popup-Rückmeldung
 mit Erfolgskennzeichen und festem Fehlercode. Fremde Fehlermeldungen gelangen
 weder ins Popup noch ins Debug. Ein Darstellungsfehler verändert das
 Installationsergebnis nicht.
+
+Ist die Freigabe für externes JavaScript unbekannt, erklärt eine Fachmeldung,
+dass der Auftrag über die offizielle Z2M-Schnittstelle geprüft wird. Unbekannt
+ist kein Nachweis für eine deaktivierte Einstellung. Ein ausdrücklich gemeldetes
+false blockiert weiterhin vor dem Versand.

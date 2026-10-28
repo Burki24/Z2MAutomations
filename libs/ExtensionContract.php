@@ -81,7 +81,7 @@ final class ExtensionContract
             ''                     => '',
             'not_connected'        => 'No active MQTT connection.',
             'bridge_offline'       => 'Zigbee2MQTT must report online first.',
-            'external_js_disabled' => 'External JavaScript is disabled or has not been confirmed by bridge/info.',
+            'external_js_disabled' => 'External JavaScript is disabled according to bridge/info.',
             'artifact_unavailable' => 'The bundled extension could not be read.',
             'installation_failed'  => 'Zigbee2MQTT rejected the extension installation.',
             'send_failed'          => 'The MQTT request could not be sent.',

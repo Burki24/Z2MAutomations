@@ -57,7 +57,6 @@
             "No extension error.": "Kein Erweiterungsfehler.",
             "Extension installed and receiver confirmed.": "Erweiterung installiert und Empfänger bestätigt.",
             "The receiver storage is unavailable or read-only.": "Der Empfängerspeicher ist nicht verfügbar oder nur lesbar.",
-            "External JavaScript is disabled or has not been confirmed by bridge/info.": "Externes JavaScript ist deaktiviert oder noch nicht durch bridge/info bestätigt.",
             "Validated revision %d, %d automations. Stored revision: %d. SHA-256: %s": "Geprüfte Revision %d, %d Automationen. Gespeicherte Revision: %d. SHA-256: %s",
             "Stored YAML revision": "Gespeicherte YAML-Revision",
             "Install or update bundled extension": "Mitgelieferte Erweiterung installieren oder aktualisieren",
@@ -250,7 +249,8 @@
             "Channel %s": "Kanal %s",
             "Extension installation": "Installation der Erweiterung",
             "Extension installed or updated successfully. The receiver in Z2M has confirmed readiness.": "Erweiterung erfolgreich installiert oder aktualisiert. Der Empfänger in Z2M hat seine Bereitschaft bestätigt.",
-            "Extension installation or update failed:": "Installation oder Aktualisierung der Erweiterung fehlgeschlagen:"
+            "Extension installation or update failed:": "Installation oder Aktualisierung der Erweiterung fehlgeschlagen:",
+            "External JavaScript is disabled according to bridge/info.": "Externes JavaScript ist laut bridge/info deaktiviert."
         }
     }
 }

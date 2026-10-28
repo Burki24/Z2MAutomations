@@ -1,3 +1,17 @@
+## Installation bei fehlender bridge/info-Bestätigung
+
+Praxisbefund: Nach einem Modulupdate war externalJS unbekannt (null) und die
+Z2M-Version im Transportcache leer. Die vorhandene Erweiterung bestätigte dennoch
+Bereitschaft und den gestoppten Zustand. Der bisherige Check externalJS !== true
+verwechselte fehlende Metadaten mit deaktivierter Freigabe und blockierte vor
+jedem Versand. Nun blockiert nur ausdrücklich gemeldetes false. Bei unbekanntem
+Wert entscheidet die offizielle extension/save-Schnittstelle; Einstellungen
+werden nicht geändert. Fehlende oder negative Antworten bleiben Fehler, Erfolg
+benötigt unverändert Upload-ACK und eine korrelierte Empfängerprüfung.
+Offline geprüft: unbekannte Metadaten mit Erfolg, sicherer Installationsfehler
+und Timeout; explizit deaktivierte Freigabe weiterhin ohne Upload abgewiesen.
+Diese Korrektur ist lokal, noch nicht auf der Testinstallation eingespielt.
+
 ## Praxisprüfung der getrennten Auswahl und Installationsrückmeldung
 
 Formularanordnung auf der aktualisierten Testinstallation geprüft:

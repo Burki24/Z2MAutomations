@@ -100,7 +100,10 @@ trait ExtensionIntegration
                 $error = !$state['mqttConnected'] ? 'not_connected' : (!$state['bridgeOnline'] && $kind !== 'deactivate' ? 'bridge_offline' : '');
             }
             if ($error === '' && $kind === 'install') {
-                $error = $state['externalJS'] !== true ? 'external_js_disabled' : ($code === '' ? 'artifact_unavailable' : '');
+                if ($state['externalJS'] === null) {
+                    $this->DebugEvent('AKTION', 'Freigabe für externes JavaScript noch unbekannt; Installation wird durch die offizielle Z2M-Schnittstelle geprüft.');
+                }
+                $error = $state['externalJS'] === false ? 'external_js_disabled' : ($code === '' ? 'artifact_unavailable' : '');
             }
             if ($kind === 'store' && $error === '' && $state['validation'] === null) {
                 $error = 'not_validated';
