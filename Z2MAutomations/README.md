@@ -1,5 +1,19 @@
 # Z2MAutomations
 
+## Automatische Statusprüfung
+
+Nach Anwenden der Einstellungen bzw. einem Modulupdate und beim Öffnen des
+Formulars prüft das aktive Modul einmalig die Erreichbarkeit von Zigbee2MQTT.
+Eine passende positive Health-Antwort startet anschließend die Abfrage des
+Erweiterungsstatus. Die Statusanzeige aktualisiert sich anhand der Antworten.
+
+Die Prüfung startet verzögert nach etwa einer Sekunde und benötigt eine
+verbundene MQTT-Schnittstelle. Aufrufe innerhalb von zehn Sekunden werden
+zusammengefasst. Laufende Aufträge haben Vorrang; Fehler oder Zeitüberschreitungen
+führen nicht zu einer automatischen Wiederholung. Entwürfe werden nicht verändert;
+Installation, Übertragung und Aktivierung bleiben ausdrückliche Bedienaktionen.
+Die manuellen Prüfbuttons stehen weiterhin zur Verfügung.
+
 Dieses Modul verbindet die geplante Automationsverwaltung mit Zigbee2MQTT über
 die vorhandene MQTT-Anbindung von Symcon.
 

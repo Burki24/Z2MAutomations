@@ -149,7 +149,9 @@ sie persistent und führt sie unabhängig von Symcon aus.
   des Consumers und App-Berechtigungen für automatischen Sync sind noch zu prüfen;
   andere Repositories wurden für diese Implementierung nicht geändert.
 - Das dynamische Formular verwendet den kanonisch eingebundenen
-  ConfigurationFormHelper. Öffnen löst keine Netzwerkanfrage aus.
+  ConfigurationFormHelper. Öffnen plant eine verzögerte einmalige Statusprüfung;
+  der Formularaufbau selbst sendet kein MQTT. Nach ApplyChanges und Wiederverbindung
+  gilt dieselbe Prüfung mit Vorrang laufender Aufträge und zehn Sekunden Abstand.
 - GitHub-Identität in Metadaten und Badges: Burki24/Z2MAutomations.
 - Lizenz gemäß Projektkonvention: PolyForm Noncommercial License 1.0.0.
 - Initiale Metadaten 0.1 / Build 0 / Datum 0 bezeichnen keinen Release.

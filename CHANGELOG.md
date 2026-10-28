@@ -2,6 +2,10 @@
 
 ## Fixes
 
+- Modulupdate, Formularöffnung und MQTT-Wiederverbindung lösen eine verzögerte
+  einmalige Prüfung von Zigbee2MQTT und Erweiterungsstatus aus. Laufende Aufträge
+  haben Vorrang; deutsche Debug-Ausgaben erklären Ablauf und Fehler.
+
 - Listen in den Automationsformularen verwenden eine flexible Hauptspalte
   und kompakte Zeitspalten. Prozentbreiten der Spalten entfallen, damit
   Beschriftungen und Bedienknöpfe in der sichtbaren Formularbreite bleiben.

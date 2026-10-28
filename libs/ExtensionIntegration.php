@@ -59,10 +59,10 @@ trait ExtensionIntegration
             'operation'     => ['kind' => 'none', 'status' => 'idle', 'transaction' => ''], 'lastError' => ''];
     }
 
-    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false): string
+    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false, bool $automatic = false): string
     {
         $this->DebugEvent('AKTION', 'Erweiterungsauftrag prüfen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
-        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify): array
+        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify, $automatic): array
         {
             $state = $this->RefreshState();
             if ($kind === 'deactivate' && $state['workflow'] !== null && $state['workflow']['kind'] !== 'deactivate') {
@@ -70,6 +70,10 @@ trait ExtensionIntegration
                 $this->DebugEvent('AKTION', 'Stopp hat Vorrang; vorherigen Auftrag nicht erneut senden.');
             }
             $checksum = strlen($yaml) <= ExtensionContract::MAX_YAML_BYTES ? hash('sha256', $yaml) : '';
+            if ($automatic && ($state['workflow'] !== null || !$state['mqttConnected'] || !$state['bridgeOnline'])) {
+                $this->DebugEvent('AKTION', 'Automatische Erweiterungsabfrage zugunsten eines laufenden Auftrags oder geänderter Verbindung ausgelassen.');
+                return [];
+            }
             if ($state['workflow'] !== null) {
                 if ($state['workflow']['kind'] === $kind && $state['workflow']['checksum'] === $checksum) {
                     if ($notify) {

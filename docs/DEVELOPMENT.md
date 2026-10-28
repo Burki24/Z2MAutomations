@@ -1,3 +1,21 @@
+## Einmalige automatische Statusprüfung
+
+`ApplyChanges`, Formularabruf und Wiederverbindung planen einen einmaligen
+`StatusRefresh`-Timer mit 1000 ms ein. Der Formularaufbau sendet selbst kein MQTT
+und lädt das Formular nicht neu; bestehende Editoreingaben bleiben erhalten.
+Der bereite Kernel und eine aktive MQTT-Anbindung sind Voraussetzung.
+Nahezu gleichzeitige Anlässe werden zusammengefasst (zehn Sekunden Abstand).
+Eine frische passende positive Health-Antwort startet genau eine lesende
+Erweiterungsabfrage. Laufende manuelle Aufträge haben Vorrang; Kontextwechsel,
+Abschaltung, Transportfehler und Zeitüberschreitung beenden den Versuch.
+Es gibt keine automatische Installation, Aktivierung oder Wiederholungsschleife.
+
+`tests/status-refresh.php` prüft mit synthetischem MQTT-Gateway beide Antworten,
+Formular-/Updateauslöser, Zusammenfassung, Erhalt des Entwurfs, Vorrang manueller
+Aufträge, fremde/veraltete Antworten, Kontextwechsel, Verbindungswiederkehr,
+Transportfehler, Zeitüberschreitungen und bereinigte Debug-Ausgaben.
+Die Praxisprüfung des Timers und der Statusanzeige in der Konsole steht aus.
+
 ## Sichtbare Formularbreite
 
 Alle Listen erhalten width=100%; übergeordnete Panels behalten ihre flexible

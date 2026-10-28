@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+## Automatische Statusprüfung
+
+`RefreshStatus` ist der öffentliche Timer-Einstieg mit nativem Debug-Ablauf.
+Die deutschen Ausgaben erklären Anlass, Zusammenfassung bzw. Auslassen,
+Start der Health-Anfrage und die anschließende Erweiterungsabfrage.
+Transportfehler und Antwortzeitüberschreitungen nutzen die vorhandene Diagnose.
+YAML-Inhalte und Transaktionskennungen werden dabei nicht zusätzlich ausgegeben.
+
 Beim Laden des Gerätekatalogs meldet `Kanalzustände` die Anzahl expliziter
 Schaltkanal-Eigenschaften über die berücksichtigten Geräte. Mehrfaches Auftreten
 als Auslöser und Aktion wird je Gerät nur einmal gezählt. Namen, IEEE-Adressen

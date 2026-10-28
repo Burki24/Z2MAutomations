@@ -8,6 +8,7 @@ require_once __DIR__ . '/../libs/helper/VariablePresentationHelper.php';
 require_once __DIR__ . '/../libs/helper/ConfigurationFormHelper.php';
 require_once __DIR__ . '/../libs/helper/DebugFlowHelper.php';
 require_once __DIR__ . '/../libs/ModuleDiagnostics.php';
+require_once __DIR__ . '/../libs/AutomaticStatusRefresh.php';
 require_once __DIR__ . '/../libs/Z2MProtocol.php';
 require_once __DIR__ . '/../libs/ExtensionContract.php';
 require_once __DIR__ . '/../libs/ExtensionIntegration.php';
@@ -32,6 +33,7 @@ class Z2MAutomations extends IPSModuleStrict
     use Burki24\SymconModuleHelper\ConfigurationFormHelper;
     use Burki24\SymconModuleHelper\DebugFlowHelper;
     use Z2MAutomations\ModuleDiagnostics;
+    use Z2MAutomations\AutomaticStatusRefresh;
     use Z2MAutomations\ExtensionIntegration;
     use Z2MAutomations\AutomationEditor;
     use Z2MAutomations\AutomationEditorManagement;
@@ -63,6 +65,7 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterAttributeString('EditorConditionProperty', '');
             $this->RegisterAttributeString('EditorModes', '');
             $this->RegisterAttributeBoolean('ShowYaml', false);
+            $this->RegisterTimer('StatusRefresh', 0, 'Z2MA_RefreshStatus($_IPS[\'TARGET\']);');
             $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
             $this->RegisterMessage($this->InstanceID, FM_CONNECT);
             $this->RegisterMessage($this->InstanceID, FM_DISCONNECT);
@@ -95,6 +98,7 @@ class Z2MAutomations extends IPSModuleStrict
                 $this->ObserveParent();
                 $this->SaveState($this->RefreshState());
             });
+            $this->QueueAutomaticStatusRefresh('Einstellungen oder Modulupdate');
         });
     }
 
@@ -111,7 +115,12 @@ class Z2MAutomations extends IPSModuleStrict
         return $this->TraceModuleCall(__FUNCTION__, __LINE__, function ()
         {
             $form = $this->LoadConfigurationForm();
-            $state = $this->WithTransportLock(fn (): array => $this->RefreshState());
+            $state = $this->WithTransportLock(function (): array
+            {
+                $state = $this->RefreshState();
+                $this->SaveState($state);
+                return $state;
+            });
             foreach ($this->EditorFormFields($form['actions']) as &$field) {
                 if (($field['name'] ?? '') === 'YamlInput') {
                     $field['value'] = $this->ReadAttributeString('YamlDraft');
@@ -135,6 +144,7 @@ class Z2MAutomations extends IPSModuleStrict
             unset($field);
             $this->FillEditorForm($form, $state);
             $this->PrepareEditorItemForms($form);
+            $this->QueueAutomaticStatusRefresh('Formular geöffnet');
             return $this->EncodeConfigurationForm($form);
         });
     }
@@ -154,6 +164,7 @@ class Z2MAutomations extends IPSModuleStrict
                     $this->ObserveParent();
                     $this->SaveState($this->RefreshState());
                 });
+                $this->QueueAutomaticStatusRefresh('Verbindung oder Kernelstart');
             }
         });
     }
@@ -182,7 +193,8 @@ class Z2MAutomations extends IPSModuleStrict
                 $this->DebugEvent('EMPFANG', 'MQTT-PUBLISH empfangen.', ['Basistopic' => $base, 'Untertopic' => $suffix, 'Retain' => $packet['Retain'], 'Nutzdatenbytes' => intdiv(strlen($packet['Payload']), 2)]);
                 $payload = Z2MProtocol::DecodePayload($packet['Payload']);
                 $next = null;
-                $this->WithTransportLock(function () use ($suffix, $payload, $packet, &$next): void
+                $refreshExtension = false;
+                $this->WithTransportLock(function () use ($suffix, $payload, $packet, &$next, &$refreshExtension): void
                 {
                     $state = $this->RefreshState();
                     if (!$state['mqttConnected']) {
@@ -237,6 +249,7 @@ class Z2MAutomations extends IPSModuleStrict
                             $state['health'] = 'error';
                             $state['pending'] = null;
                         } elseif (($payload->status ?? null) === 'ok' && is_bool($payload->data->healthy ?? null)) {
+                            $refreshExtension = ($state['pending']['refreshExtension'] ?? false) && $payload->data->healthy && $state['workflow'] === null;
                             $state['health'] = $payload->data->healthy ? 'healthy' : 'unhealthy';
                             $state['bridgeState'] = 'online';
                             $this->DebugEvent('AKTION', 'Frische passende Health-Antwort bestätigt die Erreichbarkeit von Zigbee2MQTT.', ['Gesund' => $payload->data->healthy]);
@@ -249,6 +262,9 @@ class Z2MAutomations extends IPSModuleStrict
                 });
                 if ($next !== null) {
                     $this->DispatchExtensionFrame($next);
+                } elseif ($refreshExtension) {
+                    $this->DebugEvent('AKTION', 'Automatische Health-Prüfung bestätigt; Erweiterungsstatus einmalig abfragen.');
+                    $this->StartExtensionWorkflow('status', '', '', false, true);
                 }
             } catch (JsonException | InvalidArgumentException | UnexpectedValueException $exception) {
                 $this->DebugEvent('FEHLER', 'Ungültige MQTT-Nachricht verworfen.', ['Ausnahmeklasse' => get_class($exception)]);
@@ -277,14 +293,14 @@ class Z2MAutomations extends IPSModuleStrict
         });
     }
 
-    public function CheckHealth(): string
+    public function CheckHealth(bool $RefreshExtension = false): string
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function ()
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($RefreshExtension)
         {
-            $request = $this->WithTransportLock(function (): array
+            $request = $this->WithTransportLock(function () use ($RefreshExtension): array
             {
                 $state = $this->RefreshState();
-                if (!$state['mqttConnected']) {
+                if (!$state['mqttConnected'] || ($RefreshExtension && $state['workflow'] !== null)) {
                     $this->SaveState($state);
                     return [];
                 }
@@ -293,6 +309,9 @@ class Z2MAutomations extends IPSModuleStrict
                 }
                 $transaction = bin2hex(random_bytes(16));
                 $state['pending'] = ['transaction' => $transaction, 'deadline' => $this->Now() + $this->ReadPropertyInteger('RequestTimeout')];
+                if ($RefreshExtension) {
+                    $state['pending']['refreshExtension'] = true;
+                }
                 $state['transaction'] = $transaction;
                 $state['health'] = 'pending';
                 $this->SaveState($state);
