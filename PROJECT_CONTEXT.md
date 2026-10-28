@@ -8,12 +8,19 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Mehrkanal-Katalog korrigiert: explizite state_l1/state_l2/state_l3-Exposes werden
+  wie allgemeine Zustände priorisiert, ihre Eigenschaften unverändert übernommen.
+  Kanalbeschriftungen und sichere Kanalanzahl im Debug ergänzt. Modul und neue
+  Erweiterung auf Testinstallation aktualisiert; native Auswahl/Vorbelegung aller
+  drei Kanäle und einer Kanalaktion sowie Z2M-Validierung bestätigt. Original-YAML
+  unverändert, Revision 18 weiterhin gestoppt; keine Geräte geschaltet.
+
 - Reale ODER-Prüfung: Anwender löste Radar und Mehrkanaltaster physisch aus;
   beide starteten dieselbe Ein-/Warte-/Aus-Folge am Testlicht. Beim Weg zum
   Taster entstand ein zusätzlicher Radar-Lauf, separat im Debug erkennbar.
   Anschließend gestoppt, ursprüngliche Regeln inhaltlich erhalten (Revision 18),
-  Testlicht aus, Laufzeitfehler leer. Der Einzelkanal des Mehrkanaltasters fehlt
-  noch im Klick-Katalog; Praxisprüfung verwendete dessen explizite YAML-Eigenschaft.
+  Testlicht aus, Laufzeitfehler leer. Der Einzelkanal des Mehrkanaltasters fehlte
+  beim damaligen Test im Klick-Katalog; die oben beschriebene Korrektur behebt dies.
   Siehe docs/DEVELOPMENT.md auch zu zurückgesetzten Diagnoseoptionen.
 
 - Geräteeditor unterstützt ein bis acht ODER-Auslöser mit eigener Mindestdauer.

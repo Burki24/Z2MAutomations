@@ -240,7 +240,8 @@
             "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately.": "Jedes eingetragene Ereignis kann die Automation starten (ODER). Die Bedingungen gelten für alle Auslöser. Mindestdauer 0 reagiert sofort.",
             "Use 1 to 8 device events and durations from 0 to 86400 seconds.": "Ein bis acht Geräteereignisse und Mindestdauern von 0 bis 86400 Sekunden verwenden.",
             "%d device triggers (OR)": "%d Geräteauslöser (ODER)",
-            "Minimum duration (seconds)": "Mindestdauer (Sekunden)"
+            "Minimum duration (seconds)": "Mindestdauer (Sekunden)",
+            "State (channel %s)": "Zustand (Kanal %s)"
         }
     }
 }

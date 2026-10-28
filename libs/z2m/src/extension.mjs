@@ -106,7 +106,9 @@ export function buildEditorCatalog(zigbee) {
                 walk(feature.features, depth + 1, primary);
                 if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
                     || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
-                if ((feature.type === 'binary' && feature.property === 'state') !== primary) continue;
+                const state = feature.type === 'binary' && (feature.property === 'state' || feature.name === 'state'
+                    || (typeof feature.endpoint === 'string' && feature.property === 'state_' + feature.endpoint));
+                if (state !== primary) continue;
                 if (feature.type === 'numeric' && (feature.access & 1) !== 0 && numeric.length < 64 && optionCount < 1024) {
                     numeric.push({property: feature.property, unit: typeof feature.unit === 'string' ? [...feature.unit].slice(0, 24).join('') : ''});
                     optionCount++;

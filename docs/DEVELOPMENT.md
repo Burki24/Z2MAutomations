@@ -1,5 +1,35 @@
 # Entwicklung
 
+## Korrektur und Praxisprüfung des Mehrkanal-Katalogs
+
+Ursache waren korrekt gelieferte explizite Kanal-Exposes, die im zweiten
+Katalogdurchlauf hinter Sonderoptionen standen. Das globale 1024er-Budget konnte
+vor diesen Eigenschaften erschöpft sein. Binäre Features mit Zustandsnamen oder
+passender expliziter Endpoint-Eigenschaft erhalten jetzt denselben Vorrang wie
+state. Übernommene Property-Namen bleiben unverändert; keine erfundenen Endpoints
+oder umgeschriebenen MQTT-Eigenschaften. Grenzen und gültige bisherige Auswahlkeys
+bleiben erhalten. PHP ergänzt verständliche Kanalbeschriftungen und die sichere
+Anzahl übernommener Kanalzustände im Debug.
+
+Ein zuerst roter Node-Regressionstest bildet ausgeschöpftes Auswahlbudget und
+drei spätere Switch-Endpoints synthetisch ab. Die PHP-/Node-Integration erstellt
+über echte Formularskripte drei Kanal-Auslöser und eine Kanalaktion, validiert
+und speichert beim echten synthetischen Empfänger und lädt alle Auswahlwerte
+und Dauern wieder. Vollständige Offline-Suite mit 38 Node-Tests erfolgreich.
+
+Testinstallation: PHP und Übersetzung aktualisiert, generiertes Einzeldatei-
+Artefakt per Modul installiert und vom Empfänger bestätigt. Artefakt-SHA-256:
+710f41be297b317062f33af9e50792b53ea4dfb2a8f314fa0b95371cd990af21.
+In der nativen Konsole alle drei Kanäle einzeln ausgewählt und mit Mindestdauern
+1/2/3 Sekunden übernommen. Zielkanal L2 mit Wartezeit 4 Sekunden ausgewählt.
+Erneute Regelauswahl stellte alle Zeilen, Zustände und Dauern vollständig wieder
+her; Z2M validierte den Entwurf erfolgreich. Debug bestätigt Kanalzustände und
+FelderVorbelegt=true. Keine Speicherung/Aktivierung der Testregel, keine Geräte
+betätigt. Original-YAML durch Neuladen bytegenau wiederhergestellt; gespeicherte
+Revision 18 unverändert, Engine gestoppt, Laufzeitfehler leer. Debug-Dateisitzung
+beendet. Der zuvor beschriebene Mehrkanal-Katalogbefund ist damit behoben.
+
+
 ## Reale ODER-Prüfung mit Radar und Mehrkanaltaster
 
 Auf ausdrücklichen Praxisauftrag löste der Anwender den beauftragten Radar und

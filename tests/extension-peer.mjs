@@ -26,6 +26,9 @@ const devices = new Map([
     ['0x0000000000000003', {ID: '0x0000000000000003', ieeeAddr: '0x0000000000000003', name: 'synthetic/second-light', isDevice: () => true,
         exposes: () => [{type: 'binary', property: 'state', access: 7, value_on: 'ON', value_off: 'OFF'}]}]
 ]);
+devices.set('0x0000000000000004', {ID: '0x0000000000000004', ieeeAddr: '0x0000000000000004', name: 'synthetic/channel-switch', isDevice: () => true,
+    exposes: () => [1, 2, 3].map(n => ({type: 'switch', endpoint: 'l' + n, features: [
+        {name: 'state', property: 'state_l' + n, endpoint: 'l' + n, type: 'binary', access: 7, value_on: 'ON', value_off: 'OFF'}]}))});
 const zigbee = {resolveEntity: id => devices.get(id), devicesIterator: () => devices.values(), groupsIterator: () => [][Symbol.iterator]()};
 const bus = {onMQTTMessage: (_owner, callback) => { listener = callback; },
     emitMQTTMessage: event => {

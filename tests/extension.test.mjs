@@ -29,6 +29,21 @@ test('click editor reserves basic state choices for later devices before filling
     assert.equal(bounded.reduce((sum, device) => sum + device.actions.length + device.triggers.length, 0), 1024);
 });
 
+test('click editor reserves individual switch channels before special options exhaust the budget', () => {
+    const devices = Array.from({length: 12}, (_, i) => ({ieeeAddr: '0x' + (i + 1).toString(16).padStart(16, '0'), name: 'Synthetic rich device', isDevice: () => true,
+        exposes: () => Array.from({length: 8}, (_, n) => ({property: 'special_' + n, type: 'enum', access: 7, values: Array.from({length: 32}, (_, v) => 'option_' + v)}))}));
+    devices.push({ieeeAddr: '0x00000000000000ff', name: 'Synthetic three channel switch', isDevice: () => true,
+        exposes: () => [1, 2, 3].map(n => ({type: 'switch', endpoint: 'l' + n, features: [
+            {name: 'state', property: 'state_l' + n, endpoint: 'l' + n, type: 'binary', access: 7, value_on: 'ON', value_off: 'OFF'}]}))});
+    const catalog = buildEditorCatalog({devicesIterator: () => devices});
+    const device = catalog.find(item => item.id === '0x00000000000000ff');
+    const expected = [1, 2, 3].flatMap(n => [{property: 'state_l' + n, value: 'ON'}, {property: 'state_l' + n, value: 'OFF'}]);
+    assert.deepEqual(device?.triggers, expected);
+    assert.deepEqual(device?.actions, expected);
+    assert.ok(!device.triggers.some(item => item.property === 'state'), 'Explicit channel properties are preserved without synthesizing a general state');
+    assert.ok(catalog.reduce((sum, item) => sum + item.triggers.length + item.actions.length + item.numeric.length, 0) <= 1024);
+});
+
 test('click editor reads bounded discrete Exposes and ignores unsupported values and raw definitions', () => {
     const catalog = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000001', name: 'Synthetic button', isDevice: () => true,
         exposes: () => [{features: [{property: 'action', type: 'enum', access: 1, values: ['single', 'double']},

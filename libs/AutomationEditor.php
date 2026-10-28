@@ -185,10 +185,15 @@ trait AutomationEditor
         foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
             $this->UpdateEditorField($field, 'value', '');
         }
+        $channelStates = 0;
+        foreach ($devices as $device) {
+            $properties = array_unique(array_column(array_merge($device['triggers'], $device['actions']), 'property'));
+            $channelStates += count(array_filter($properties, static fn (string $property): bool => preg_match('/\Astate_l[1-9][0-9]*\z/D', $property) === 1));
+        }
         $this->DebugEvent(
             'EMPFANG',
             'Geräte und gespeicherte Automationen für den Editor übernommen.',
-            ['Geräte' => count($devices), 'Automationen' => $metadata['automationCount']]
+            ['Geräte' => count($devices), 'Automationen' => $metadata['automationCount'], 'Kanalzustände' => $channelStates]
         );
         $this->FinishExtensionWorkflow($state, 'editor_loaded');
     }
@@ -233,7 +238,9 @@ trait AutomationEditor
                 'ON' => 'On', 'OFF' => 'Off', 'single' => 'Single press', 'double' => 'Double press', 'hold' => 'Hold', 'release' => 'Release',
                 true => 'Yes', false => 'No', default => json_encode($choice['value'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
             };
-            $options[] = ['caption' => $this->Translate($property) . ': ' . $this->Translate($value), 'value' => $key];
+            $label = preg_match('/\Astate_(l[1-9][0-9]*)\z/D', $choice['property'], $channel) === 1
+                ? sprintf($this->Translate('State (channel %s)'), strtoupper($channel[1])) : $this->Translate($property);
+            $options[] = ['caption' => $label . ': ' . $this->Translate($value), 'value' => $key];
         }
         return $options;
     }

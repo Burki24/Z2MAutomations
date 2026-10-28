@@ -2,6 +2,11 @@
 
 ## Fixes
 
+- Einzelne Schaltkanäle von Mehrkanalgeräten erhalten im begrenzten Katalog
+  denselben Vorrang wie der allgemeine Zustand. Sonderoptionen verdrängen sie
+  dadurch nicht mehr. Auswahl zeigt beispielsweise „Zustand (Kanal L3)“;
+  Kanalzustände werden im bereinigten Katalog-Debug gezählt.
+
 - Gespeicherte lokale Regeln lassen sich nach einem Library-Neuladen auch ohne
   erneute Empfängerbestätigung zur Ansicht auswählen. Name, Uhrzeit, Bedingungen
   und Aktionen werden vorbelegt; Änderungen und Übertragung behalten die

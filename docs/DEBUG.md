@@ -1,5 +1,11 @@
 # Debug und MQTT-Diagnose
 
+Beim Laden des Gerätekatalogs meldet `Kanalzustände` die Anzahl expliziter
+Schaltkanal-Eigenschaften über die berücksichtigten Geräte. Mehrfaches Auftreten
+als Auslöser und Aktion wird je Gerät nur einmal gezählt. Namen, IEEE-Adressen
+und Kanalinhalte werden nicht an die Debug-Ausgabe übergeben. Die Regelauswahl
+bestätigt weiterhin `FelderVorbelegt`, ohne die Regel zu protokollieren.
+
 `InspectEditorTriggers` meldet Hinzufügen/Bearbeiten/Löschen der ODER-Auslöserliste.
 Beim Löschen beschreibt `AuslöserVorLöschen` nur den nativen Vorbestand. Ungültige
 Listen erhalten einen festen deutschen Hinweis. SaveScheduledAutomation nennt

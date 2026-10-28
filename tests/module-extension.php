@@ -609,6 +609,40 @@ try {
     $check($fields['DeviceEditorTriggers']['values'] === [$triggerRows[1]], 'Deleting a trigger preserves the remaining trigger and duration');
     $module->DeleteAutomation($twoRule['id'], $fields['DeviceEditorEditToken']['value']);
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $module->SelectAutomation('', $fields['YamlInput']['value'], true, 'device');
+    $module->SelectEditorDevice('Source', '0x0000000000000004', 'device');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $channelTriggers = [];
+    foreach ([1, 2, 3] as $channel) {
+        $choice = array_values(array_filter($fields['EditorSourceChoice']['options'], static fn (array $option): bool => str_contains($option['caption'], 'L' . $channel) && preg_match('/(?:Off|Aus)$/', $option['caption']) === 1));
+        $check(count($choice) === 1, 'Each channel has an explicit localized off-event choice');
+        $channelTriggers[] = ['Choice' => '0x0000000000000004:' . $choice[0]['value'], 'Hold' => $channel];
+    }
+    $channelAction = array_values(array_filter($fields['DeviceEditorActions']['columns'][0]['edit']['options'], static fn (array $option): bool => str_contains($option['caption'], 'L2') && preg_match('/(?:On|Ein)$/', $option['caption']) === 1));
+    $check(count($channelAction) === 1, 'Channel-specific actions use the same clear channel label');
+    $channelActions = [['Choice' => $channelAction[0]['value'], 'Delay' => 3]];
+    $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Channel selection regression', 'DeviceEditorEnabled' => false,
+        'DeviceEditorTriggers'                                                                  => new ArrayIterator($channelTriggers), 'DeviceEditorActions' => new ArrayIterator($channelActions)]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $channelDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $channelRule = $channelDocument['automations'][array_key_last($channelDocument['automations'])];
+    $check(
+        array_column($channelRule['triggers'], 'property') === ['state_l1', 'state_l2', 'state_l3'] && $channelRule['actions'][0]['values'] === ['state_l2' => 'ON'],
+        'The real form serializes explicit channel properties without falling back to general state'
+    );
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Channel rules validate and persist through the actual receiver');
+    $module->LoadAutomationEditor();
+    $module->SelectAutomation($channelRule['id']);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check(
+        $fields['DeviceEditorTriggers']['values'] === $channelTriggers && $fields['DeviceEditorActions']['values'] === $channelActions,
+        'All selected channels, individual durations and target channel reopen without loss'
+    );
+    $catalogDebug = array_map(static fn (array $entry): array => json_decode($entry[1], true, 512, JSON_THROW_ON_ERROR), $module->debugMessages);
+    $check(
+        count(array_filter($catalogDebug, static fn (array $entry): bool => ($entry['Bezug']['Kanalzustände'] ?? 0) >= 3)) > 0,
+        'Safe catalog debug counts explicit channel states without device identities'
+    );
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');

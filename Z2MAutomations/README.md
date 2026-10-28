@@ -72,7 +72,8 @@ Der erste Editor unterstützt diskrete Geräteereignisse und Geräteaktionen aus
 den Z2M-Exposes (Enum und Binary): etwa Taster, Bewegung oder Ein-/Ausschalten.
 Nicht jedes Gerät besitzt solche auswählbaren Eigenschaften. Maximal die ersten
 256 Geräte und insgesamt 1024 Auswahlwerte werden geladen. Grundlegende binäre
-Zustandswerte erhalten über diese Geräte hinweg Vorrang vor Sonderoptionen;
+Zustandswerte einschließlich einzelner Schaltkanäle erhalten über diese Geräte
+hinweg Vorrang vor Sonderoptionen;
 unpassende Exposes
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
@@ -101,6 +102,15 @@ Aktivieren und Stoppen beziehen sich auf die gesamte gespeicherte Konfiguration.
 Ausführungsstatus und Stopp stehen oben. MQTT-Einstellungen, Einrichtung/Diagnose
 und der erweiterte YAML-Editor sind normalerweise eingeklappt. Die Bearbeitung
 ändert zuerst den lokalen Entwurf; Z2M ändert sich erst beim Speichern.
+
+## Mehrkanaltaster und Schaltkanäle
+
+Einzelne Kanäle erscheinen bei Auslösern und Aktionen als „Zustand (Kanal L1)“,
+„Zustand (Kanal L2)“ usw., jeweils mit Ein/Aus. Den passenden Kanal ausdrücklich
+wählen. Der allgemeine Zustand bleibt davon getrennt; er ersetzt keinen Kanal.
+Beim erneuten Auswählen einer Automation werden Kanal, Zustand und Mindestdauer
+bzw. Wartezeit wieder geladen. Nach diesem Update die mitgelieferte Erweiterung
+aktualisieren und anschließend Geräte und gespeicherte Automationen neu laden.
 
 ## Mehrere Geräteauslöser (ODER)
 
