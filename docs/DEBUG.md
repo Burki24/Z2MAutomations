@@ -116,3 +116,13 @@ Deaktivierte oder ungültige Konfigurationen verwenden `^$`, das keine gültige
 JSON-Nachricht annimmt. Lookarounds wie `(?!)` sind in der eingesetzten nativen
 Regex-Engine nicht unterstützt. Die Offline-Prüfung deckt vollständige
 Umschläge und JSON-Escaping ab; sie ersetzt keinen Test der nativen Engine.
+
+## Getrennte Eigenschaftsauswahl
+
+`GetEditorItemForm` protokolliert das Öffnen und die erfolgreiche Vorbelegung des
+Zeilendialogs. `ConfigureEditorItem` meldet Geräte-/Eigenschafts-/Wertwechsel und
+ob die Auswahl zulässig ist. `SelectEditorConditionProperty` erklärt das
+Zurücksetzen der abhängigen Wertauswahl. Katalogempfang meldet Geräteanzahl,
+lesbare Eigenschaften und anhand Symcon geprüfte schaltbare Eigenschaften.
+Keine Variablennamen, IEEE-Adressen, Regelwerte oder Auswahltokens im Debug.
+Alle öffentlichen Einstiege verwenden zentrale Start-/Ende-Abläufe.

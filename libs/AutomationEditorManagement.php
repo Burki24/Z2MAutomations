@@ -213,10 +213,10 @@ trait AutomationEditorManagement
             $this->WriteAttributeString('Editor' . $side, $fields['Editor' . $side]);
             $this->UpdateEditorField('Editor' . $side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $fields['Editor' . $side], $side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         }
-        $this->UpdateEditorField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot, $fields['EditorActionRows']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorActions', 'values', json_encode($fields['EditorActionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorActions', 'enabled', $fields['simple']);
-        $this->UpdateEditorField('EditorTriggers', 'columns', json_encode($this->EditorTriggerColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorTriggers', 'columns', json_encode($this->EditorTriggerColumns($snapshot, $fields['EditorTriggerRows']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorTriggers', 'values', json_encode($fields['EditorTriggerRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorTriggers', 'enabled', $fields['simple']);
         foreach ($fields as $field => $value) {

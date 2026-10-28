@@ -1,3 +1,36 @@
+## Generischer Geräte- und Eigenschaftskatalog
+
+Der native Zeilendialog für Auslöser und Aktionen trennt Gerät, Eigenschaft/Kanal
+und Wert. Binär-/Enumwerte sind Auswahlfelder, Zahlen erhalten Grenzen und
+Schrittprüfung aus Z2M-Exposes. Zustandsbedingungen besitzen ebenfalls getrennte
+Eigenschafts- und Wertfelder. Numerische Bedingungen behalten Vergleich und Zahl.
+Jeder Dialog wird frisch erzeugt; beim Geräte-/Eigenschaftswechsel werden alte
+Werte verworfen. Vorhandene Regeln werden anhand ihrer gespeicherten Z2M-Identität
+vorbelegt. Nicht unterstützte oder nicht mehr zulässige Regeln bleiben erhalten
+und werden gegen unbeabsichtigtes Überschreiben geschützt.
+
+Aktionsziele benötigen sowohl Z2M-Schreibrecht als auch eine vorhandene,
+nicht gesperrte Symcon-Variable mit wirksamer Aktion. Zuordnung ausschließlich
+über die Zigbee2MQTT-Geräteinstanz, IEEE, identisches MQTTBaseTopic und direktes
+Variablen-Ident; keine Namens- oder Pfadheuristik. Die Eigenschaftsauswahl verwendet
+die Variablen-ID. Doppelte Zuordnungen werden ausgeschlossen. CustomAction=1
+sperrt; ein gültiges eigenes Aktionsskript hat Vorrang vor der Standardaktion.
+Aktionen werden dabei weder aufgerufen noch Skripte ausgeführt. Lesbare Sensoren
+bleiben unabhängig von Symcon-Aktionen für Auslöser und Bedingungen verfügbar.
+
+Die YAML enthält weiterhin ausschließlich Z2M-Gerät, Eigenschaft und Wert.
+Symcon-IDs und Formularfelder werden nicht übertragen. Bestehende Auswahl-Hashes
+bleiben gültig; numerische Werte erhalten begrenzte, erneut validierte Tokens.
+Ältere Katalogantworten ohne Metadaten werden konservativ aus den bisherigen
+Auswahlwerten ergänzt. Neue Eigenschaften benötigen die aktualisierte Erweiterung.
+
+Offline geprüft: echter Formularcode, numerischer Aktionsentwurf mit Verzögerung,
+Validierung/Speicherung im JavaScript-Empfänger, erneutes Laden und Vorbelegung,
+deaktivierte Aktionen, reine Anzeigevariablen, Schreib-/Leserechte, Zahlenschritte
+und generische Endpoints. Keine Live-Installation oder reale Schaltung für diese
+Änderung. Die Darstellung des neuen List-Zeilendialogs in der Testkonsole steht
+noch zur gesonderten Praxisprüfung aus.
+
 # Entwicklung
 
 ## Korrektur und Praxisprüfung des Mehrkanal-Katalogs

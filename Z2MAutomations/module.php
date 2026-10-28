@@ -17,6 +17,9 @@ require_once __DIR__ . '/../libs/AutomationEditorSchedule.php';
 require_once __DIR__ . '/../libs/AutomationEditorActions.php';
 require_once __DIR__ . '/../libs/AutomationEditorAreas.php';
 require_once __DIR__ . '/../libs/AutomationEditorTriggers.php';
+require_once __DIR__ . '/../libs/EditorSymconVariables.php';
+require_once __DIR__ . '/../libs/EditorPropertyCatalog.php';
+require_once __DIR__ . '/../libs/EditorItemForms.php';
 
 use Z2MAutomations\Z2MProtocol;
 
@@ -35,6 +38,9 @@ class Z2MAutomations extends IPSModuleStrict
     use Z2MAutomations\AutomationEditorActions;
     use Z2MAutomations\AutomationEditorAreas;
     use Z2MAutomations\AutomationEditorTriggers;
+    use Z2MAutomations\EditorSymconVariables;
+    use Z2MAutomations\EditorPropertyCatalog;
+    use Z2MAutomations\EditorItemForms;
 
     public function Create(): void
     {
@@ -52,6 +58,7 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterAttributeString('EditorTarget', '');
             $this->RegisterAttributeString('EditorSelection', '');
             $this->RegisterAttributeString('EditorCondition', '');
+            $this->RegisterAttributeString('EditorConditionProperty', '');
             $this->RegisterAttributeString('EditorModes', '');
             $this->RegisterAttributeBoolean('ShowYaml', false);
             $this->RegisterTimer('RequestTimeout', 0, 'Z2MA_ExpireRequest($_IPS[\'TARGET\']);');
@@ -125,6 +132,7 @@ class Z2MAutomations extends IPSModuleStrict
             }
             unset($field);
             $this->FillEditorForm($form, $state);
+            $this->PrepareEditorItemForms($form);
             return $this->EncodeConfigurationForm($form);
         });
     }

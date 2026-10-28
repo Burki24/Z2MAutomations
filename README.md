@@ -64,3 +64,9 @@ YAML-Prüfung und Speicherung stehen in der Modulanleitung.
 
 PolyForm Noncommercial License 1.0.0, siehe [LICENSE](LICENSE).
 Änderungen stehen im [Changelog](CHANGELOG.md).
+
+Im Klick-Editor werden Gerät, Eigenschaft beziehungsweise Kanal und Wert getrennt
+gewählt. Aktionen bieten nur in Symcon schaltbare Variablen mit Z2M-Schreibrecht
+an; lesbare Sensoren bleiben als Auslöser und Bedingungen verfügbar. Die Ausführung
+bleibt vollständig in Z2M. Nach Aktualisierung der Library auch die mitgelieferte
+Erweiterung aktualisieren und den Gerätekatalog erneut laden.

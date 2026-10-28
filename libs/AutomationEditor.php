@@ -42,6 +42,10 @@ trait AutomationEditor
             $this->UpdateEditorField('Editor' . $Side . 'Choice', 'options', json_encode($this->EditorChoices($snapshot, $Device, $Side), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
             $this->UpdateEditorField('Editor' . $Side . 'Choice', 'value', '');
             if ($Side === 'Condition') {
+                $this->WriteAttributeString('EditorConditionProperty', '');
+                $this->UpdateEditorField('EditorConditionProperty', 'options', json_encode($this->ConditionPropertyOptions($snapshot, $Device), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+                $this->UpdateEditorField('EditorConditionProperty', 'value', '');
+                $this->UpdateEditorField('EditorConditionChoice', 'options', json_encode($this->EditorItemValues($snapshot, $Device, null, 'Source'), JSON_THROW_ON_ERROR));
                 $this->UpdateEditorField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $Device), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
                 $this->UpdateEditorField('EditorNumericProperty', 'value', '');
             }
@@ -147,6 +151,11 @@ trait AutomationEditor
                     $entry[$kind][$key] = $value;
                 }
             }
+            $entry['properties'] = $this->ReadEditorProperties($device, $entry);
+            if ($entry['properties'] === null) {
+                $this->FinishExtensionWorkflow($state, 'error', 'invalid_response');
+                return;
+            }
             $devices[$device->id] = $entry;
             $devices[$device->id]['numeric'] = [];
             if (!is_array($device->numeric ?? []) || count($device->numeric ?? []) > 64) {
@@ -185,16 +194,13 @@ trait AutomationEditor
         foreach (['EditorSource', 'EditorTarget', 'EditorSourceChoice', 'EditorTargetChoice'] as $field) {
             $this->UpdateEditorField($field, 'value', '');
         }
-        $channelStates = 0;
-        foreach ($devices as $device) {
-            $properties = array_unique(array_column(array_merge($device['triggers'], $device['actions']), 'property'));
-            $channelStates += count(array_filter($properties, static fn (string $property): bool => preg_match('/\Astate_l[1-9][0-9]*\z/D', $property) === 1));
+        $readable = $writable = 0;
+        $filtered = $this->EditorSnapshot();
+        foreach ($devices as $id => $device) {
+            $readable += count($this->EditorProperties($filtered, $id, 'Source'));
+            $writable += count($this->EditorProperties($filtered, $id, 'Target'));
         }
-        $this->DebugEvent(
-            'EMPFANG',
-            'Geräte und gespeicherte Automationen für den Editor übernommen.',
-            ['Geräte' => count($devices), 'Automationen' => $metadata['automationCount'], 'Kanalzustände' => $channelStates]
-        );
+        $this->DebugEvent('EMPFANG', 'Gerätekatalog übernommen; Aktionsziele anhand aktiver Symcon-Aktionen geprüft.', ['Geräte' => count($devices), 'Automationen' => $metadata['automationCount'], 'LesbareEigenschaften' => $readable, 'SchaltbareEigenschaften' => $writable]);
         $this->FinishExtensionWorkflow($state, 'editor_loaded');
     }
 
@@ -213,14 +219,14 @@ trait AutomationEditor
     private function EditorSnapshot(): array
     {
         $json = $this->ReadAttributeString('EditorSnapshot');
-        return $json === '' ? [] : json_decode($json, true, 32, JSON_THROW_ON_ERROR);
+        return $json === '' ? [] : $this->FilterEditorActions(json_decode($json, true, 32, JSON_THROW_ON_ERROR));
     }
 
     private function EditorDevices(array $snapshot, string $side): array
     {
         $options = [['caption' => $this->Translate('Choose device'), 'value' => '']];
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
-            if (($device[$side === 'Target' ? 'actions' : 'triggers'] ?? []) !== [] || ($side === 'Condition' && ($device['numeric'] ?? []) !== [])) {
+            if ($this->EditorProperties($snapshot, $id, $side) !== [] || ($side === 'Condition' && ($device['numeric'] ?? []) !== [])) {
                 $options[] = ['caption' => $device['name'] . ' (' . $id . ')', 'value' => $id];
             }
         }
@@ -231,23 +237,18 @@ trait AutomationEditor
     {
         $options = [['caption' => $this->Translate('Choose event or action'), 'value' => '']];
         foreach ($snapshot['devices'][$id][$side === 'Target' ? 'actions' : 'triggers'] ?? [] as $key => $choice) {
-            $property = match ($choice['property']) {
-                'action' => 'Button event', 'state' => 'State', 'occupancy' => 'Motion', 'contact' => 'Contact', default => $choice['property']
-            };
-            $value = match ($choice['value']) {
-                'ON' => 'On', 'OFF' => 'Off', 'single' => 'Single press', 'double' => 'Double press', 'hold' => 'Hold', 'release' => 'Release',
-                true => 'Yes', false => 'No', default => json_encode($choice['value'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
-            };
-            $label = preg_match('/\Astate_(l[1-9][0-9]*)\z/D', $choice['property'], $channel) === 1
-                ? sprintf($this->Translate('State (channel %s)'), strtoupper($channel[1])) : $this->Translate($property);
-            $options[] = ['caption' => $label . ': ' . $this->Translate($value), 'value' => $key];
+            $options[] = ['caption' => $this->EditorPropertyLabel($snapshot, $id, $choice['property'], $side) . ': ' . $this->EditorValueLabel($choice['value']), 'value' => $key];
         }
         return $options;
     }
 
     private function FindEditorChoice(array $snapshot, string $id, string $key, string $side): ?array
     {
-        return $snapshot['devices'][$id][$side === 'Source' ? 'triggers' : 'actions'][$key] ?? null;
+        $choice = $snapshot['devices'][$id][$side === 'Source' ? 'triggers' : 'actions'][$key] ?? null;
+        if ($choice !== null) {
+            return $this->EditorValueAllowed($snapshot, $id, $choice['property'], $choice['value'], $side) ? $choice : null;
+        }
+        return $this->DecodeEditorValue($snapshot, $id, $key, $side);
     }
 
     private function EditorFormFields(array &$items): array

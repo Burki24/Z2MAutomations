@@ -97,6 +97,40 @@ trait AutomationEditorSchedule
         }));
     }
 
+    public function SelectEditorConditionProperty(string $Property, string $Area = ''): void
+    {
+        $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Property, $Area): void
+        {
+            if (!$this->CheckEditorArea($Area)) {
+                return;
+            }
+            $snapshot = $this->EditorSnapshot();
+            $device = $this->ReadAttributeString('EditorCondition');
+            $meta = $this->EditorProperties($snapshot, $device, 'Source')[$Property] ?? null;
+            if (($meta['type'] ?? 'numeric') === 'numeric') {
+                $Property = '';
+                $meta = null;
+            }
+            $this->WriteAttributeString('EditorConditionProperty', $Property);
+            $this->UpdateEditorField('EditorConditionChoice', 'options', json_encode($this->EditorItemValues($snapshot, $device, $meta, 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+            $this->UpdateEditorField('EditorConditionChoice', 'value', '');
+            $this->DebugEvent('AKTION', 'Eigenschaft der Zustandsbedingung ausgewählt; Wertauswahl zurückgesetzt.', ['EigenschaftVerfügbar' => $meta !== null]);
+        });
+    }
+
+    private function ConditionPropertyOptions(array $snapshot, string $device): array
+    {
+        return array_values(array_filter($this->EditorItemProperties($snapshot, $device, 'Source'), fn (array $option): bool => $option['value'] === '' || ($snapshot['devices'][$device]['properties'][$option['value']]['type'] ?? 'numeric') !== 'numeric'));
+    }
+
+    private function ConditionMeta(array $snapshot, array $fields): ?array
+    {
+        $device = $fields['EditorCondition'];
+        $choice = $this->FindEditorChoice($snapshot, $device, $fields['EditorConditionChoice'], 'Source');
+        $property = $choice['property'] ?? $this->ReadAttributeString('EditorConditionProperty');
+        return $this->EditorProperties($snapshot, $device, 'Source')[$property] ?? null;
+    }
+
     private function ScheduleDefaults(): array
     {
         return ['EditorTriggerType' => 'device', 'EditorAt' => '18:00:00', 'EditorTimezone' => 'Europe/Berlin', 'EditorHold' => 0, 'EditorDelay' => 0,
@@ -215,7 +249,7 @@ trait AutomationEditorSchedule
         if ($v['EditorConditionType'] !== 'none') {
             $device = $v['EditorCondition'];
             if ($v['EditorConditionType'] === 'state') {
-                $choice = $snapshot['devices'][$device]['triggers'][$v['EditorConditionChoice']] ?? null;
+                $choice = $this->FindEditorChoice($snapshot, $device, $v['EditorConditionChoice'], 'Source');
                 if ($choice === null || !in_array($v['EditorCompare'], ['eq', 'ne'], true)) {
                     $reason = 'editor_condition';
                     return null;
@@ -262,7 +296,7 @@ trait AutomationEditorSchedule
             $source = $sourceChoice = '';
         } elseif ($t['type'] === 'device' && $t['operator'] === 'eq') {
             $source = $t['device'];
-            $sourceChoice = $find($snapshot['devices'][$source]['triggers'] ?? [], $t['property'], $t['value']);
+            $sourceChoice = $this->EditorValueKey($snapshot, $source, $t['property'], $t['value'], 'Source') ?? '';
             if ($sourceChoice === '') {
                 return null;
             }
@@ -273,7 +307,7 @@ trait AutomationEditorSchedule
             return null;
         }
         $property = array_key_first($a['values']);
-        $targetChoice = $find($snapshot['devices'][$a['target']['id']]['actions'] ?? [], $property, $a['values'][$property]);
+        $targetChoice = $this->EditorValueKey($snapshot, $a['target']['id'], $property, $a['values'][$property], 'Target') ?? '';
         if ($targetChoice === '') {
             return null;
         }
@@ -314,7 +348,7 @@ trait AutomationEditorSchedule
         $condition = $v['EditorConditionType'];
         $fields = ['EditorDeviceTrigger' => $device, 'EditorTimeTrigger' => !$device, 'EditorTriggers' => $device, 'EditorSource' => false, 'EditorSourceChoice' => false, 'EditorHold' => false, 'EditorAt' => !$device, 'EditorTimezone' => !$device,
             'EditorAfter'                => $window, 'EditorBefore' => $window, 'EditorWindowTimezone' => $window,
-            'EditorCondition'            => $condition !== 'none', 'EditorConditionChoice' => $condition === 'state',
+            'EditorCondition'            => $condition !== 'none', 'EditorConditionChoice' => $condition === 'state', 'EditorConditionProperty' => $condition === 'state',
             'EditorNumericProperty'      => $condition === 'numeric', 'EditorNumber' => $condition === 'numeric', 'EditorCompare' => $condition !== 'none',
             'WindowHelp'                 => $window, 'ConditionHelp' => $condition !== 'none'];
         foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day) {
@@ -327,10 +361,8 @@ trait AutomationEditorSchedule
     {
         $options = [['caption' => $this->Translate('Choose a measured value'), 'value' => '']];
         foreach ($snapshot['devices'][$device]['numeric'] ?? [] as $property => $unit) {
-            $label = match ($property) {
-                'temperature' => 'Temperature', 'humidity' => 'Humidity', 'illuminance' => 'Illuminance', 'power' => 'Power', 'battery' => 'Battery', default => $property
-            };
-            $options[] = ['caption' => $this->Translate($label) . ($unit === '' ? '' : ' (' . $unit . ')'), 'value' => $property];
+            $label = $this->EditorPropertyLabel($snapshot, $device, $property, 'Source');
+            $options[] = ['caption' => $label . ($unit === '' ? '' : ' (' . $unit . ')'), 'value' => $property];
         }
         return $options;
     }
@@ -352,7 +384,12 @@ trait AutomationEditorSchedule
         $this->WriteAttributeString('EditorModes', json_encode(array_intersect_key($fields, array_flip(['EditorTriggerType', 'EditorWindow', 'EditorConditionType'])), JSON_THROW_ON_ERROR));
         $snapshot = $this->EditorSnapshot();
         $this->UpdateEditorField('EditorCompare', 'options', json_encode($this->EditorComparisonOptions($fields['EditorConditionType']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $this->UpdateEditorField('EditorConditionChoice', 'options', json_encode($this->EditorChoices($snapshot, $fields['EditorCondition'], 'Condition'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $meta = $this->ConditionMeta($snapshot, $fields);
+        $this->WriteAttributeString('EditorConditionProperty', $meta['property'] ?? '');
+        $this->UpdateEditorField('EditorConditionProperty', 'options', json_encode($this->ConditionPropertyOptions($snapshot, $fields['EditorCondition']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorConditionProperty', 'value', $meta['property'] ?? '');
+        $this->UpdateEditorField('EditorConditionProperty', 'enabled', $fields['simple']);
+        $this->UpdateEditorField('EditorConditionChoice', 'options', json_encode($this->EditorItemValues($snapshot, $fields['EditorCondition'], $meta, 'Source'), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorNumericProperty', 'options', json_encode($this->EditorNumericOptions($snapshot, $fields['EditorCondition']), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         foreach ($this->ScheduleVisibility($fields) as $name => $visible) {
             $this->UpdateEditorField($name, 'visible', $visible);
@@ -380,8 +417,12 @@ trait AutomationEditorSchedule
             }
             if ($name === 'EditorCondition') {
                 $field['options'] = $this->EditorDevices($snapshot, 'Condition');
+            } elseif ($name === 'EditorConditionProperty') {
+                $field['options'] = $this->ConditionPropertyOptions($snapshot, $v['EditorCondition']);
+                $field['value'] = $this->ConditionMeta($snapshot, $v)['property'] ?? '';
+                $field['enabled'] = $selection['simple'];
             } elseif ($name === 'EditorConditionChoice') {
-                $field['options'] = $this->EditorChoices($snapshot, $v['EditorCondition'], 'Condition');
+                $field['options'] = $this->EditorItemValues($snapshot, $v['EditorCondition'], $this->ConditionMeta($snapshot, $v), 'Source');
             } elseif ($name === 'EditorNumericProperty') {
                 $field['options'] = $this->EditorNumericOptions($snapshot, $v['EditorCondition']);
             } elseif ($name === 'EditorCompare') {

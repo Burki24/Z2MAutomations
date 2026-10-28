@@ -333,21 +333,26 @@ export function buildEditorCatalog(zigbee) {
     for (const device of zigbee?.devicesIterator?.() ?? []) {
         if (++devicesSeen > 256) break;
         if (!device?.isDevice?.() || device.zh?.type === 'Coordinator' || !/^0x[0-9a-f]{16}$/.test(device.ieeeAddr)) continue;
-        const triggers = [], actions = [], numeric = [];
+        const triggers = [], actions = [], numeric = [], properties = [];
         let visited = 0;
-        const walk = (features, depth = 0, primary = false) => {
+        const walk = (features, depth = 0, primary = false, endpoint = '') => {
             if (!Array.isArray(features) || depth > 6) return;
             for (const feature of features) {
                 if (++visited > 128 || optionCount >= 1024) break;
                 if (!isObject(feature)) continue;
-                walk(feature.features, depth + 1, primary);
+                const channel = typeof feature.endpoint === 'string' ? feature.endpoint : endpoint;
+                walk(feature.features, depth + 1, primary, channel);
                 if (typeof feature.property !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(feature.property)
                     || ['constructor', 'prototype', '__proto__'].includes(feature.property)) continue;
                 const state = feature.type === 'binary' && (feature.property === 'state' || feature.name === 'state'
                     || (typeof feature.endpoint === 'string' && feature.property === 'state_' + feature.endpoint));
                 if (state !== primary) continue;
-                if (feature.type === 'numeric' && (feature.access & 1) !== 0 && numeric.length < 64 && optionCount < 1024) {
-                    numeric.push({property: feature.property, unit: typeof feature.unit === 'string' ? [...feature.unit].slice(0, 24).join('') : ''});
+                const admitted = [];
+                const before = optionCount;
+                if (feature.type === 'numeric' && (feature.access & 3) !== 0 && numeric.length < 64 && optionCount < 1024) {
+                    if ((feature.access & 1) !== 0) {
+                        numeric.push({property: feature.property, unit: typeof feature.unit === 'string' ? [...feature.unit].slice(0, 24).join('') : ''});
+                    }
                     optionCount++;
                 }
                 const values = feature.type === 'binary' ? [feature.value_on, feature.value_off]
@@ -355,15 +360,29 @@ export function buildEditorCatalog(zigbee) {
                 for (const value of values) {
                     if (!scalar(value) || optionCount >= 1024) continue;
                     const entry = {property: feature.property, value};
+                    const prior = optionCount;
                     if ((feature.access & 1) !== 0 && triggers.length < 64 && optionCount < 1024) { triggers.push(entry); optionCount++; }
                     if ((feature.access & 2) !== 0 && actions.length < 64 && optionCount < 1024) { actions.push(entry); optionCount++; }
+                    if (optionCount > prior && !admitted.includes(value)) admitted.push(value);
+                }
+                if (optionCount > before && properties.length < 64 && ['binary', 'enum', 'numeric'].includes(feature.type)
+                    && !properties.some(item => item.property === feature.property)) {
+                    const property = {property: feature.property, type: feature.type, access: feature.access & 3,
+                        label: typeof feature.label === 'string' && !/[\x00-\x1f\x7f]/.test(feature.label) ? [...feature.label].slice(0, 80).join('') : feature.property,
+                        endpoint: typeof channel === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(channel) ? channel : '', values: admitted};
+                    if (feature.type === 'numeric') {
+                        for (const [from, to] of [['value_min', 'minimum'], ['value_max', 'maximum'], ['value_step', 'step']]) {
+                            if (typeof feature[from] === 'number' && Number.isFinite(feature[from]) && (to !== 'step' || feature[from] > 0)) property[to] = feature[from];
+                        }
+                    }
+                    properties.push(property);
                 }
             }
         };
         let features;
         try { features = device.exposes(); } catch { continue; }
         candidates.push({entry: {id: device.ieeeAddr,
-            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric},
+            name: typeof device.name === 'string' ? [...device.name].slice(0, 120).join('') : device.ieeeAddr, triggers, actions, numeric, properties},
         scan: primary => { visited = 0; walk(features, 0, primary); }, failed: false});
     }
     // Reserve ordinary on/off choices across the bounded device set before special options.
@@ -373,7 +392,7 @@ export function buildEditorCatalog(zigbee) {
             try { candidate.scan(primary); } catch { candidate.failed = true; }
         }
     }
-    return candidates.filter(({entry, failed}) => !failed && (entry.triggers.length || entry.actions.length || entry.numeric.length)).map(({entry}) => entry);
+    return candidates.filter(({entry, failed}) => !failed && (entry.triggers.length || entry.actions.length || entry.numeric.length || entry.properties.length)).map(({entry}) => entry);
 }
 
 class ConfigurationStore {

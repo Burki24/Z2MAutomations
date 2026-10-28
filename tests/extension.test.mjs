@@ -74,6 +74,22 @@ test('click editor exposes bounded readable numeric properties without copying r
     assert.equal(JSON.stringify(device).includes('raw-secret'), false);
 });
 
+test('generic property metadata preserves endpoints, access and numeric constraints', () => {
+    const [device] = buildEditorCatalog({devicesIterator: () => [{ieeeAddr: '0x0000000000000005', name: 'Synthetic valve', isDevice: () => true,
+        exposes: () => [{endpoint: 'upper', features: [
+            {property: 'valve_upper', label: 'Valve position', type: 'numeric', access: 3, value_min: 10, value_max: 90, value_step: 5},
+            {property: 'mode_upper', label: 'Mode', type: 'enum', access: 2, values: ['auto', 'manual']},
+            {property: 'temperature_upper', type: 'numeric', access: 1},
+        ]}]}]});
+    const properties = Object.fromEntries(device.properties.map(item => [item.property, item]));
+    assert.deepEqual(properties.valve_upper, {property: 'valve_upper', label: 'Valve position', type: 'numeric', access: 3,
+        endpoint: 'upper', values: [], minimum: 10, maximum: 90, step: 5});
+    assert.equal(properties.mode_upper.access, 2);
+    assert.deepEqual(properties.mode_upper.values, ['auto', 'manual']);
+    assert.equal(properties.temperature_upper.access, 1);
+    assert.ok(!device.triggers.some(item => item.property === 'mode_upper'));
+});
+
 async function harness(options = {}) {
     const directory = options.directory ?? await mkdtemp(join(tmpdir(), 'z2ma-test-'));
     const messages = [];

@@ -83,6 +83,10 @@ trait AutomationEditorTriggers
                 }
             }
             if ($found === null) {
+                $key = $this->EditorValueKey($snapshot, $trigger['device'], $trigger['property'], $trigger['value'], 'Source');
+                $found = $key === null ? null : $trigger['device'] . ':' . $key;
+            }
+            if ($found === null) {
                 return null;
             }
             $rows[] = ['Choice' => $found, 'Hold' => $trigger['for_seconds'] ?? 0];
@@ -90,7 +94,7 @@ trait AutomationEditorTriggers
         return $rows;
     }
 
-    private function EditorTriggerColumns(array $snapshot): array
+    private function EditorTriggerColumns(array $snapshot, array $rows = []): array
     {
         $options = [['caption' => $this->Translate('Choose device and event'), 'value' => '']];
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
@@ -100,6 +104,7 @@ trait AutomationEditorTriggers
                 }
             }
         }
+        $options = $this->ExtraEditorChoiceOptions($snapshot, 'Source', $options, $rows);
         return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => '60%', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
             ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (seconds)'), 'width' => '25%', 'add' => 0,
                 'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
@@ -109,7 +114,7 @@ trait AutomationEditorTriggers
     {
         foreach ($this->EditorFormFields($form['actions']) as &$field) {
             if (($field['name'] ?? '') === 'EditorTriggers') {
-                $field['columns'] = $this->EditorTriggerColumns($snapshot);
+                $field['columns'] = $this->EditorTriggerColumns($snapshot, $selection['EditorTriggerRows']);
                 $field['values'] = $selection['EditorTriggerRows'];
                 $field['enabled'] = $selection['simple'];
             }

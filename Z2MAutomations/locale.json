@@ -241,7 +241,13 @@
             "Use 1 to 8 device events and durations from 0 to 86400 seconds.": "Ein bis acht Geräteereignisse und Mindestdauern von 0 bis 86400 Sekunden verwenden.",
             "%d device triggers (OR)": "%d Geräteauslöser (ODER)",
             "Minimum duration (seconds)": "Mindestdauer (Sekunden)",
-            "State (channel %s)": "Zustand (Kanal %s)"
+            "State (channel %s)": "Zustand (Kanal %s)",
+            "Device": "Gerät",
+            "Property or channel": "Eigenschaft oder Kanal",
+            "Choose property or channel": "Eigenschaft oder Kanal auswählen",
+            "Value": "Wert",
+            "Choose value": "Wert auswählen",
+            "Channel %s": "Kanal %s"
         }
     }
 }

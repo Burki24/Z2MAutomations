@@ -25,6 +25,9 @@ function formFields(array $items): array
             $fields[$item['name']] = $item;
         }
         $fields += formFields($item['items'] ?? []);
+        if (is_array($item['form'] ?? null)) {
+            $fields += formFields($item['form']);
+        }
     }
     return $fields;
 }
@@ -34,6 +37,7 @@ $root = dirname(__DIR__);
 $library = json_decode(file_get_contents($root . '/library.json'), true, 512, JSON_THROW_ON_ERROR);
 IPS\ModuleLoader::loadSingleModule($root . '/Z2MAutomations', $library['id']);
 IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/MQTTClient', $library['id']);
+IPS\ModuleLoader::loadSingleModule(__DIR__ . '/fixtures/Z2MDevice', $library['id']);
 $metadata = json_decode(file_get_contents($root . '/Z2MAutomations/module.json'), true, 512, JSON_THROW_ON_ERROR);
 class ObservedAutomationModule extends Z2MAutomations
 {
@@ -92,6 +96,13 @@ IPS_SetProperty($id, 'BaseTopic', 'synthetic/z2m');
 IPS_ApplyChanges($id);
 $module = IPS\InstanceManager::getInstanceInterface($id);
 $parent = IPS\InstanceManager::getInstanceInterface($parentID);
+$syntheticDevices = [];
+foreach ([1, 2, 3, 4] as $n) {
+    $deviceID = IPS_CreateInstance('{E5BB36C6-A70B-EB23-3716-9151A09AC8A2}');
+    IPS_SetProperty($deviceID, 'IEEE', '0x' . str_pad((string) $n, 16, '0', STR_PAD_LEFT));
+    IPS_ApplyChanges($deviceID);
+    $syntheticDevices[$n] = $deviceID;
+}
 $parent->publish('synthetic/z2m/bridge/state', ['state' => 'online']);
 $state = static fn (): array => json_decode($module->GetTransportState(), true, 512, JSON_THROW_ON_ERROR);
 $check($module->InstallExtension() === '' && $state()['lastError'] === 'external_js_disabled', 'Never enable external JavaScript automatically');
@@ -168,6 +179,43 @@ try {
     $check(isset(formFields($sections['EditorDeviceSection']['items'])['DeviceEditorName'])
         && isset(formFields($sections['EditorTimeSection']['items'])['TimeEditorName']), 'Both editing forms are physically nested in their trigger sections');
     $check(!isset($fields['NewDeviceRuleButton']) && !isset($fields['NewTimeRuleButton']), 'Redundant new buttons are removed from the form');
+    $stateVariable = IPS_GetObjectIDByIdent('state', $syntheticDevices[2]);
+    IPS_SetVariableCustomAction($stateVariable, 1);
+    $restricted = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check(
+        count(array_filter($restricted['EditorActions']['columns'][0]['edit']['options'], static fn (array $choice): bool => str_starts_with($choice['value'], '0x0000000000000002:'))) === 0,
+        'An explicitly disabled Symcon action is excluded from the action catalog'
+    );
+    IPS_SetVariableCustomAction($stateVariable, 0);
+    $split = formFields(json_decode($module->GetEditorItemForm('DeviceEditorActions', '', 0), true, 512, JSON_THROW_ON_ERROR));
+    $check(isset($split['RowDevice'], $split['RowProperty'], $split['RowValue'], $split['RowNumber']), 'List dialogs offer separate device, property and typed value controls');
+    $module->ConfigureEditorItem('device', 'DeviceEditorActions', '0x0000000000000004', '', '""');
+    $propertyOptions = json_decode($module->formUpdates['RowProperty']['options'], true, 512, JSON_THROW_ON_ERROR);
+    $levelVariable = IPS_GetObjectIDByIdent('level', $syntheticDevices[4]);
+    $displayVariable = IPS_GetObjectIDByIdent('display_flag', $syntheticDevices[4]);
+    $writeOnlyVariable = IPS_GetObjectIDByIdent('write_only', $syntheticDevices[4]);
+    $check(in_array((string) $levelVariable, array_column($propertyOptions, 'value'), true)
+        && in_array((string) $writeOnlyVariable, array_column($propertyOptions, 'value'), true)
+        && !in_array((string) $displayVariable, array_column($propertyOptions, 'value'), true), 'Action property selection uses IDs of actual switchable variables and excludes display variables');
+    $module->ConfigureEditorItem('property', 'DeviceEditorActions', '0x0000000000000004', (string) $levelVariable, '""');
+    $check($module->formUpdates['RowNumber']['visible'] && !$module->formUpdates['RowValue']['visible']
+        && $module->formUpdates['RowNumber']['minimum'] === 0 && $module->formUpdates['RowNumber']['maximum'] === 100, 'Numeric values receive their declared bounds');
+    $module->ConfigureEditorItem('value', 'DeviceEditorActions', '0x0000000000000004', (string) $levelVariable, '13');
+    $check($module->formUpdates['Choice']['value'] === '', 'Values outside the declared numeric step are rejected');
+    $module->ConfigureEditorItem('value', 'DeviceEditorActions', '0x0000000000000004', (string) $levelVariable, '15');
+    $numericChoice = $module->formUpdates['Choice']['value'];
+    $check(str_starts_with($numericChoice, '0x0000000000000004:value.'), 'Valid numeric values produce a bounded typed choice');
+    $numericDialog = formFields(json_decode($module->GetEditorItemForm('DeviceEditorActions', $numericChoice, 4), true, 512, JSON_THROW_ON_ERROR));
+    $check($numericDialog['RowDevice']['value'] === '0x0000000000000004' && $numericDialog['RowProperty']['value'] === (string) $levelVariable
+        && $numericDialog['RowNumber']['value'] === 15 && $numericDialog['Delay']['value'] === 4, 'Reopening restores device, variable ID, numeric value and delay');
+    $module->ConfigureEditorItem('device', 'DeviceEditorTriggers', '0x0000000000000004', '', '""');
+    $sourceProperties = json_decode($module->formUpdates['RowProperty']['options'], true, 512, JSON_THROW_ON_ERROR);
+    $check(in_array('display_flag', array_column($sourceProperties, 'value'), true)
+        && !in_array('write_only', array_column($sourceProperties, 'value'), true), 'Read-only sources remain available while write-only values cannot trigger');
+    IPS_SetVariableCustomAction($levelVariable, 1);
+    $deniedDialog = formFields(json_decode($module->GetEditorItemForm('DeviceEditorActions', $numericChoice, 0), true, 512, JSON_THROW_ON_ERROR));
+    $check($deniedDialog['Choice']['value'] === '', 'Previously valid choices cannot bypass a newly disabled native action');
+    IPS_SetVariableCustomAction($levelVariable, 0);
     $sentBeforeSections = count($parent->sent);
     $runSectionScript = static function (string $script, array $fields, array $overrides = []) use ($id): void
     {
@@ -367,7 +415,9 @@ try {
         $formAfterRejection = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
         $check($formAfterRejection['YamlInput']['value'] === $unchangedScheduledYaml, 'Rejected schedule never changes the draft');
     }
-    $conditionOff = $fields['EditorConditionChoice']['options'][2]['value'];
+    $module->SelectEditorConditionProperty('state');
+    $check(count(json_decode($module->formUpdates['EditorConditionChoice']['options'], true)) === 3, 'Condition values are narrowed to the selected property');
+    $conditionOff = json_decode($module->formUpdates['EditorConditionChoice']['options'], true)[2]['value'];
     $changedSchedule = array_replace($schedule, ['EditorTriggerType' => 'device', 'EditorWindow' => false, 'EditorHold' => 4, 'EditorDelay' => 3,
         'EditorConditionType'                                        => 'state', 'EditorConditionChoice' => $conditionOff, 'EditorCompare' => 'eq']);
     $check($module->SaveScheduledAutomation($scheduled['id'], $timeToken, 'Synthetic event rule', false, '0x0000000000000001', $changedTrigger, '0x0000000000000002', $action, json_encode($changedSchedule)), 'Time trigger can change to device event with a state condition');
@@ -638,9 +688,30 @@ try {
         $fields['DeviceEditorTriggers']['values'] === $channelTriggers && $fields['DeviceEditorActions']['values'] === $channelActions,
         'All selected channels, individual durations and target channel reopen without loss'
     );
+    $module->SelectAutomation('', '', false, 'device');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $DeviceEditorActions = ['Choice' => $numericChoice, 'Delay' => 4];
+    $dialogFromScript = formFields(eval($fields['DeviceEditorActions']['form']));
+    $check($dialogFromScript['RowNumber']['value'] === 15, 'The native list form script restores the selected numeric row');
+    $numericRows = [['Choice' => $numericChoice, 'Delay' => 4, 'RowDevice' => '0x0000000000000004', 'RowProperty' => (string) $levelVariable, 'RowNumber' => 15]];
+    $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, [
+        'DeviceEditorRule'     => '', 'DeviceEditorEditToken' => '', 'DeviceEditorName' => 'Synthetic numeric rule',
+        'DeviceEditorEnabled'  => false, 'DeviceEditorWindow' => false, 'DeviceEditorConditionType' => 'none',
+        'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]),
+        'DeviceEditorActions'  => new ArrayIterator($numericRows)]);
+    $check($state()['operation']['status'] === 'draft_created', 'Actual save button strips dialog fields and accepts the numeric action');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $numericDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $numericRule = $numericDocument['automations'][array_key_last($numericDocument['automations'])];
+    $check($numericRule['actions'][0]['values'] === ['level' => 15] && $numericRule['actions'][0]['delay_seconds'] === 4, 'YAML contains native Z2M property and value without Symcon variable IDs');
+    $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Numeric rule validates and persists in the real JavaScript receiver');
+    $module->LoadAutomationEditor();
+    $check($module->SelectAutomation($numericRule['id']), 'Stored numeric rule remains editable');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorActions']['values'] === [['Choice' => $numericChoice, 'Delay' => 4]], 'Stored numeric action reopens with its typed value and delay');
     $catalogDebug = array_map(static fn (array $entry): array => json_decode($entry[1], true, 512, JSON_THROW_ON_ERROR), $module->debugMessages);
     $check(
-        count(array_filter($catalogDebug, static fn (array $entry): bool => ($entry['Bezug']['Kanalzustände'] ?? 0) >= 3)) > 0,
+        count(array_filter($catalogDebug, static fn (array $entry): bool => ($entry['Bezug']['SchaltbareEigenschaften'] ?? 0) >= 3)) > 0,
         'Safe catalog debug counts explicit channel states without device identities'
     );
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');

@@ -94,6 +94,10 @@ trait AutomationEditorActions
                 }
             }
             if ($found === null) {
+                $key = $this->EditorValueKey($snapshot, $device, $property, $action['values'][$property], 'Target');
+                $found = $key === null ? null : $device . ':' . $key;
+            }
+            if ($found === null) {
                 return null;
             }
             $rows[] = ['Choice' => $found, 'Delay' => $action['delay_seconds'] ?? 0];
@@ -101,7 +105,7 @@ trait AutomationEditorActions
         return $rows;
     }
 
-    private function EditorActionColumns(array $snapshot): array
+    private function EditorActionColumns(array $snapshot, array $rows = []): array
     {
         $options = [['caption' => $this->Translate('Choose device and action'), 'value' => '']];
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
@@ -111,6 +115,7 @@ trait AutomationEditorActions
                 }
             }
         }
+        $options = $this->ExtraEditorChoiceOptions($snapshot, 'Target', $options, $rows);
         return [['name' => 'Choice', 'caption' => $this->Translate('Device and action'), 'width' => '70%', 'add' => '',
             'edit'      => ['type' => 'Select', 'options' => $options]],
             ['name'    => 'Delay', 'caption' => $this->Translate('Wait before this step (seconds)'), 'width' => '30%', 'add' => 0,
@@ -121,7 +126,7 @@ trait AutomationEditorActions
     {
         foreach ($this->EditorFormFields($form['actions']) as &$field) {
             if (($field['name'] ?? '') === 'EditorActions') {
-                $field['columns'] = $this->EditorActionColumns($snapshot);
+                $field['columns'] = $this->EditorActionColumns($snapshot, $selection['EditorActionRows']);
                 $field['values'] = $selection['EditorActionRows'];
                 $field['enabled'] = $selection['simple'];
             }

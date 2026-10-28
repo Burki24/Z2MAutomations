@@ -1,0 +1,10 @@
+{
+    "id": "{E5BB36C6-A70B-EB23-3716-9151A09AC8A2}",
+    "name": "SyntheticZ2MDevice",
+    "type": 3,
+    "vendor": "Test",
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "SZDV"
+}
