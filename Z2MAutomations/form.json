@@ -110,26 +110,27 @@
                         {
                             "name": "Name",
                             "caption": "Automation name",
-                            "width": "30%"
+                            "width": "auto"
                         },
                         {
                             "name": "Source",
                             "caption": "Trigger",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Target",
                             "caption": "First target device",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Enabled",
                             "caption": "Enabled",
-                            "width": "10%"
+                            "width": "80px"
                         }
                     ],
                     "values": [],
-                    "visible": true
+                    "visible": true,
+                    "width": "100%"
                 },
                 {
                     "type": "Select",
@@ -228,7 +229,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and event",
-                                            "width": "60%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -242,8 +243,8 @@
                                         },
                                         {
                                             "name": "Hold",
-                                            "caption": "Minimum duration (seconds)",
-                                            "width": "25%",
+                                            "caption": "Minimum duration (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -338,7 +339,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -719,7 +721,8 @@
                                     ],
                                     "onAdd": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR), 'add', 'device');",
                                     "onEdit": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR), 'edit', 'device');",
-                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR), 'delete', 'device');"
+                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR), 'delete', 'device');",
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -745,7 +748,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and action",
-                                            "width": "70%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -759,8 +762,8 @@
                                         },
                                         {
                                             "name": "Delay",
-                                            "caption": "Wait before this step (seconds)",
-                                            "width": "30%",
+                                            "caption": "Delay (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -839,7 +842,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -934,26 +938,27 @@
                         {
                             "name": "Name",
                             "caption": "Automation name",
-                            "width": "30%"
+                            "width": "auto"
                         },
                         {
                             "name": "Source",
                             "caption": "Scheduled time",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Target",
                             "caption": "First target device",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Enabled",
                             "caption": "Enabled",
-                            "width": "10%"
+                            "width": "80px"
                         }
                     ],
                     "values": [],
-                    "visible": true
+                    "visible": true,
+                    "width": "100%"
                 },
                 {
                     "type": "Select",
@@ -1086,7 +1091,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and event",
-                                            "width": "60%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -1100,8 +1105,8 @@
                                         },
                                         {
                                             "name": "Hold",
-                                            "caption": "Minimum duration (seconds)",
-                                            "width": "25%",
+                                            "caption": "Minimum duration (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -1196,7 +1201,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -1544,7 +1550,8 @@
                                     ],
                                     "onAdd": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($TimeEditorConditionList), JSON_THROW_ON_ERROR), 'add', 'time');",
                                     "onEdit": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($TimeEditorConditionList), JSON_THROW_ON_ERROR), 'edit', 'time');",
-                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($TimeEditorConditionList), JSON_THROW_ON_ERROR), 'delete', 'time');"
+                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($TimeEditorConditionList), JSON_THROW_ON_ERROR), 'delete', 'time');",
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -1570,7 +1577,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and action",
-                                            "width": "70%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -1584,8 +1591,8 @@
                                         },
                                         {
                                             "name": "Delay",
-                                            "caption": "Wait before this step (seconds)",
-                                            "width": "30%",
+                                            "caption": "Delay (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -1664,7 +1671,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -1759,26 +1767,27 @@
                         {
                             "name": "Name",
                             "caption": "Automation name",
-                            "width": "30%"
+                            "width": "auto"
                         },
                         {
                             "name": "Source",
                             "caption": "Trigger",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Target",
                             "caption": "First target device",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Enabled",
                             "caption": "Enabled",
-                            "width": "10%"
+                            "width": "80px"
                         }
                     ],
                     "values": [],
-                    "visible": true
+                    "visible": true,
+                    "width": "100%"
                 },
                 {
                     "type": "Select",
@@ -1877,7 +1886,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and event",
-                                            "width": "60%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -1891,8 +1900,8 @@
                                         },
                                         {
                                             "name": "Hold",
-                                            "caption": "Minimum duration (seconds)",
-                                            "width": "25%",
+                                            "caption": "Minimum duration (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -1987,7 +1996,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -2368,7 +2378,8 @@
                                     ],
                                     "onAdd": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($EditorConditionList), JSON_THROW_ON_ERROR), 'add', '');",
                                     "onEdit": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($EditorConditionList), JSON_THROW_ON_ERROR), 'edit', '');",
-                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($EditorConditionList), JSON_THROW_ON_ERROR), 'delete', '');"
+                                    "onDelete": "Z2MA_InspectEditorConditions($id, json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($EditorConditionList), JSON_THROW_ON_ERROR), 'delete', '');",
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -2394,7 +2405,7 @@
                                         {
                                             "name": "Choice",
                                             "caption": "Device and action",
-                                            "width": "70%",
+                                            "width": "auto",
                                             "add": "",
                                             "edit": {
                                                 "type": "Select",
@@ -2408,8 +2419,8 @@
                                         },
                                         {
                                             "name": "Delay",
-                                            "caption": "Wait before this step (seconds)",
-                                            "width": "30%",
+                                            "caption": "Delay (s)",
+                                            "width": "140px",
                                             "add": 0,
                                             "edit": {
                                                 "type": "NumberSpinner",
@@ -2488,7 +2499,8 @@
                                             "minimum": 0,
                                             "maximum": 86400
                                         }
-                                    ]
+                                    ],
+                                    "width": "100%"
                                 }
                             ]
                         },
@@ -2633,26 +2645,27 @@
                         {
                             "name": "Name",
                             "caption": "Automation name",
-                            "width": "30%"
+                            "width": "auto"
                         },
                         {
                             "name": "Source",
                             "caption": "Source device",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Target",
                             "caption": "Target device",
-                            "width": "30%"
+                            "width": "150px"
                         },
                         {
                             "name": "Enabled",
                             "caption": "Enabled",
-                            "width": "10%"
+                            "width": "80px"
                         }
                     ],
                     "values": [],
-                    "visible": false
+                    "visible": false,
+                    "width": "100%"
                 }
             ]
         },

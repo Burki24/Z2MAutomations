@@ -254,7 +254,9 @@
             "Device, property and value": "Gerät, Eigenschaft und Wert",
             "Device conditions (all must match, maximum 16)": "Gerätebedingungen (alle müssen zutreffen, höchstens 16)",
             "All listed conditions AND the optional time window must match. An empty list adds no device restriction.": "Alle aufgeführten Bedingungen UND das optionale Zeitfenster müssen erfüllt sein. Zusammen sind höchstens 16 Bedingungen zulässig. Eine leere Liste schränkt Gerätewerte nicht ein.",
-            "Check every condition and comparison. At most 16 conditions including the time window are allowed.": "Alle Bedingungen und Vergleiche prüfen. Einschließlich Zeitfenster sind höchstens 16 Bedingungen zulässig."
+            "Check every condition and comparison. At most 16 conditions including the time window are allowed.": "Alle Bedingungen und Vergleiche prüfen. Einschließlich Zeitfenster sind höchstens 16 Bedingungen zulässig.",
+            "Minimum duration (s)": "Mindestdauer (s)",
+            "Delay (s)": "Wartezeit (s)"
         }
     }
 }

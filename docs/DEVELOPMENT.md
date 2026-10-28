@@ -1,3 +1,21 @@
+## Sichtbare Formularbreite
+
+Alle Listen erhalten width=100%; übergeordnete Panels behalten ihre flexible
+Breite ohne Pixelvorgaben. Listenspalten verwenden genau eine auto-Hauptspalte
+und Pixelbreiten für die übrigen Felder. Auslöser verwenden je 140px für Vergleich
+und Mindestdauer, Aktionen 140px für Wartezeit und Bedingungen 140px für Vergleich.
+Die Übersichten verwenden jeweils 150px für Auslöser/Ziel und 80px für Aktiviert.
+Kompakte Zeitspaltenüberschriften lassen die ausführlichen Beschriftungen im
+Zeilendialog unverändert. Statische Listen und dynamische Spaltendefinitionen
+verwenden dieselbe Breitenregel. Keine Änderung an Regelwerten oder Skripten.
+
+Die Symcon-List-Dokumentation erlaubt Pixelbreiten und eine auto-Spalte.
+Prozentbreiten der bisherigen Spalten summierten sich teilweise bereits zu 100%,
+wodurch Bedienknöpfe und lange Beschriftungen zusätzlich überlaufen konnten.
+Die Struktur und die tatsächlich erzeugten Formulare werden offline geprüft.
+Die schmale/breite visuelle Abnahme in der nativen Testkonsole erfordert nach
+Modulupdate einen gesonderten Praxislauf; dieser Stand wurde nicht live eingespielt.
+
 ## Messwertvergleiche und UND-Bedingungsliste
 
 Der native Geräteauslöser-Zeilendialog bietet einen Vergleich an. Numerische

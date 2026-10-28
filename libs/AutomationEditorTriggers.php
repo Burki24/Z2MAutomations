@@ -114,9 +114,9 @@ trait AutomationEditorTriggers
             }
         }
         $options = $this->ExtraEditorChoiceOptions($snapshot, 'Source', $options, $rows);
-        return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => '60%', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
-            ['name' => 'Compare', 'caption' => $this->Translate('Comparison'), 'width' => '15%', 'add' => 'eq', 'edit' => ['type' => 'Select', 'options' => $this->EditorComparisonOptions('numeric')]],
-            ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (seconds)'), 'width' => '25%', 'add' => 0,
+        return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => 'auto', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
+            ['name' => 'Compare', 'caption' => $this->Translate('Comparison'), 'width' => '140px', 'add' => 'eq', 'edit' => ['type' => 'Select', 'options' => $this->EditorComparisonOptions('numeric')]],
+            ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (s)'), 'width' => '140px', 'add' => 0,
                 'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
     }
 

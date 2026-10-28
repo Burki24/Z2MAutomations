@@ -116,9 +116,9 @@ trait AutomationEditorActions
             }
         }
         $options = $this->ExtraEditorChoiceOptions($snapshot, 'Target', $options, $rows);
-        return [['name' => 'Choice', 'caption' => $this->Translate('Device and action'), 'width' => '70%', 'add' => '',
+        return [['name' => 'Choice', 'caption' => $this->Translate('Device and action'), 'width' => 'auto', 'add' => '',
             'edit'      => ['type' => 'Select', 'options' => $options]],
-            ['name'    => 'Delay', 'caption' => $this->Translate('Wait before this step (seconds)'), 'width' => '30%', 'add' => 0,
+            ['name'    => 'Delay', 'caption' => $this->Translate('Delay (s)'), 'width' => '140px', 'add' => 0,
                 'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
     }
 

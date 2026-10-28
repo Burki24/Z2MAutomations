@@ -2,6 +2,10 @@
 
 ## Fixes
 
+- Listen in den Automationsformularen verwenden eine flexible Hauptspalte
+  und kompakte Zeitspalten. Prozentbreiten der Spalten entfallen, damit
+  Beschriftungen und Bedienknöpfe in der sichtbaren Formularbreite bleiben.
+
 - Geräteauslöser im Klick-Editor unterstützen Vergleichsoperatoren für
   Messwerte sowie Gleichheit/Ungleichheit für Zustände und Ereignisse.
 - Geräte- und Zeitautomationen bieten eine Liste mehrerer UND-verknüpfter
