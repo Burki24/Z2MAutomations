@@ -1,3 +1,25 @@
+## Praxisprüfung der getrennten Auswahl und Installationsrückmeldung
+
+Formularanordnung auf der aktualisierten Testinstallation geprüft:
+Einrichtung/Diagnose folgt unmittelbar auf MQTT. Vorhandene Zeitregel einschließlich
+Zeitfenster, Wochentagen, numerischer Bedingung und Aktion korrekt vorbelegt.
+Aktionsdialog stellt Gerät, schaltbare Eigenschaft und Wert wieder her.
+Mehrkanaltaster bietet L1–L3 getrennt; Wechsel des Geräts verwirft alte
+Eigenschafts-/Wertauswahl. Lesbare Sensoren bleiben in der Quellenauswahl.
+Eine deaktivierte Geräte-Prüfregel wurde nur im lokalen Entwurf angelegt,
+neu ausgewählt und mit Kanal, Wert, Mindestdauer und Aktionsverzögerung geprüft.
+Danach Originalzustand durch erneutes Laden wiederhergestellt. Keine Speicherung,
+Aktivierung oder reale Schaltung. Empfänger bestätigt unveränderte Revision und
+Prüfsumme, eine gespeicherte Regel und gestoppten Zustand ohne Fehler.
+Debug bestätigt Auswahlwechsel, erfolgreiche Vorbelegung und Katalogzählung.
+
+Die zusätzliche Installationsrückmeldung ist lokal implementiert, noch nicht
+auf der Testinstallation eingespielt. PopupAlert wird nur beim Formularaufruf
+(Notify=true) geöffnet. Kein Erfolg beim bloßen Absenden oder Upload-ACK;
+erst nach korrelierter Empfängerprüfung. Offline-Integration prüft außerdem
+bereinigte Installationsfehler, fehlende Bereitschaftsbestätigung/Timeout und
+programmatisch unveränderte Standardaufrufe ohne Popup.
+
 ## Generischer Geräte- und Eigenschaftskatalog
 
 Der native Zeilendialog für Auslöser und Aktionen trennt Gerät, Eigenschaft/Kanal

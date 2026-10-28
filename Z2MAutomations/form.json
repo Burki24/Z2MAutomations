@@ -55,7 +55,7 @@
                     "confirm": "Install the bundled z2m-automations.mjs in Z2M and replace an existing file with this name?",
                     "caption": "Install or update bundled extension",
                     "type": "Button",
-                    "onClick": "Z2MA_InstallExtension($id);",
+                    "onClick": "Z2MA_InstallExtension($id, true);",
                     "name": "InstallButton"
                 }
             ]
@@ -2325,6 +2325,22 @@
                     "visible": false
                 }
             ]
+        },
+        {
+            "type": "PopupAlert",
+            "name": "InstallResultPopup",
+            "visible": false,
+            "popup": {
+                "caption": "Extension installation",
+                "closeCaption": "OK",
+                "items": [
+                    {
+                        "type": "Label",
+                        "name": "InstallResultMessage",
+                        "caption": "Extension installation"
+                    }
+                ]
+            }
         }
     ],
     "status": [

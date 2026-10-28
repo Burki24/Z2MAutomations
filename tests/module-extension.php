@@ -25,6 +25,7 @@ function formFields(array $items): array
             $fields[$item['name']] = $item;
         }
         $fields += formFields($item['items'] ?? []);
+        $fields += formFields($item['popup']['items'] ?? []);
         if (is_array($item['form'] ?? null)) {
             $fields += formFields($item['form']);
         }
@@ -105,7 +106,7 @@ foreach ([1, 2, 3, 4] as $n) {
 }
 $parent->publish('synthetic/z2m/bridge/state', ['state' => 'online']);
 $state = static fn (): array => json_decode($module->GetTransportState(), true, 512, JSON_THROW_ON_ERROR);
-$check($module->InstallExtension() === '' && $state()['lastError'] === 'external_js_disabled', 'Never enable external JavaScript automatically');
+$check($module->InstallExtension(true) === '' && $state()['lastError'] === 'external_js_disabled', 'Never enable external JavaScript automatically');
 $parent->publish('synthetic/z2m/bridge/info', ['version' => '2.14.2', 'config' => ['advanced' => ['enable_external_js' => true]]]);
 $peer = proc_open(['node', __DIR__ . '/extension-peer.mjs'], [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipes, $root);
 if (!is_resource($peer)) {
@@ -134,8 +135,9 @@ $parent->onPublish = static function (array $packet) use ($exchange, $deliver): 
     $deliver($exchange(['topic' => $packet['Topic'], 'payload' => $packet['Payload']]));
 };
 try {
-    $install = $module->InstallExtension();
+    $install = $module->InstallExtension(true);
     $check($install !== '' && $state()['operation']['status'] === 'installed' && $state()['extensionConfirmed'], 'Installation completes only after a correlated receiver probe');
+    $check($module->formUpdates['InstallResultPopup']['visible'] === true && str_contains($module->formUpdates['InstallResultMessage']['caption'], 'confirmed readiness'), 'Installation popup follows the correlated receiver confirmation');
     $sent = $parent->sent;
     $packet = $sent[0];
     $check($packet['Topic'] === 'synthetic/z2m/bridge/request/extension/save'
@@ -748,7 +750,7 @@ try {
 
 // Deterministic negative protocol scenarios use the native stub boundary only.
 $parent->onPublish = null;
-class ClockedExtensionModule extends Z2MAutomations
+class ClockedExtensionModule extends ObservedAutomationModule
 {
     public int $clock = 1000;
 
@@ -807,7 +809,8 @@ $validate = static function () use ($controlled, $source, $replyStatus, $remote,
     $check($controlledState()['operation']['status'] === 'validated', 'Obtain current validation receipt');
 };
 
-$install = $controlled->InstallExtension();
+$install = $controlled->InstallExtension(true);
+$check(!isset($controlled->formUpdates['InstallResultPopup']), 'Sending an installation does not show an early success popup');
 $count = count($parent->sent);
 $check($controlled->InstallExtension() === $install && count($parent->sent) === $count, 'Duplicate install click does not upload twice');
 $answer(['status' => 'ok', 'data' => (object) []], false, 'foreign-transaction');
@@ -815,14 +818,18 @@ $check($controlledState()['operation']['status'] === 'pending', 'Wrong installat
 $answer(['status' => 'ok', 'data' => (object) []], true);
 $check($controlledState()['operation']['status'] === 'pending', 'Retained installation response cannot authorize a probe');
 $answer(['status' => 'error', 'error' => 'synthetic-sensitive-install-error', 'data' => (object) []]);
+$check($controlled->formUpdates['InstallResultPopup']['visible'] === true && !str_contains($controlled->formUpdates['InstallResultMessage']['caption'], 'synthetic-sensitive'), 'Installation error popup uses fixed safe messages');
 $check($controlledState()['lastError'] === 'installation_failed' && !str_contains($controlled->GetTransportState(), 'synthetic-sensitive'), 'Native installation errors are sanitized');
 
-$controlled->InstallExtension();
+$controlled->InstallExtension(true);
+$controlled->formUpdates = [];
 $answer(['status' => 'ok', 'data' => (object) []]);
 $check(str_ends_with($last()['Topic'], '/request/status') && !$controlledState()['extensionConfirmed'], 'Upload acknowledgement alone is not receiver confirmation');
+$check(!isset($controlled->formUpdates['InstallResultPopup']), 'Upload acknowledgement alone does not display success');
 $controlled->clock += 11;
 $controlled->ExpireRequest();
 $check($controlledState()['operation']['status'] === 'timeout' && !$controlledState()['extensionConfirmed'], 'Missing receiver confirmation expires');
+$check($controlled->formUpdates['InstallResultPopup']['visible'] === true && str_contains($controlled->formUpdates['InstallResultMessage']['caption'], 'failed'), 'Missing receiver confirmation produces a timeout popup');
 $replyStatus($remote);
 $check($controlledState()['operation']['status'] === 'timeout', 'Late status response cannot complete a timed out installation');
 

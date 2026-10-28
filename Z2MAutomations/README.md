@@ -354,7 +354,7 @@ Ergebnis in OperationStatus.
   extensionConfirmed, operation (kind, status, transaction), lastError als
   bereinigter Fehlercode und validation als Vorschau oder null.
   Interne Sitzungskennungen, YAML und JavaScript-Code werden nicht ausgegeben.
-- Z2MA_InstallExtension(InstanceID): Installiert/aktualisiert die feste mitgelieferte
+- Z2MA_InstallExtension(InstanceID, Notify = false): Installiert/aktualisiert die feste mitgelieferte
   Erweiterung und prüft anschließend die Empfängerbereitschaft.
 - Z2MA_RequestExtensionStatus(InstanceID): Fragt den aktuellen Empfänger aktiv ab.
 - Z2MA_ValidateYaml(InstanceID, Yaml): Prüft den UTF-8-String (maximal 128 KiB)
@@ -374,3 +374,10 @@ passende Transaktions-ID und gespeicherte Retain-Antworten schließen sie nicht 
 Pro Instanz ist zusätzlich zur Gesundheitsanfrage eine Erweiterungsaktion
 gleichzeitig möglich. Jede Phase hat das konfigurierte Antwortzeitlimit.
 Ein grafischer Regeleditor und die Ausführung der Automationen folgen später.
+
+Der Installationsbutton zeigt nach Abschluss ein natives Popup mit Erfolg oder
+bereinigter Fehlerbeschreibung. Erfolg setzt sowohl die Upload-Bestätigung als
+auch die anschließende Empfängerprüfung voraus. Zeitüberschreitungen und bereits
+vor dem Versand erkannte Fehler erscheinen ebenfalls im Popup. Programmatische
+InstallExtension-Aufrufe bleiben standardmäßig ohne Popup; Notify=true aktiviert
+es für ein geöffnetes Formular.

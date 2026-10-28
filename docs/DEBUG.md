@@ -126,3 +126,8 @@ Zurücksetzen der abhängigen Wertauswahl. Katalogempfang meldet Geräteanzahl,
 lesbare Eigenschaften und anhand Symcon geprüfte schaltbare Eigenschaften.
 Keine Variablennamen, IEEE-Adressen, Regelwerte oder Auswahltokens im Debug.
 Alle öffentlichen Einstiege verwenden zentrale Start-/Ende-Abläufe.
+
+Die Installation protokolliert zusätzlich die Übergabe der Popup-Rückmeldung
+mit Erfolgskennzeichen und festem Fehlercode. Fremde Fehlermeldungen gelangen
+weder ins Popup noch ins Debug. Ein Darstellungsfehler verändert das
+Installationsergebnis nicht.

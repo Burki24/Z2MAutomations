@@ -247,7 +247,10 @@
             "Choose property or channel": "Eigenschaft oder Kanal auswählen",
             "Value": "Wert",
             "Choose value": "Wert auswählen",
-            "Channel %s": "Kanal %s"
+            "Channel %s": "Kanal %s",
+            "Extension installation": "Installation der Erweiterung",
+            "Extension installed or updated successfully. The receiver in Z2M has confirmed readiness.": "Erweiterung erfolgreich installiert oder aktualisiert. Der Empfänger in Z2M hat seine Bereitschaft bestätigt.",
+            "Extension installation or update failed:": "Installation oder Aktualisierung der Erweiterung fehlgeschlagen:"
         }
     }
 }

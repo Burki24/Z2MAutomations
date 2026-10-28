@@ -9,13 +9,13 @@ use Throwable;
 
 trait ExtensionIntegration
 {
-    public function InstallExtension(): string
+    public function InstallExtension(bool $Notify = false): string
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function ()
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Notify)
         {
             $code = @file_get_contents(__DIR__ . '/z2m/' . ExtensionContract::NAME, false, null, 0, Z2MProtocol::MAX_PAYLOAD_BYTES + 1);
             $valid = is_string($code) && $code !== '' && strlen($code) <= Z2MProtocol::MAX_PAYLOAD_BYTES && preg_match('//u', $code) === 1;
-            return $this->StartExtensionWorkflow('install', '', $valid ? $code : '');
+            return $this->StartExtensionWorkflow('install', '', $valid ? $code : '', $Notify);
         });
     }
 
@@ -59,10 +59,10 @@ trait ExtensionIntegration
             'operation'     => ['kind' => 'none', 'status' => 'idle', 'transaction' => ''], 'lastError' => ''];
     }
 
-    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = ''): string
+    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false): string
     {
         $this->DebugEvent('AKTION', 'Erweiterungsauftrag prüfen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
-        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code): array
+        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify): array
         {
             $state = $this->RefreshState();
             if ($kind === 'deactivate' && $state['workflow'] !== null && $state['workflow']['kind'] !== 'deactivate') {
@@ -72,7 +72,14 @@ trait ExtensionIntegration
             $checksum = strlen($yaml) <= ExtensionContract::MAX_YAML_BYTES ? hash('sha256', $yaml) : '';
             if ($state['workflow'] !== null) {
                 if ($state['workflow']['kind'] === $kind && $state['workflow']['checksum'] === $checksum) {
+                    if ($notify) {
+                        $state['workflow']['notify'] = true;
+                        $this->SaveState($state);
+                    }
                     return ['existing' => $state['workflow']['id']];
+                }
+                if ($notify) {
+                    $this->NotifyExtensionInstallation('busy');
                 }
                 $state['lastError'] = 'busy';
                 $this->SaveState($state);
@@ -100,6 +107,9 @@ trait ExtensionIntegration
             }
             if ($error !== '') {
                 $this->DebugEvent('FEHLER', 'Erweiterungsauftrag abgelehnt.', ['Auftrag' => $kind, 'Grund' => $error]);
+                if ($notify) {
+                    $this->NotifyExtensionInstallation($error);
+                }
                 $state['operation'] = ['kind' => $kind, 'status' => 'error', 'transaction' => ''];
                 $state['lastError'] = $error;
                 $this->SaveState($state);
@@ -109,7 +119,7 @@ trait ExtensionIntegration
             $state['operation'] = ['kind' => $kind, 'status' => 'pending', 'transaction' => $id];
             $state['lastError'] = '';
             $state['workflow'] = ['id' => $id, 'kind' => $kind, 'checksum' => $checksum, 'yaml' => $yaml,
-                'previousSession'      => $state['extension']['session'] ?? null, 'target' => null, 'verifyRuntime' => false];
+                'notify'               => $notify, 'previousSession'      => $state['extension']['session'] ?? null, 'target' => null, 'verifyRuntime' => false];
             if (in_array($kind, ['activate', 'deactivate'], true)) {
                 $state['runtimeConfirmed'] = false;
             }
@@ -195,9 +205,26 @@ trait ExtensionIntegration
             $state['runtimeConfirmed'] = false;
         }
         $this->DebugEvent($error === '' ? 'AKTION' : 'FEHLER', 'Erweiterungsauftrag abgeschlossen.', ['Auftrag' => $state['workflow']['kind'] ?? 'none', 'Ergebnis' => $status, 'Grund' => $error]);
+        if (($state['workflow']['kind'] ?? '') === 'install' && ($state['workflow']['notify'] ?? false)) {
+            $this->NotifyExtensionInstallation($error);
+        }
         $state['operation']['status'] = $status;
         $state['lastError'] = $error;
         $state['workflow'] = null;
+    }
+
+    private function NotifyExtensionInstallation(string $error): void
+    {
+        try {
+            $message = $error === '' ? $this->Translate('Extension installed or updated successfully. The receiver in Z2M has confirmed readiness.')
+                : $this->Translate('Extension installation or update failed:') . ' ' . $this->Translate(ExtensionContract::ErrorText($error));
+            $this->UpdateFormField('InstallResultMessage', 'caption', $message);
+            $this->UpdateFormField('InstallResultPopup', 'visible', false);
+            $this->UpdateFormField('InstallResultPopup', 'visible', true);
+            $this->DebugEvent($error === '' ? 'AKTION' : 'FEHLER', 'Installationsrückmeldung an das geöffnete Formular übergeben.', ['Erfolgreich' => $error === '', 'Grund' => $error]);
+        } catch (Throwable) {
+            $this->DebugEvent('FEHLER', 'Installationsrückmeldung konnte im Formular nicht angezeigt werden. Statusanzeige und Debug beachten.');
+        }
     }
 
     private function ObserveExtensionStatus(array &$state, array $metadata): void

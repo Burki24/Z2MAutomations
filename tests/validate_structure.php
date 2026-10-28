@@ -44,7 +44,7 @@ foreach ($modules as $path) {
     $fieldNames = [];
     while ($pending !== []) {
         $field = array_shift($pending);
-        array_push($pending, ...($field['items'] ?? []));
+        array_push($pending, ...($field['items'] ?? []), ...($field['popup']['items'] ?? []));
         if (isset($field['name'])) {
             $check(!isset($fieldNames[$field['name']]), 'Unique nested form name: ' . $field['name']);
             $fieldNames[$field['name']] = true;
@@ -52,7 +52,8 @@ foreach ($modules as $path) {
         if (($field['type'] ?? '') === 'ExpansionPanel') {
             $check(!isset($field['width']), 'Panels must use the available console width');
         }
-        $check(isset($translations[$field['caption']]), 'German form translation: ' . $field['caption']);
+        $caption = $field['caption'] ?? $field['popup']['caption'] ?? '';
+        $check(isset($translations[$caption]), 'German form translation: ' . $caption);
         if (isset($field['confirm'])) {
             $check(isset($translations[$field['confirm']]), 'German confirmation translation');
         }
