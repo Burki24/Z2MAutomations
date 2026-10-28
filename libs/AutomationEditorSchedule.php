@@ -39,9 +39,9 @@ trait AutomationEditorSchedule
         });
     }
 
-    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = '', string $Area = ''): bool
+    public function SaveScheduledAutomation(string $RuleID, string $SelectionToken, string $Name, bool $Enabled, string $Source, string $Trigger, string $Target, string $Action, string $Options, string $CurrentDraft = '', bool $CheckDraft = false, string $ActionSteps = '', string $Area = '', string $TriggerSteps = ''): bool
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps, $Area): bool
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, fn (): bool => $this->WithTransportLock(function () use ($RuleID, $SelectionToken, $Name, $Enabled, $Source, $Trigger, $Target, $Action, $Options, $CurrentDraft, $CheckDraft, $ActionSteps, $Area, $TriggerSteps): bool
         {
             if (!$this->CheckEditorArea($Area)) {
                 return false;
@@ -65,16 +65,19 @@ trait AutomationEditorSchedule
             $rule = $index === null ? null : $draft['configuration']['automations'][$index];
             if ($rule !== null && $this->ScheduledEditorFields($rule) === null) {
                 // Unsupported structures stay intact; only explicit metadata changes apply.
-                if ($Source !== '' || $Trigger !== '' || $Target !== '' || $Action !== '' || ($ActionSteps !== '' && $ActionSteps !== '[]')) {
+                if ($Source !== '' || $Trigger !== '' || $Target !== '' || $Action !== '' || ($ActionSteps !== '' && $ActionSteps !== '[]') || ($TriggerSteps !== '' && $TriggerSteps !== '[]')) {
                     return $this->RejectEditorChange($state, 'editor_advanced');
                 }
                 $parts = array_intersect_key($rule, array_flip(['triggers', 'conditions', 'actions']));
             } else {
+                if ($rule !== null && count($rule['triggers']) > 1 && $TriggerSteps === '') {
+                    return $this->RejectEditorChange($state, 'editor_triggers');
+                }
                 if ($rule !== null && count($rule['actions']) > 1 && $ActionSteps === '') {
                     return $this->RejectEditorChange($state, 'editor_actions');
                 }
                 $reason = 'editor_schedule';
-                $parts = $this->BuildScheduledRule($Source, $Trigger, $Target, $Action, $Options, $reason, $ActionSteps);
+                $parts = $this->BuildScheduledRule($Source, $Trigger, $Target, $Action, $Options, $reason, $ActionSteps, $TriggerSteps);
                 if ($parts === null) {
                     return $this->RejectEditorChange($state, $reason);
                 }
@@ -88,7 +91,7 @@ trait AutomationEditorSchedule
             } else {
                 $draft['configuration']['automations'][$index] = $rule;
             }
-            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Bereich' => $this->EditorTypeLabel($this->EditorRuleType($rule)), 'Bedingungen' => count($rule['conditions'])]);
+            $this->DebugEvent('AKTION', 'Auslöser und Bedingungen für den lokalen Entwurf vorbereitet.', ['Bereich' => $this->EditorTypeLabel($this->EditorRuleType($rule)), 'Auslöser' => count($rule['triggers']), 'Verknüpfung' => 'ODER', 'Bedingungen' => count($rule['conditions'])]);
             $this->DebugEditorActionSteps($rule['actions']);
             return $this->CommitEditorChange($state, $draft, $index === null ? 'draft_created' : 'draft_updated', $index === null ? '' : $RuleID);
         }));
@@ -110,7 +113,7 @@ trait AutomationEditorSchedule
         return preg_match('/\A(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\z/D', $value) === 1 ? (strlen($value) === 5 ? $value . ':00' : $value) : null;
     }
 
-    private function BuildScheduledRule(string $sourceID, string $triggerKey, string $targetID, string $actionKey, string $options, string &$reason, string $actionSteps = ''): ?array
+    private function BuildScheduledRule(string $sourceID, string $triggerKey, string $targetID, string $actionKey, string $options, string &$reason, string $actionSteps = '', string $triggerSteps = ''): ?array
     {
         if (strlen($options) > 8192) {
             return null;
@@ -155,7 +158,19 @@ trait AutomationEditorSchedule
             }
             $reason = 'editor_schedule';
         }
-        if ($v['EditorTriggerType'] === 'time') {
+        $triggers = null;
+        if ($v['EditorTriggerType'] === 'time' && $triggerSteps !== '' && $triggerSteps !== '[]') {
+            $reason = 'editor_triggers';
+            return null;
+        }
+        if ($v['EditorTriggerType'] === 'device' && $triggerSteps !== '') {
+            $reason = 'editor_triggers';
+            $triggers = $this->BuildEditorTriggers($triggerSteps);
+            if ($triggers === null) {
+                return null;
+            }
+            $trigger = $triggers[0];
+        } elseif ($v['EditorTriggerType'] === 'time') {
             $at = $this->EditorClockTime($v['EditorAt']);
             if ($at === null) {
                 $reason = 'editor_time';
@@ -217,12 +232,12 @@ trait AutomationEditorSchedule
             }
             $conditions[] = ['type' => 'device_value', 'device' => $device, 'property' => $property, 'operator' => $v['EditorCompare'], 'value' => $value];
         }
-        return ['triggers' => [$trigger], 'conditions' => $conditions, 'actions' => $actions];
+        return ['triggers' => $triggers ?? [$trigger], 'conditions' => $conditions, 'actions' => $actions];
     }
 
     private function ScheduledEditorFields(array $rule): ?array
     {
-        if (count($rule['triggers'] ?? []) !== 1 || $this->EditorActionRows($rule) === null || count($rule['conditions'] ?? []) > 2) {
+        if ((count($rule['triggers'] ?? []) !== 1 && $this->EditorTriggerRows($rule) === null) || $this->EditorActionRows($rule) === null || count($rule['conditions'] ?? []) > 2) {
             return null;
         }
         $t = $rule['triggers'][0];
@@ -297,7 +312,7 @@ trait AutomationEditorSchedule
         $device = $v['EditorTriggerType'] === 'device';
         $window = $v['EditorWindow'];
         $condition = $v['EditorConditionType'];
-        $fields = ['EditorDeviceTrigger' => $device, 'EditorTimeTrigger' => !$device, 'EditorSource'   => $device, 'EditorSourceChoice' => $device, 'EditorHold' => $device, 'EditorAt' => !$device, 'EditorTimezone' => !$device,
+        $fields = ['EditorDeviceTrigger' => $device, 'EditorTimeTrigger' => !$device, 'EditorTriggers' => $device, 'EditorSource' => false, 'EditorSourceChoice' => false, 'EditorHold' => false, 'EditorAt' => !$device, 'EditorTimezone' => !$device,
             'EditorAfter'                => $window, 'EditorBefore' => $window, 'EditorWindowTimezone' => $window,
             'EditorCondition'            => $condition !== 'none', 'EditorConditionChoice' => $condition === 'state',
             'EditorNumericProperty'      => $condition === 'numeric', 'EditorNumber' => $condition === 'numeric', 'EditorCompare' => $condition !== 'none',

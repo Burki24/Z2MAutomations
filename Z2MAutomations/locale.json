@@ -232,7 +232,15 @@
             "Storing transfers the draft. Activation starts all enabled stored rules; stopping stops all rules.": "Speichern überträgt den Entwurf. Aktivieren startet alle aktivierten gespeicherten Regeln; Stoppen stoppt alle Regeln.",
             "Scheduled time": "Zeitpunkt",
             "Trigger": "Auslöser",
-            "First target device": "Erstes Zielgerät"
+            "First target device": "Erstes Zielgerät",
+            "Triggers (maximum 8, OR)": "Auslöser (höchstens 8, ODER)",
+            "Device and event": "Gerät und Ereignis",
+            "Choose device and event": "Gerät und Ereignis auswählen",
+            "Event duration (seconds)": "Mindestdauer des Zustands (Sekunden)",
+            "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately.": "Jedes eingetragene Ereignis kann die Automation starten (ODER). Die Bedingungen gelten für alle Auslöser. Mindestdauer 0 reagiert sofort.",
+            "Use 1 to 8 device events and durations from 0 to 86400 seconds.": "Ein bis acht Geräteereignisse und Mindestdauern von 0 bis 86400 Sekunden verwenden.",
+            "%d device triggers (OR)": "%d Geräteauslöser (ODER)",
+            "Minimum duration (seconds)": "Mindestdauer (Sekunden)"
         }
     }
 }

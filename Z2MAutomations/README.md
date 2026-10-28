@@ -50,8 +50,9 @@ Das Modul aktiviert kein externes JavaScript und löst keinen Z2M-Neustart aus.
    Entwurf neu geladen; die in Z2M gespeicherten Regeln werden noch nicht geändert.
 3. Den Bereich „Durch ein Gerät ausgelöste Automationen“ öffnen und in der Auswahl
    „Neue Automation erstellen“ wählen und „Automation bearbeiten“ aufklappen. Die Bearbeitung öffnet sich direkt in diesem Bereich.
-   Namen eingeben und unter „Wenn ein Gerät ein Ereignis meldet“ Quellgerät
-   und Ereignis wählen, beispielsweise „Tasterereignis: Einfach drücken“.
+   Namen eingeben und unter „Wenn ein Gerät ein Ereignis meldet“ in der
+   Auslöserliste ein Gerät und Ereignis hinzufügen, beispielsweise
+   „Tasterereignis: Einfach drücken“. Weitere Auslöser sind optional.
    Für eine Uhrzeitregel stattdessen im Bereich „Zeitgesteuerte Automationen“
    „Neue Automation erstellen“ wählen, die Bearbeitung aufklappen und
    Uhrzeit/Zeitzone einstellen.
@@ -75,7 +76,7 @@ Zustandswerte erhalten über diese Geräte hinweg Vorrang vor Sonderoptionen;
 unpassende Exposes
 werden ausgelassen. Geräte werden technisch anhand ihrer IEEE-Adresse ausgewählt;
 die Adresse neben dem Namen unterscheidet gleichnamige Geräte. Gruppen, numerische
-Geräteaktionen und mehrere Auslöser bleiben der erweiterten
+Geräteaktionen und gemischte Geräte-/Zeitauslöser bleiben der erweiterten
 YAML-Ansicht vorbehalten. Bestehende Regeln außerhalb des Formularumfangs können
 umbenannt, deaktiviert oder gelöscht werden; ihre zusätzlichen Schritte bleiben erhalten.
 
@@ -100,6 +101,27 @@ Aktivieren und Stoppen beziehen sich auf die gesamte gespeicherte Konfiguration.
 Ausführungsstatus und Stopp stehen oben. MQTT-Einstellungen, Einrichtung/Diagnose
 und der erweiterte YAML-Editor sind normalerweise eingeklappt. Die Bearbeitung
 ändert zuerst den lokalen Entwurf; Z2M ändert sich erst beim Speichern.
+
+## Mehrere Geräteauslöser (ODER)
+
+Im Gerätebereich enthält die Auslöserliste ein bis acht Einträge. Jeden Eintrag
+über Hinzufügen anlegen und Gerät mit Ereignis/Zustand wählen. Bewegungsmelder,
+Taster und andere angebotene Geräteereignisse können kombiniert werden. Sobald
+einer der Einträge zutrifft, kann dieselbe Aktionsfolge starten. Die zusätzlichen
+Bedingungen gelten für jeden Auslöser gemeinsam. Eine UND-Verknüpfung mehrerer
+Ereignisse ist hier nicht vorgesehen.
+
+„Mindestdauer des Zustands“ wird je Eintrag eingestellt: 0 reagiert sofort,
+1 bis 86400 fordert einen entsprechend lange anliegenden Zustand. Für einen
+kurzen Tastendruck normalerweise 0 verwenden. Einträge sind bearbeitbar und
+löschbar; ihre Reihenfolge ist für ODER ohne Bedeutung. Vorhandene Einzelregeln
+erscheinen als eine Zeile, unterstützte Mehrfachregeln mit allen Einträgen.
+
+Danach in den Entwurf übernehmen, gemeinsam prüfen und speichern. Die Engine
+verhindert parallele Läufe derselben Regel und besitzt einen Schutzabstand von
+einer Sekunde zwischen Regelstarts. Bedingungen und Wartezeiten verändern diese
+Regeln nicht. Gemischte Zeit-/Geräteauslöser und nicht darstellbare Vergleiche
+bleiben in der erweiterten YAML bzw. der begrenzten Metadatenbearbeitung erhalten.
 
 ## Mehrere Aktionen per Klick
 

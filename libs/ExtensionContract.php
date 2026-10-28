@@ -117,6 +117,7 @@ final class ExtensionContract
             'editor_weekdays'      => 'Choose at least one weekday for the time window.',
             'editor_condition'     => 'Choose an available condition property, comparison and correctly typed value.',
             'editor_duration'      => 'Event duration and action delay must be whole seconds from 0 to 86400.',
+            'editor_triggers'      => 'Use 1 to 8 device events and durations from 0 to 86400 seconds.',
             'editor_actions'       => 'Use 1 to 16 actions from the device catalog and waits from 0 to 86400 seconds.',
             'editor_missing'       => 'The selected automation is no longer in the draft. Select it again.',
             'editor_advanced'      => 'This advanced rule supports name and enabled state changes only in the click editor.',

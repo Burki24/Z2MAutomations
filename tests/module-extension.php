@@ -175,6 +175,8 @@ try {
         foreach ($fields as $name => $field) {
             if (array_key_exists('value', $field)) {
                 $values[$name] = $field['value'];
+            } elseif (($field['type'] ?? '') === 'List') {
+                $values[$name] = new ArrayIterator($field['values'] ?? []);
             }
         }
         extract(array_replace($values, $overrides), EXTR_SKIP);
@@ -275,7 +277,7 @@ try {
     $advanced['triggers'][0]['for_seconds'] = 5;
     $advanced['actions'][0]['delay_seconds'] = 2;
     $advanced['actions'][] = $advanced['actions'][0];
-    $advanced['triggers'][] = $advanced['triggers'][0];
+    $advanced['triggers'][] = ['type' => 'time', 'at' => '10:00:00', 'timezone' => 'Europe/Berlin'];
     $advanced['conditions'] = [['type' => 'device_value', 'device' => '0x0000000000000002', 'property' => 'state', 'operator' => 'eq', 'value' => 'OFF']];
     $advancedYaml = json_encode(['schema_version' => 1, 'revision' => 6, 'automations' => [$advanced]], JSON_THROW_ON_ERROR);
     $module->ValidateYaml($advancedYaml);
@@ -401,6 +403,8 @@ try {
         foreach ($fields as $name => $field) {
             if (array_key_exists('value', $field)) {
                 $values[$name] = $field['value'];
+            } elseif (($field['type'] ?? '') === 'List') {
+                $values[$name] = new ArrayIterator($field['values'] ?? []);
             }
         }
         extract(array_replace($values, $overrides), EXTR_SKIP);
@@ -408,7 +412,7 @@ try {
     };
     $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorRule' => '', 'DeviceEditorEditToken' => '', 'DeviceEditorName' => 'Synthetic sequence',
         'DeviceEditorEnabled'                                                                   => true, 'DeviceEditorWindow' => false, 'DeviceEditorConditionType' => 'none',
-        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorActions' => new ArrayIterator($steps)]);
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator($steps)]);
     $check($state()['operation']['status'] === 'draft_created', 'The actual form button serializes all list rows and creates the sequence');
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $sequenceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
@@ -526,7 +530,7 @@ try {
         'Device source callbacks update the event choices inside their own section'
     );
     $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Local device editor', 'DeviceEditorEnabled' => false,
-        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorActions' => new ArrayIterator([$steps[0]])]);
+        'DeviceEditorSource'                                                                    => '0x0000000000000001', 'DeviceEditorSourceChoice' => $trigger, 'DeviceEditorTriggers' => new ArrayIterator([['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0]]), 'DeviceEditorActions' => new ArrayIterator([$steps[0]])]);
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $deviceDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
     $localDevice = $deviceDocument['automations'][array_key_last($deviceDocument['automations'])];
@@ -545,6 +549,66 @@ try {
         'Device deletion preserves all unrelated time and device rules'
     );
     $check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Common validation and storage accept the local editor result');
+    $module->LoadAutomationEditor();
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $module->SelectAutomation('', $fields['YamlInput']['value'], true, 'device');
+    $module->SelectEditorDevice('Source', '0x0000000000000002', 'device');
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $secondSourceChoice = $fields['EditorSourceChoice']['options'][1]['value'];
+    $triggerRows = [['Choice' => '0x0000000000000001:' . $trigger, 'Hold' => 0],
+        ['Choice' => '0x0000000000000002:' . $secondSourceChoice, 'Hold' => 0]];
+    $triggerActions = [['Choice' => '0x0000000000000003:' . $changedAction, 'Delay' => 0]];
+    foreach (['onAdd', 'onEdit', 'onDelete'] as $event) {
+        $runEditorScript($fields['DeviceEditorTriggers'][$event], $fields, ['DeviceEditorTriggers' => new ArrayIterator($triggerRows)]);
+    }
+    $runEditorScript($fields['DeviceCreateRuleButton']['onClick'], $fields, ['DeviceEditorName' => 'Two alternative device triggers',
+        'DeviceEditorEnabled'                                                                   => true, 'DeviceEditorTriggers' => new ArrayIterator($triggerRows), 'DeviceEditorActions' => new ArrayIterator($triggerActions)]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $twoDocument = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR);
+    $twoRule = $twoDocument['automations'][array_key_last($twoDocument['automations'])];
+    $check(count($twoRule['triggers']) === 2 && $twoRule['triggers'][0]['device'] !== $twoRule['triggers'][1]['device'], 'The native list creates two distinct device triggers without handwritten YAML: ' . $state()['lastError']);
+    $check(
+        $module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '' && $module->ActivateAutomations() !== '',
+        'The existing schema validates, stores and activates the generated OR rule'
+    );
+    foreach ([['device' => '0x0000000000000001', 'payload' => ['action' => 'single']], ['device' => '0x0000000000000002', 'payload' => ['state' => 'ON']]] as $event) {
+        $messages = $exchange(['control' => 'event'] + $event);
+        $commands = array_values(array_filter($messages, static fn (object $message): bool => str_ends_with($message->topic, '/set')));
+        $check(count($commands) === 1 && $commands[0]->payload->state === 'OFF', 'Either generated trigger independently starts the same action (OR)');
+        $module->StopAutomations();
+        $module->ActivateAutomations(); // Fresh arming isolates alternatives from the one-second rule cooldown.
+    }
+    $module->StopAutomations();
+    $module->LoadAutomationEditor();
+    $module->SelectAutomation($twoRule['id']);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorTriggers']['values'] === $triggerRows && $fields['DeviceEditorActions']['values'] === $triggerActions
+        && $fields['EditorAdvancedSection']['visible'], 'Stored trigger rows reopen fully in the device section alongside existing advanced rules');
+    $twoToken = $fields['DeviceEditorEditToken']['value'];
+    $unchangedTwo = $fields['YamlInput']['value'];
+    $check(
+        !$module->SaveScheduledAutomation($twoRule['id'], $twoToken, 'Legacy flatten', true, '0x0000000000000001', $trigger, '', '', '{}', '', false, json_encode($triggerActions)),
+        'Legacy calls cannot silently reduce a multi-trigger rule to one'
+    );
+    foreach (['[]', '{}', '{', json_encode(array_fill(0, 9, $triggerRows[0])), json_encode([['Choice' => 'forged', 'Hold' => 0]]),
+        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => -1]]), json_encode([['Choice'  => $triggerRows[0]['Choice'], 'Hold' => 86401]]),
+        json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => '2']]), json_encode([['Choice' => $triggerRows[0]['Choice'], 'Hold' => 0, 'extra' => true]])] as $invalidTriggers) {
+        $check(!$module->SaveScheduledAutomation($twoRule['id'], $twoToken, 'Invalid trigger rows', true, '', '', '', '', '{}', '', false, json_encode($triggerActions), 'device', $invalidTriggers), 'Malformed or out-of-bound trigger lists are rejected');
+        $check(
+            formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'])['YamlInput']['value'] === $unchangedTwo,
+            'Rejected trigger lists preserve the entire draft'
+        );
+    }
+    $check($module->InspectEditorTriggers(json_encode(array_fill(0, 8, $triggerRows[0])), 'edit', 'device'), 'Eight device triggers are accepted at the supported boundary');
+    $triggerRows[1]['Hold'] = 4;
+    $runEditorScript($fields['DeviceUpdateRuleButton']['onClick'], $fields, ['DeviceEditorTriggers' => new ArrayIterator($triggerRows), 'DeviceEditorActions' => new ArrayIterator($triggerActions)]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorTriggers']['values'] === $triggerRows, 'Editing restores each trigger duration without changing the other trigger');
+    $runEditorScript($fields['DeviceUpdateRuleButton']['onClick'], $fields, ['DeviceEditorTriggers' => new ArrayIterator([$triggerRows[1]]), 'DeviceEditorActions' => new ArrayIterator($triggerActions)]);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+    $check($fields['DeviceEditorTriggers']['values'] === [$triggerRows[1]], 'Deleting a trigger preserves the remaining trigger and duration');
+    $module->DeleteAutomation($twoRule['id'], $fields['DeviceEditorEditToken']['value']);
+    $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $module->ValidateYaml($fields['YamlInput']['value'] . '# edited');
     $check(!$module->CreateSimpleAutomation('Refuse stale editor draft', '0x0000000000000001', $trigger, '0x0000000000000002', $action)
         && $state()['lastError'] === 'editor_changed', 'Manual edits are not silently overwritten by the builder');

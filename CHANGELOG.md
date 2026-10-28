@@ -28,6 +28,11 @@
 
 ## Neu
 
+- Gerätebereich um eine Auslöserliste mit ein bis acht Geräteereignissen ergänzt.
+  Jeder Auslöser startet dieselbe Aktionsfolge (ODER), mit gemeinsamer Bedingung
+  und optionaler Mindestdauer je Eintrag. Bearbeiten/Löschen und Wiederladen
+  unterstützen Mehrfachregeln; alte Einzelaufrufe dürfen sie nicht verkürzen.
+
 - Bearbeitung direkt in Geräte- und Zeitbereiche integriert: eigene Eingaben,
   Bedingungen, Aktionsfolgen und Übernehmen-/Löschen-Buttons. Die Auslöserart
   ist durch den Bereich festgelegt. Prüfung, Speicherung und Ausführungssteuerung

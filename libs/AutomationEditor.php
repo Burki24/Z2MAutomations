@@ -315,6 +315,7 @@ trait AutomationEditor
         unset($field);
         $this->FillScheduleForm($form, $draft, $selection);
         $this->FillActionSequenceForm($form, $selection, $snapshot);
+        $this->FillTriggerSequenceForm($form, $selection, $snapshot);
         $this->FillAutomationSections($form, $draft, $selection);
     }
 
@@ -331,6 +332,9 @@ trait AutomationEditor
             $sourceLabel = ($rule['triggers'][0]['type'] ?? '') === 'time'
                 ? sprintf($this->Translate('Daily at %s (%s)'), $rule['triggers'][0]['at'], $rule['triggers'][0]['timezone'])
                 : ($snapshot['devices'][$source]['name'] ?? $this->Translate('Advanced rule'));
+            if (count($rule['triggers'] ?? []) > 1 && $this->EditorRuleType($rule) === 'device') {
+                $sourceLabel = sprintf($this->Translate('%d device triggers (OR)'), count($rule['triggers']));
+            }
             $rows[] = ['Name' => $rule['name'], 'Source' => $sourceLabel,
                 'Target'      => $snapshot['devices'][$target]['name'] ?? $this->Translate('Advanced rule'),
                 'Enabled'     => $this->Translate(($rule['enabled'] ?? false) === true ? 'Yes' : 'No')];

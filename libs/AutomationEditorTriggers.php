@@ -1,0 +1,119 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Z2MAutomations;
+
+use JsonException;
+
+trait AutomationEditorTriggers
+{
+    public function InspectEditorTriggers(string $Triggers, string $Change, string $Area = ''): bool
+    {
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Triggers, $Change, $Area): bool
+        {
+            if (!$this->CheckEditorArea($Area)) {
+                return false;
+            }
+            $triggers = $this->BuildEditorTriggers($Triggers);
+            if (!in_array($Change, ['add', 'edit', 'delete'], true) || $triggers === null) {
+                $this->DebugEvent('FEHLER', 'Auslöserliste noch nicht gültig; ein bis acht Geräteereignisse und eine Mindestdauer von 0 bis 86400 Sekunden wählen.');
+                return false;
+            }
+            $details = $Change === 'delete' ? ['AuslöserVorLöschen' => count($triggers)] : ['Auslöser' => count($triggers)];
+            $this->DebugEvent('AKTION', $Change === 'delete'
+                ? 'Auslöser zum Löschen ausgewählt; Anzahl beschreibt den Vorbestand. Verbleibende Liste wird beim Übernehmen geprüft.'
+                : 'Auslöserliste im Formular bearbeitet; jedes Ereignis kann dieselbe Aktionsfolge starten (ODER).', $details);
+            return true;
+        });
+    }
+
+    private function BuildEditorTriggers(string $text): ?array
+    {
+        if (strlen($text) > 4096) {
+            return null;
+        }
+        try {
+            $rows = json_decode($text, true, 8, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return null;
+        }
+        if (!is_array($rows) || !array_is_list($rows) || count($rows) < 1 || count($rows) > 8) {
+            return null;
+        }
+        $snapshot = $this->EditorSnapshot();
+        $triggers = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || count($row) !== 2 || !is_string($row['Choice'] ?? null) || !is_int($row['Hold'] ?? null)
+                || $row['Hold'] < 0 || $row['Hold'] > 86400) {
+                return null;
+            }
+            $parts = explode(':', $row['Choice']);
+            if (count($parts) !== 2) {
+                return null;
+            }
+            [$device, $key] = $parts;
+            $choice = $this->FindEditorChoice($snapshot, $device, $key, 'Source');
+            if ($choice === null) {
+                return null;
+            }
+            $triggers[] = ['type' => 'device', 'device' => $device, 'property' => $choice['property'], 'operator' => 'eq',
+                'value'           => $choice['value'], 'for_seconds' => $row['Hold']];
+        }
+        return $triggers;
+    }
+
+    private function EditorTriggerRows(array $rule): ?array
+    {
+        if (count($rule['triggers'] ?? []) < 1 || count($rule['triggers']) > 8) {
+            return null;
+        }
+        $snapshot = $this->EditorSnapshot();
+        $rows = [];
+        foreach ($rule['triggers'] as $trigger) {
+            if (($trigger['type'] ?? '') !== 'device' || ($trigger['operator'] ?? '') !== 'eq'
+                || !is_int($trigger['for_seconds'] ?? 0) || ($trigger['for_seconds'] ?? 0) < 0 || ($trigger['for_seconds'] ?? 0) > 86400) {
+                return null;
+            }
+            $found = null;
+            foreach ($snapshot['devices'][$trigger['device']]['triggers'] ?? [] as $key => $choice) {
+                if ($choice['property'] === $trigger['property'] && $choice['value'] === $trigger['value']) {
+                    $found = $trigger['device'] . ':' . $key;
+                    break;
+                }
+            }
+            if ($found === null) {
+                return null;
+            }
+            $rows[] = ['Choice' => $found, 'Hold' => $trigger['for_seconds'] ?? 0];
+        }
+        return $rows;
+    }
+
+    private function EditorTriggerColumns(array $snapshot): array
+    {
+        $options = [['caption' => $this->Translate('Choose device and event'), 'value' => '']];
+        foreach ($snapshot['devices'] ?? [] as $id => $device) {
+            foreach ($this->EditorChoices($snapshot, $id, 'Source') as $choice) {
+                if ($choice['value'] !== '') {
+                    $options[] = ['caption' => $device['name'] . ' (' . $id . ') — ' . $choice['caption'], 'value' => $id . ':' . $choice['value']];
+                }
+            }
+        }
+        return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => '60%', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
+            ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (seconds)'), 'width' => '25%', 'add' => 0,
+                'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
+    }
+
+    private function FillTriggerSequenceForm(array &$form, array $selection, array $snapshot): void
+    {
+        foreach ($this->EditorFormFields($form['actions']) as &$field) {
+            if (($field['name'] ?? '') === 'EditorTriggers') {
+                $field['columns'] = $this->EditorTriggerColumns($snapshot);
+                $field['values'] = $selection['EditorTriggerRows'];
+                $field['enabled'] = $selection['simple'];
+            }
+        }
+        unset($field);
+    }
+}

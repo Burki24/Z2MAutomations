@@ -8,6 +8,15 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Geräteeditor unterstützt ein bis acht ODER-Auslöser mit eigener Mindestdauer.
+  Alle unterstützten Einträge werden wieder geladen. Alte Einzelaufrufe können
+  Mehrfachregeln nicht verkürzen; gemischte Zeit-/Geräteregeln bleiben geschützt.
+  Schema und Z2M-Erweiterung bleiben unverändert. Native List-Skripte, Validierung,
+  Persistenz und alternative Ausführung durch zwei synthetische Geräte sind geprüft.
+  Testinstallation aktualisiert; native Erstellung/Wiederladen/Bearbeiten/Löschen
+  mit Bewegungsmelder und Taster sowie Z2M-Validierung bestätigt. Original-YAML
+  wiederhergestellt; keine Live-Speicherung/Aktivierung, Z2M weiterhin gestoppt.
+
 - Auswahl und Vorbelegung eines gültigen lokalen Entwurfs benötigen keine
   erneute Z2M-Bestätigung nach Verlust des flüchtigen Transportcaches. Bekannte
   Empfängerkonflikte, Scope-/YAML-Konflikte sowie jede Änderung/Übertragung bleiben

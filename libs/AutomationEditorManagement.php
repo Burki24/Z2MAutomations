@@ -186,12 +186,13 @@ trait AutomationEditorManagement
         $selected = $index !== null && ($selection['checksum'] ?? null) === ($draft['draftChecksum'] ?? null);
         $rule = $selected ? $draft['configuration']['automations'][$index] : null;
         $simple = $rule === null ? null : $this->ScheduledEditorFields($rule);
-        return ['EditorRule'   => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
-            'EditorName'       => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
-            'EditorSource'     => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
-            'EditorTarget'     => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
-            'EditorActionRows' => $simple === null ? [] : $this->EditorActionRows($rule),
-            'selected'         => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
+        return ['EditorRule'    => $selected ? $id : '', 'EditorEditToken' => $selected ? $selection['token'] : '',
+            'EditorName'        => $rule['name'] ?? '', 'EditorEnabled' => $rule['enabled'] ?? true,
+            'EditorSource'      => $simple['EditorSource'] ?? '', 'EditorSourceChoice' => $simple['EditorSourceChoice'] ?? '',
+            'EditorTarget'      => $simple['EditorTarget'] ?? '', 'EditorTargetChoice' => $simple['EditorTargetChoice'] ?? '',
+            'EditorActionRows'  => $simple === null ? [] : $this->EditorActionRows($rule),
+            'EditorTriggerRows' => $simple === null || ($rule['triggers'][0]['type'] ?? '') !== 'device' ? [] : $this->EditorTriggerRows($rule),
+            'selected'          => $selected, 'simple' => $simple !== null || !$selected] + array_intersect_key($simple ?? $this->ScheduleDefaults(), $this->ScheduleDefaults());
     }
 
     private function SetEditorSelection(array $draft, string $id, string $newType = ''): void
@@ -215,8 +216,11 @@ trait AutomationEditorManagement
         $this->UpdateEditorField('EditorActions', 'columns', json_encode($this->EditorActionColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorActions', 'values', json_encode($fields['EditorActionRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->UpdateEditorField('EditorActions', 'enabled', $fields['simple']);
+        $this->UpdateEditorField('EditorTriggers', 'columns', json_encode($this->EditorTriggerColumns($snapshot), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorTriggers', 'values', json_encode($fields['EditorTriggerRows'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        $this->UpdateEditorField('EditorTriggers', 'enabled', $fields['simple']);
         foreach ($fields as $field => $value) {
-            if (!in_array($field, ['selected', 'simple', 'EditorActionRows'], true)) {
+            if (!in_array($field, ['selected', 'simple', 'EditorActionRows', 'EditorTriggerRows'], true)) {
                 $this->UpdateEditorField($field, 'value', $value);
             }
         }
@@ -252,7 +256,10 @@ trait AutomationEditorManagement
     private function EditorRuleType(array $rule): string
     {
         $type = $rule['triggers'][0]['type'] ?? '';
-        return count($rule['triggers'] ?? []) === 1 && in_array($type, ['device', 'time'], true) ? $type : 'advanced';
+        if (($rule['triggers'] ?? []) !== [] && count(array_filter($rule['triggers'], static fn (array $t): bool => ($t['type'] ?? '') === 'device')) === count($rule['triggers'])) {
+            return 'device';
+        }
+        return count($rule['triggers'] ?? []) === 1 && $type === 'time' ? 'time' : 'advanced';
     }
 
     private function EditorTypeLabel(string $type): string

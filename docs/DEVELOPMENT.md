@@ -1,5 +1,50 @@
 # Entwicklung
 
+## Mehrfachauslöser im Geräteeditor
+
+Native List verwaltet 1 bis 8 Kombinationen aus Katalogauswahl und Mindestdauer.
+Die vorhandene ODER-Semantik der Erweiterung und Schema 1 bleiben unverändert.
+SaveScheduledAutomation erhält den optionalen letzten Parameter TriggerSteps;
+ältere Aufrufe bleiben für Einzelregeln gültig, dürfen mehrere Auslöser jedoch
+nicht auf einen reduzieren. Geräte-/Zeitmischungen bleiben Metadatenbearbeitung.
+Die Liste erhält dieselbe Bereichszuordnung wie Aktionen und Bedingungen.
+
+Die Integration führt reale Formularskripte mit nativen Listen-Iteratoren aus,
+prüft Erstellung, Wiederladen, Daueränderung, Löschen, 8er-Grenze, ungültige
+Typen/Werte und Legacy-Schutz. Zwei synthetische Geräte starten jeweils dieselbe
+Aktion über die unveränderte Node-Erweiterung. Zwischen den Alternativen wird
+neu aktiviert, um den bestehenden einsekündigen Cooldown getrennt zu prüfen.
+
+## Praxisprüfung der Auslöserliste
+
+Aktuellen Modulstand mit neuer Trigger-Trait, Formular und Übersetzungen auf die
+Testinstallation übertragen, PHP-Syntax und Library-Reload ohne Fehler. In der
+nativen Konsole wurde eine deaktivierte lokale Regel aus Bewegungsmelder und
+Taster per Listendialog erstellt und nach Regelauswahl mit beiden Einträgen
+wieder geladen. Mindestdauer über Zahnrad geändert, übernommen, Eintrag über
+Papierkorb gelöscht und erneut übernommen. Die Spalten reservieren Platz für
+Bedienelemente; Hinzufügen/Zahnrad/Papierkorb sind ohne seitliches Scrollen sichtbar.
+Z2M validierte anschließend den Entwurf mit zwei Auslösern erfolgreich. Debug
+bestätigt Auslöseranzahl, ODER-Verknüpfung und beim Löschen den Vorbestand.
+
+Keine Live-Aktivierung oder Speicherung: Original-YAML durch Editor-Neuladen
+wiederhergestellt und bytegenau verglichen. Z2M bleibt bei Revision 16 gestoppt,
+keine Geräte geschaltet. Temporäre Testregeln entfernt, Debug-Dateisitzung beendet.
+Die echten alternativen Schaltläufe wurden ausschließlich synthetisch geprüft.
+
+## Praxisprüfung der Vorbelegung
+
+Auf der Testinstallation wurden die identischen aktuellen Moduldateien per Hash
+bestätigt und die Library ohne Fehler neu geladen. Die echte Konsolenauswahl lud
+die deaktivierte Zeitregel vollständig: Name, 07:30, Europe/Berlin, Nachtfenster,
+Wochentage, Temperaturvergleich und Aktion. Eine temporäre deaktivierte lokale
+Geräteregel lud Quelle/Ereignis, Mindestdauer 4 Sekunden, dieselben Bedingungen
+und zwei Aktionen mit Wartezeiten 5 und 7 Sekunden. Native Debug-Datei bestätigt
+FelderVorbelegt=true für beide Auswahlen. Die Testregel wurde durch Neuladen des
+gespeicherten Originals entfernt; exakter YAML-Abgleich bestanden. Z2M blieb
+gestoppt bei Revision 16, keine Schaltbefehle oder Speicherung der Testregel.
+
+
 ## Korrektur: Vorbelegung nach Verlust des Transportcaches
 
 Die Testinstallation zeigte erhaltene Editorregeln, aber extensionConfirmed=false

@@ -1,5 +1,11 @@
 # Debug und MQTT-Diagnose
 
+`InspectEditorTriggers` meldet Hinzufügen/Bearbeiten/Löschen der ODER-Auslöserliste.
+Beim Löschen beschreibt `AuslöserVorLöschen` nur den nativen Vorbestand. Ungültige
+Listen erhalten einen festen deutschen Hinweis. SaveScheduledAutomation nennt
+Auslöseranzahl und ODER-Verknüpfung. Die öffentlichen Abläufe verwenden zentrale
+START-/ENDE-Ausgaben; Gerätenamen, Auswahlwerte und Listeninhalte bleiben geschützt.
+
 Regelauswahl meldet `FelderVorbelegt` und `EmpfängerBestätigt` getrennt. Ein
 gültiger lokaler Entwurf kann nach Verlust der flüchtigen Z2M-Bestätigung
 weiter zur Bearbeitungsansicht geladen werden. Änderungen bleiben bis zur
