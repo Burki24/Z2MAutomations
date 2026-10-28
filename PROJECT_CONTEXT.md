@@ -44,9 +44,10 @@ sie persistent und führt sie unabhängig von Symcon aus.
   Debug-Ausgaben. Schema und Z2M-Artefakt bleiben unverändert. Die Konsolenprüfung
   bestätigt Erstellen, Bearbeiten, Wiederladen und Löschen sowie Prüfung und
   Speicherung. Umsortieren wurde durch den Anwender manuell ausgeführt und durch
-  den Agenten einschließlich Persistenz geprüft. Ein Debug-Befund bleibt offen:
-  Die unmittelbare native Löschmeldung protokolliert noch den Vorbestand; die
-  eigentliche Übernahme und Speicherung der verbleibenden Schritte sind korrekt.
+  den Agenten einschließlich Persistenz geprüft. Die unmittelbare Löschdiagnose
+  kennzeichnet den nativen Vorbestand nun ausdrücklich und listet gelöschte
+  Schritte nicht als verbleibende Folge auf. Regressionstest und erneute native
+  Löschprüfung (2 auf 1 sowie 1 auf 0 Formularzeilen) bestätigen die Korrektur.
   Ursprüngliche Regeln wurden wiederhergestellt, die Engine blieb gestoppt.
   Reale Geräteausführung einer mit dieser neuen Liste erstellten Folge ist offen.
 - Uhrzeit-Auslöser, Zeitfenster mit Wochentagen sowie eine zusätzliche Geräte-
@@ -84,8 +85,8 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 1. Zeitregeln bei Bedarf nach weiterem Praxisauftrag auch live auslösen und
    weitere Geräte-/Bedingungskombinationen in der Konsole prüfen.
-2. Unmittelbare Löschdiagnose der Aktionsliste nach Korrekturauftrag an den nativen
-   Ereigniszeitpunkt anpassen und erneut prüfen; Gruppen bei Bedarf ergänzen.
+2. Reale Ausführung einer über die neue Aktionsliste erstellten Folge nach
+   Praxisauftrag prüfen; Gruppen bei Bedarf ergänzen.
 2. Weitere Z2M-Versionen, Geräte-/Gruppen- und Zeitregeln nach Praxisauftrag prüfen;
    der einzelne erfolgreiche Geräteablauf ist keine vollständige Kompatibilitätsabnahme.
 

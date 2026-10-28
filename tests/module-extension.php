@@ -288,6 +288,17 @@ try {
     $steps = [['Choice' => '0x0000000000000002:' . $action, 'Delay' => 0],
         ['Choice' => '0x0000000000000003:' . $changedAction, 'Delay' => 1]];
     $check($module->InspectEditorActions(json_encode($steps), 'add') && !$module->InspectEditorActions('[]', 'delete'), 'List callbacks explain valid and incomplete edits without changing the draft');
+    foreach ([$steps, [$steps[0]]] as $beforeDelete) {
+        $debugBeforeDelete = count($module->debugMessages);
+        $check($module->InspectEditorActions(json_encode($beforeDelete), 'delete'), 'Native delete callbacks receive the list before removing one row, including the last row');
+        $deleteEntries = array_map(static fn (array $entry): array => json_decode($entry[1], true, 512, JSON_THROW_ON_ERROR), array_slice($module->debugMessages, $debugBeforeDelete));
+        $deleteDetails = array_column($deleteEntries, 'Bezug');
+        $check(
+            count(array_filter($deleteDetails, static fn (array $details): bool => ($details['AktionenVorLöschen'] ?? null) === count($beforeDelete))) === 1
+            && count(array_filter($deleteDetails, static fn (array $details): bool => isset($details['Schritt']) || isset($details['Aktionen']))) === 0,
+            'Deletion diagnostics label the supplied pre-delete count and never present removed rows as remaining prepared steps'
+        );
+    }
     $fields = array_column(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions'], null, 'name');
     $runEditorScript = static function (string $script, array $fields, array $overrides) use ($id): void
     {

@@ -1,7 +1,11 @@
 # Debug und MQTT-Diagnose
 
 `InspectEditorActions` erklärt Hinzufügen, Bearbeiten, Löschen und Umordnen der
-Aktionsliste. Gültige Listen melden Anzahl, Schrittnummer und Wartezeit in Sekunden;
+Aktionsliste. Beim nativen Löschen enthält der Callback noch den Vorbestand:
+Die Meldung kennzeichnet deshalb ausschließlich `AktionenVorLöschen` und gibt
+keine alten Schritte als verbleibende Folge aus. Erst beim Übernehmen wird die
+verbleibende Liste geprüft und mit ihren Schritten protokolliert.
+Andere gültige Listen melden Anzahl, Schrittnummer und Wartezeit in Sekunden;
 unvollständige Listen erhalten einen festen deutschen Korrekturhinweis. Es werden
 keine Gerätekennungen, Namen, Auswahlwerte oder Listeninhalte ausgegeben. Die
 Formularliste wird erst durch `SaveScheduledAutomation` in den lokalen Entwurf

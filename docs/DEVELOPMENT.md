@@ -40,15 +40,25 @@ Wartezeiten und Zielzuordnung blieben erhalten. Danach wurde der erste Schritt
 über den Zeilen-Löschbutton entfernt. Übernahme, Prüfung, Speicherung und erneutes
 Laden bestätigten genau die verbleibenden zwei Schritte (0 und 12 Sekunden).
 
-Ein bestätigter Diagnosebefund bleibt offen: Der native onDelete-Kontext liefert
+Die erste Praxisprüfung zeigte einen Diagnosefehler: Der native onDelete-Kontext liefert
 bei der unmittelbaren Löschmeldung noch den Vorbestand. InspectEditorActions
 protokollierte deshalb drei Aktionen und deren Wartezeiten, obwohl die Oberfläche
 anschließend zwei Zeilen zeigte. Die spätere Übernahme und Speicherung verwenden
-die richtige verbleibende Liste und protokollieren zwei Schritte. Die sofortige
-Löschdiagnose muss den Vorbestand ausdrücklich kennzeichnen oder den gelöschten
-Eintrag berücksichtigen; der bisherige ArrayIterator-Test bildet diesen nativen
-Ereigniszeitpunkt nicht ab. Unter einem reinen Prüfauftrag wurden keine
-Produktionsquellen geändert. In schmalen Ansichten sind die rechten Bearbeitungs-
+die richtige verbleibende Liste und protokollieren zwei Schritte. Der bisherige
+ArrayIterator-Test bildete diesen nativen Ereigniszeitpunkt nicht ab.
+
+Nach gesondertem Korrekturauftrag kennzeichnet die sofortige Löschmeldung den
+Vorbestand ausdrücklich als AktionenVorLöschen. Sie listet die übergebenen alten
+Schritte nicht mehr als vorbereitete Folge auf und verweist auf die Prüfung der
+verbleibenden Liste beim Übernehmen. Der Regressionstest scheiterte vor der
+Korrektur und prüft jetzt Vorbestände mit zwei bzw. einer Aktion, fehlende falsche
+Schritt-/Anzahlausgaben sowie die bestehenden Start-/Ende- und Datenschutzverträge.
+Die korrigierte Datei wurde in die Testinstallation übertragen und syntaktisch
+bestätigt. Erneutes natives Löschen von zwei auf eine und von einer auf null
+Formularzeilen lieferte AktionenVorLöschen 2 bzw. 1, ohne erneute Schrittauflistung
+und ohne Fehler. Entwurfsbytes, gespeicherte Revision und Regeln blieben unverändert;
+die Engine blieb gestoppt, die Debug-Dateisitzung wurde beendet.
+In schmalen Ansichten sind die rechten Bearbeitungs-
 und Löschbuttons durch horizontales Scrollen erreichbar.
 
 Die Testregel wurde über den bestätigten Lösch-/Prüf-/Speicherablauf entfernt.

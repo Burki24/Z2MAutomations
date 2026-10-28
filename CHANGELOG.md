@@ -1,5 +1,11 @@
 # UnverÃ¶ffentlicht
 
+## Fixes
+
+- Debug beim Löschen eines Aktionsschritts kennzeichnet die vom nativen Formular
+  übergebene Liste als Vorbestand. Gelöschte Schritte erscheinen nicht mehr als
+  vermeintlich verbleibende Folge; diese wird beim Übernehmen geprüft.
+
 ## Neu
 
 - Klick-Editor um Aktionsfolgen mit bis zu 16 Schritten erweitert. Schritte lassen

@@ -18,6 +18,11 @@ trait AutomationEditorActions
                 $this->DebugEvent('FEHLER', 'Aktionsliste noch nicht gültig; vor der Übernahme korrigieren.', ['Grund' => $reason]);
                 return false;
             }
+            if ($Change === 'delete') {
+                // Native onDelete supplies the list before the selected row is removed.
+                $this->DebugEvent('AKTION', 'Löschen eines Aktionsschritts gemeldet; übergebene Anzahl ist der Vorbestand. Die verbleibende Liste wird beim Übernehmen geprüft.', ['AktionenVorLöschen' => count($actions)]);
+                return true;
+            }
             $this->DebugEvent('AKTION', 'Aktionsliste im Formular bearbeitet; noch nicht in den Regelentwurf übernommen.', ['Änderung' => $Change, 'Aktionen' => count($actions)]);
             $this->DebugEditorActionSteps($actions);
             return true;
