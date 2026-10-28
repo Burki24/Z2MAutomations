@@ -1,3 +1,31 @@
+## Import-Gerätedaten direkt laden
+
+`LoadImportDevices(EventID, Confirmed)` startet nach ausdrücklicher Bestätigung
+nur den vorhandenen lesenden Editor-Workflow. Dessen optionale `importEvent`-
+Kennzeichnung speichert die auszuwertende Auswahl. Nach `editor_loaded` werden
+Suchbericht und Vorschau erneuert. Der Hook läuft nach Aktualisierung des
+Editorentwurfs und Entfernen des Workflows, aber noch unter der Transport-Sperre;
+Suche und Vorschau führen keine eigene Sperre oder MQTT-Anfrage aus.
+Live-Formularfelder erhalten den gerade abgeschlossenen Transportzustand direkt,
+damit alte Bufferwerte keine dauerhafte Ladeanzeige hinterlassen.
+
+Ein kontextgebundener Fehlerhinweis bleibt beim Formularabruf erhalten; Start,
+neue Suche oder Auswahl löschen ihn. Laden deaktiviert bisherige Vorschautokens.
+Ein anderer laufender Auftrag wird nicht ersetzt. Ohne Bestätigung bleiben
+Netzwerk und Entwurf unverändert; die native Bestätigung benennt ausdrücklich
+auch den Ersatz ungespeicherter lokaler Änderungen. Es erfolgt keine Installation,
+Aktivierung oder Änderung eines Symcon-Quellereignisses.
+
+Auf ausdrücklichen Anwenderwunsch zeigt die Importübersicht die Symcon-Instanz-ID
+neben dem Gerätenamen. Das ist eine begrenzte Anzeigeausnahme zum zentralen
+Identitätsstandard, keine neue technische Zuordnung. Quelle bleibt die
+Variablen-ID. Namen/IDs der Geräte werden nicht zusätzlich in Debug geschrieben.
+
+`tests/event-import.inc.php` prüft den leeren Katalog, die tatsächlichen Buttons,
+verzögerte MQTT-Antwort, sofortige Live-Freigabe nach Bestätigung, Timeout mit
+persistenter Fehlermeldung, Retry sowie anschließende Übernahme und Speicherung.
+Die Praxisprüfung des neuen Formularstands steht noch aus.
+
 ## Gatewaygebundene Instanz- und Ereignissuche
 
 `Z2MInstanceDiscovery` ermittelt bekannte Z2M-Modultypen lokal. GUID-Konstanten

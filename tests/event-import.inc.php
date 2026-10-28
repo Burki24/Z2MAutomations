@@ -14,8 +14,54 @@ $sourceRecord = ['name' => 'Synthetic private import event', 'event' => [
     'TriggerSubsequentExecution' => true, 'EventLimit' => 0, 'EventConditions' => [], 'EventScript' => '', 'EventActive' => true,
     'EventActionID'              => '{EF078D00-FBD5-8857-F5DC-F5B54B107DD3}', 'EventActionParameters' => ['TARGET' => $targetVariable]]];
 $module->importEvents = [900001 => $sourceRecord];
-$module->LoadAutomationEditor();
+$module->ClearSyntheticImportCatalog();
 $importFields = static fn (): array => formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
+$fields = $importFields();
+$module->ScanEventImports();
+$fields = $importFields();
+$check($fields['ImportEvents']['values'][0]['Device'] === IPS_GetName($syntheticDevices[1])
+    && $fields['ImportEvents']['values'][0]['Instance'] === $syntheticDevices[1], 'Search overview identifies the source device by actual name and instance ID');
+$check(str_contains($fields['ImportEventID']['options'][1]['caption'], IPS_GetName($syntheticDevices[1]))
+    && str_contains($fields['ImportEventID']['options'][1]['caption'], (string) $syntheticDevices[1]), 'Event selection distinguishes identical names by source device and instance ID');
+$check(!$module->PreviewEventImport(900001) && !$importFields()['ImportButton']['enabled']
+    && str_contains($importFields()['ImportMessage']['caption'], 'Click "Load device data for import"'), 'Missing device data explains the exact next button instead of an unexplained catalog requirement');
+$beforeDataLoad = count($parent->sent);
+$beforeDataDraft = $importFields()['YamlInput']['value'];
+$check($module->LoadImportDevices(900001) === '' && count($parent->sent) === $beforeDataLoad
+    && $importFields()['YamlInput']['value'] === $beforeDataDraft, 'Declined device loading leaves the local draft and MQTT untouched');
+$normalPeer = $parent->onPublish;
+$deferredData = [];
+$parent->onPublish = static function (array $packet) use ($exchange, &$deferredData): void
+{
+    $deferredData = $exchange(['topic' => $packet['Topic'], 'payload' => $packet['Payload']]);
+};
+$ImportEventID = 900001;
+$fields = $importFields();
+eval($fields['ImportLoadButton']['onClick']);
+$waiting = $importFields();
+$check(!$waiting['ImportButton']['enabled'] && !$waiting['ImportLoadButton']['enabled'] && !$waiting['ImportEventID']['enabled'] && $waiting['ImportEventID']['value'] === 900001
+    && str_contains($waiting['ImportMessage']['caption'], 'Loading device data'), 'Delayed MQTT responses keep the selection visible without prematurely enabling import');
+$parent->onPublish = $normalPeer;
+$deliver($deferredData);
+$check(!str_contains($module->formUpdates['ImportMessage']['caption'], 'Loading device data')
+    && $module->formUpdates['ImportButton']['enabled'] && $module->formUpdates['ImportLoadButton']['enabled'], 'Successful loading updates the open form without requiring it to be reopened');
+$fields = $importFields();
+$check($fields['ImportButton']['enabled'] && $fields['ImportEventID']['value'] === 900001 && $fields['ImportLoadButton']['enabled']
+    && str_contains($fields['ImportEvents']['values'][0]['Result'], 'Supported.'), 'A confirmed editor response automatically refreshes the report and selected preview');
+// A timeout must remain understandable after reopening the form and permit retry.
+$parent->onPublish = static function (array $packet): void
+{};
+$module->LoadImportDevices(900001, true);
+$pendingData = json_decode($module->ReplaceTransportBuffer(''), true, 32, JSON_THROW_ON_ERROR);
+$pendingData['workflow']['deadline'] = 1;
+$module->ReplaceTransportBuffer(json_encode($pendingData, JSON_THROW_ON_ERROR));
+$module->ExpireRequest();
+$failedLoad = $importFields();
+$check(!$failedLoad['ImportButton']['enabled'] && $failedLoad['ImportLoadButton']['enabled']
+    && str_contains($failedLoad['ImportMessage']['caption'], 'Device data could not be loaded:'), 'Loading errors survive form reopening and never grant import approval');
+$parent->onPublish = $normalPeer;
+$module->LoadImportDevices(900001, true);
+$check($importFields()['ImportButton']['enabled'], 'Retrying device load confirms metadata and re-enables the selected supported event');
 $fields = $importFields();
 $beforeImport = count($parent->sent);
 eval($fields['EventImportSection']['items'][1]['onClick']);

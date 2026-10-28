@@ -2,6 +2,11 @@
 
 ## Fixes
 
+- Die Ereignisübersicht und Auswahl zeigen das auslösende Gerät mit Namen und
+  Symcon-Instanz-ID. Fehlende Gerätedaten werden mit verständlicher Handlungsanweisung
+  erklärt. Ein direkter Ladebutton aktualisiert nach Bestätigung Übersicht und
+  ausgewählte Vorschau; Fehler bleiben sichtbar und erteilen keine Importfreigabe.
+
 - Die Ereignissuche prüft fremde Variablen und Elternobjekte vor Instanzzugriffen;
   Kategorien und fremde Module erzeugen keine ungültigen Instanz-/Property-Abfragen.
 - Geräte, Gruppen und Ereignisse werden nach dem eigenen MQTT-Gateway und dem

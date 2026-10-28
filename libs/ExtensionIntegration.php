@@ -59,10 +59,10 @@ trait ExtensionIntegration
             'operation'     => ['kind' => 'none', 'status' => 'idle', 'transaction' => ''], 'lastError' => ''];
     }
 
-    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false, bool $automatic = false): string
+    private function StartExtensionWorkflow(string $kind, string $yaml = '', string $code = '', bool $notify = false, bool $automatic = false, ?int $importEvent = null): string
     {
         $this->DebugEvent('AKTION', 'Erweiterungsauftrag prüfen.', ['Auftrag' => $kind, 'YAMLBytes' => strlen($yaml), 'Artefaktbytes' => strlen($code)]);
-        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify, $automatic): array
+        $frame = $this->WithTransportLock(function () use ($kind, $yaml, $code, $notify, $automatic, $importEvent): array
         {
             $state = $this->RefreshState();
             if ($kind === 'deactivate' && $state['workflow'] !== null && $state['workflow']['kind'] !== 'deactivate') {
@@ -72,6 +72,10 @@ trait ExtensionIntegration
             $checksum = strlen($yaml) <= ExtensionContract::MAX_YAML_BYTES ? hash('sha256', $yaml) : '';
             if ($automatic && ($state['workflow'] !== null || !$state['mqttConnected'] || !$state['bridgeOnline'])) {
                 $this->DebugEvent('AKTION', 'Automatische Erweiterungsabfrage zugunsten eines laufenden Auftrags oder geänderter Verbindung ausgelassen.');
+                return [];
+            }
+            if ($importEvent !== null && $state['workflow'] !== null) {
+                $this->DebugEvent('AKTION', 'Import-Gerätedaten wegen laufendem Auftrag nicht erneut angefordert.');
                 return [];
             }
             if ($state['workflow'] !== null) {
@@ -127,6 +131,9 @@ trait ExtensionIntegration
             $state['lastError'] = '';
             $state['workflow'] = ['id' => $id, 'kind' => $kind, 'checksum' => $checksum, 'yaml' => $yaml,
                 'notify'               => $notify, 'previousSession'      => $state['extension']['session'] ?? null, 'target' => null, 'verifyRuntime' => false];
+            if ($kind === 'editor' && $importEvent !== null) {
+                $state['workflow']['importEvent'] = $importEvent;
+            }
             if (in_array($kind, ['activate', 'deactivate'], true)) {
                 $state['runtimeConfirmed'] = false;
             }
@@ -215,9 +222,13 @@ trait ExtensionIntegration
         if (($state['workflow']['kind'] ?? '') === 'install' && ($state['workflow']['notify'] ?? false)) {
             $this->NotifyExtensionInstallation($error);
         }
+        $importEvent = $state['workflow']['importEvent'] ?? null;
         $state['operation']['status'] = $status;
         $state['lastError'] = $error;
         $state['workflow'] = null;
+        if ($importEvent !== null) {
+            $this->FinishImportDeviceLoad($importEvent, $status, $error, $state);
+        }
     }
 
     private function NotifyExtensionInstallation(string $error): void

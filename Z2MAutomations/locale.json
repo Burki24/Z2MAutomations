@@ -288,7 +288,15 @@
             "Base topics found on this MQTT gateway": "An diesem MQTT-Gateway gefundene Basistopics",
             "Choose a detected base topic": "Gefundenes Basistopic auswählen",
             "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events.": "Ein Automationsmodul pro MQTT-Gateway. Gefundenes Topic auswählen oder manuell eingeben, Einstellungen übernehmen und vor dem Ereignisimport den Gerätekatalog neu laden.",
-            "Load the Z2M catalog for the selected gateway and topic before importing.": "Vor dem Import den Z2M-Katalog für das ausgewählte Gateway und Topic laden."
+            "Load device data for import": "Gerätedaten für den Import laden",
+            "Load devices and stored rules from Z2M for this connection? This replaces the local automation draft, including unsaved changes. Original Symcon events and Z2M automations are not changed.": "Geräte und gespeicherte Regeln für diese Verbindung aus Z2M laden? Dabei wird der lokale Automationsentwurf einschließlich ungespeicherter Änderungen ersetzt. Die ursprünglichen Symcon-Ereignisse und die Automationen in Z2M werden nicht verändert.",
+            "Trigger device": "Auslösendes Gerät",
+            "Instance ID": "Instanz-ID",
+            "Device no longer available": "Gerät nicht mehr verfügbar",
+            "Device data not loaded yet.": "Gerätedaten noch nicht geladen.",
+            "Device data are missing for this connection. Click \"Load device data for import\". The selected event will then be checked again.": "Für diese Verbindung fehlen die Gerätedaten aus Z2M. Klicke auf „Gerätedaten für den Import laden“. Danach wird das ausgewählte Ereignis erneut geprüft.",
+            "Loading device data from Z2M. The selected event will be checked after the response.": "Gerätedaten werden aus Z2M geladen. Nach der Antwort wird das ausgewählte Ereignis erneut geprüft.",
+            "Device data could not be loaded:": "Gerätedaten konnten nicht geladen werden:"
         }
     }
 }

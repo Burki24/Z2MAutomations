@@ -1,5 +1,14 @@
 # Debug und MQTT-Diagnose
 
+## Import-Gerätedaten laden
+
+`LoadImportDevices` verwendet den kanonischen START-/ENDE-Ablauf. Deutsche
+Meldungen erklären fehlende Bestätigung, Anfrage am eigenen Gateway/Topic,
+Abschluss mit erneuter Importprüfung oder einen festen Fehlergrund. Die
+Gerätenamen und Instanz-IDs aus der Übersicht bleiben außerhalb dieser zusätzlichen
+Ausgaben. Das Absenden einer Anfrage wird nicht als Importfreigabe ausgegeben.
+
+
 ## Suchbereich der Ereignissuche
 
 Die Suche nennt eigenes Gateway, konfiguriertes Basistopic, Anzahl geprüfter

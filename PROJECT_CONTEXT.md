@@ -8,6 +8,16 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Importformular verbessert: Ereignisse nennen das auslösende Gerät und auf
+  ausdrücklichen Anwenderwunsch seine Symcon-Instanz-ID (auch in der Auswahl).
+  Fehlende Z2M-Daten verweisen auf einen direkten, bestätigten Ladebutton.
+  `LoadImportDevices` nutzt den bestehenden Editor-Workflow; dessen Abschluss
+  aktualisiert Suche und ausgewählte Vorschau automatisch. Fehler werden
+  kontextgebunden angezeigt, ohne Importfreigabe; lokaler Entwurf wird erst
+  durch den bestätigten Ladevorgang wie beim regulären Editor-Laden ersetzt.
+  Verzögerte Antworten, Timeout, Retry und vollständige Übernahme offline geprüft.
+  Neuer Stand noch nicht in der Testinstallation geprüft.
+
 - Ereignisimport korrigiert: fremde Variablen/Eltern werden vor Instanz- und
   Konfigurationszugriffen klassifiziert. Kein konkreter Instanz-ID-Bezug im Code.
   Native Z2M-Instanzen werden über Modultyp, eigene MQTT-ConnectionID und

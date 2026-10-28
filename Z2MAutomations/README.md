@@ -26,6 +26,25 @@ weiter angeboten. Es sind keine konkreten Instanz-IDs im Modul hinterlegt.
 
 ## Vorhandene Symcon-Ereignisse importieren
 
+Die Übersicht zeigt Ereignisname, **auslösendes Gerät** und dessen
+**Symcon-Instanz-ID**. Auch in der Ereignisauswahl stehen diese Angaben, damit
+sich gleichnamige Ereignisse unterscheiden lassen.
+
+Fehlt die Gerätezuordnung aus Z2M für die gewählte Verbindung, steht in der
+Übersicht **Gerätedaten noch nicht geladen**. Die Meldung darunter verweist direkt
+auf **Gerätedaten für den Import laden**. Dieser Button lädt Geräte, Gruppen und
+gespeicherte Regeln über die Erweiterung. Nach der Antwort wird die Übersicht
+aktualisiert und das gewählte Ereignis erneut geprüft. Dafür ist kein erneutes
+Öffnen des Formulars notwendig. Ein unterstütztes Ereignis lässt sich danach
+übernehmen; andernfalls erscheint der konkrete Ablehnungsgrund.
+
+Beim Laden wird der lokale Entwurf durch die in Z2M gespeicherten Regeln ersetzt.
+Der Bestätigungsdialog weist darauf hin; ohne Bestätigung wird nichts geladen.
+Bereits lokal erstellte Änderungen deshalb vorher sichern bzw. speichern.
+Während der Antwort aus Z2M bleiben Laden und Übernahme gesperrt. Ladefehler
+werden verständlich angezeigt und bleiben beim erneuten Öffnen sichtbar.
+
+
 1. Modul und mitgelieferte Z2M-Erweiterung auf denselben aktuellen Stand bringen.
 2. **Geräte und gespeicherte Automationen laden**. Das ersetzt den lokalen Entwurf;
    vorherige Änderungen deshalb zuerst übernehmen bzw. speichern.

@@ -13,6 +13,7 @@ trait SymconEventImport
         return $this->TraceModuleCall(__FUNCTION__, __LINE__, function (): bool
         {
             $this->SetBuffer('EventImportPreview', '');
+            $this->SetBuffer('EventImportNotice', '');
             $rows = $options = [];
             $snapshot = $this->EditorSnapshot();
             if (!$this->ImportCatalogMatchesContext($snapshot)) {
@@ -25,8 +26,9 @@ trait SymconEventImport
                     continue;
                 }
                 $result = $this->EvaluateImportEvent($id, $record, $snapshot);
-                $rows[] = ['Name' => $record['name'], 'Result' => $this->Translate($result['reason'])];
-                $options[] = ['caption' => $record['name'], 'value' => $id];
+                $device = $this->ImportSourceDevice($record['event']['TriggerVariableID']);
+                $rows[] = ['Name' => $record['name'], 'Device' => $device['name'], 'Instance' => $device['id'], 'Result' => $this->Translate($result['reason'])];
+                $options[] = ['caption' => $record['name'] . ' — ' . $device['name'] . ' (' . $device['id'] . ')', 'value' => $id];
                 if (count($rows) >= 256) {
                     break;
                 }
@@ -34,11 +36,36 @@ trait SymconEventImport
             $report = ['context' => $this->EventImportContext(), 'rows' => $rows, 'options' => $options];
             $this->SetBuffer('EventImportReport', json_encode($report, JSON_THROW_ON_ERROR));
             $this->RefreshEventImportFields();
-            $message = $snapshot === [] ? 'Load the Z2M catalog for the selected gateway and topic before importing.'
+            $message = $snapshot === [] ? $this->ImportDeviceDataHelp()
                 : (count($ids) > 4096 || count($rows) >= 256 ? 'Search limit reached. Only the listed events were checked.' : 'Select an event to preview its import.');
             $this->UpdateFormField('ImportMessage', 'caption', $this->Translate($message));
             $this->DebugEvent('AKTION', 'Symcon-Ereignisse lesend geprüft; keine Ereignisse oder Geräte verändert.', ['Gateway' => $this->GetParentID(), 'Basistopic' => $this->ReadPropertyString('BaseTopic'), 'EreignisseGeprüft' => min(count($ids), 4096), 'Zugeordnet' => count($rows)]);
             return $this->HasParent();
+        });
+    }
+
+    public function LoadImportDevices(int $EventID, bool $Confirmed = false): string
+    {
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($EventID, $Confirmed): string
+        {
+            if (!$Confirmed) {
+                $this->DebugEvent('AKTION', 'Laden der Import-Gerätedaten ohne Bestätigung nicht gestartet; Entwurf bleibt erhalten.');
+                return '';
+            }
+            $this->SetBuffer('EventImportPreview', '');
+            $this->SetBuffer('EventImportNotice', '');
+            $this->UpdateFormField('ImportToken', 'value', '');
+            $this->UpdateFormField('ImportButton', 'enabled', false);
+            $this->UpdateFormField('ImportEventID', 'enabled', false);
+            $this->UpdateFormField('ImportLoadButton', 'enabled', false);
+            $this->UpdateFormField('ImportMessage', 'caption', $this->Translate('Loading device data from Z2M. The selected event will be checked after the response.'));
+            $this->DebugEvent('AKTION', 'Gerätedaten und gespeicherte Regeln für den Import angefordert; Bestätigung steht aus.', ['Gateway' => $this->GetParentID(), 'Basistopic' => $this->ReadPropertyString('BaseTopic')]);
+            $request = $this->StartExtensionWorkflow('editor', '', '', false, false, $EventID);
+            if ($request === '') {
+                $state = $this->WithTransportLock(fn (): array => $this->RefreshState());
+                $this->FinishImportDeviceLoad($EventID, 'error', $state['workflow'] !== null ? 'busy' : ($state['lastError'] ?: 'busy'), $state);
+            }
+            return $request;
         });
     }
 
@@ -47,6 +74,7 @@ trait SymconEventImport
         return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($EventID): bool
         {
             $this->SetBuffer('EventImportPreview', '');
+            $this->SetBuffer('EventImportNotice', '');
             $result = $this->EvaluateImportEvent($EventID, $this->ReadImportEvent($EventID), $this->EditorSnapshot());
             $preview = ['context' => $this->EventImportContext(), 'event' => $EventID, 'result' => $result, 'token' => $result['rule'] === null ? '' : bin2hex(random_bytes(16))];
             $this->SetBuffer('EventImportPreview', json_encode($preview, JSON_THROW_ON_ERROR));
@@ -105,11 +133,26 @@ trait SymconEventImport
         }
     }
 
+    private function FinishImportDeviceLoad(int $eventID, string $status, string $error, array $state): void
+    {
+        if ($error === '' && $status === 'editor_loaded') {
+            $this->ScanEventImports();
+            if ($eventID > 0) {
+                $this->PreviewEventImport($eventID);
+            }
+            $this->DebugEvent('AKTION', 'Import-Gerätedaten geladen; Ereignisübersicht und ausgewählte Vorschau neu geprüft.');
+        } else {
+            $this->SetBuffer('EventImportNotice', json_encode(['context' => $this->EventImportContext(), 'error' => $error], JSON_THROW_ON_ERROR));
+            $this->DebugEvent('FEHLER', 'Import-Gerätedaten nicht geladen; keine neue Importfreigabe erteilt.', ['Grund' => $error]);
+        }
+        $this->RefreshEventImportFields($state);
+    }
+
     private function EvaluateImportEvent(int $id, ?array $record, array $snapshot): array
     {
         $reject = static fn (string $reason): array => ['reason' => $reason, 'rule' => null];
         if (!$this->ImportCatalogMatchesContext($snapshot)) {
-            return $reject('Load the Z2M catalog for the selected gateway and topic before importing.');
+            return $reject('Device data not loaded yet.');
         }
         if ($record === null) {
             return $reject('Event no longer exists.');
@@ -231,6 +274,26 @@ trait SymconEventImport
         return [$this->GetParentID(), $this->ReadPropertyString('BaseTopic')];
     }
 
+    private function ImportDeviceDataHelp(): string
+    {
+        return 'Device data are missing for this connection. Click "Load device data for import". The selected event will then be checked again.';
+    }
+
+    private function ImportSourceDevice(int $variable): array
+    {
+        try {
+            if (IPS_ObjectExists($variable)) {
+                $instance = IPS_GetObject($variable)['ParentID'];
+                if ($this->ReadZ2MInstanceScope($instance) !== null) {
+                    return ['id' => $instance, 'name' => IPS_GetName($instance)];
+                }
+            }
+        } catch (Throwable) {
+            // Concurrent removal must not prevent displaying the remaining search results.
+        }
+        return ['id' => '', 'name' => $this->Translate('Device no longer available')];
+    }
+
     private function ImportCatalogMatchesContext(array $snapshot): bool
     {
         $scope = json_decode($snapshot['scope'] ?? '', true);
@@ -252,7 +315,7 @@ trait SymconEventImport
         }
     }
 
-    private function EventImportFields(): array
+    private function EventImportFields(?array $transport = null): array
     {
         $report = $this->EventImportBuffer('EventImportReport');
         $preview = $this->EventImportBuffer('EventImportPreview');
@@ -263,16 +326,34 @@ trait SymconEventImport
             $preview = [];
         }
         $result = $preview['result'] ?? [];
+        $message = $result['reason'] ?? (!$this->ImportCatalogMatchesContext($this->EditorSnapshot()) ? 'Device data not loaded yet.' : 'Check existing Symcon events, then select one for preview.');
+        if ($message === 'Device data not loaded yet.') {
+            $message = $this->ImportDeviceDataHelp();
+        }
+        if ($transport === null) {
+            $text = $this->GetBuffer('TransportState');
+            $transport = $text === '' ? [] : json_decode($text, true, 32, JSON_THROW_ON_ERROR);
+        }
+        $caption = $this->Translate($message) . (isset($result['summary']) ? "\n" . $result['summary'] : '');
+        $notice = $this->EventImportBuffer('EventImportNotice');
+        if (($notice['context'] ?? null) === $this->EventImportContext()) {
+            $caption = $this->Translate('Device data could not be loaded:') . ' ' . $this->Translate(ExtensionContract::ErrorText($notice['error']));
+        }
+        if (isset($transport['workflow']['importEvent'])) {
+            $caption = $this->Translate('Loading device data from Z2M. The selected event will be checked after the response.');
+        }
         return ['ImportEvents' => ['values' => $report['rows'] ?? []],
-            'ImportEventID'    => ['options' => array_merge([['caption' => $this->Translate('Choose event'), 'value' => 0]], $report['options'] ?? []), 'value' => $preview['event'] ?? 0],
+            'ImportEventID'    => ['options' => array_merge([['caption' => $this->Translate('Choose event'), 'value' => 0]], $report['options'] ?? []), 'value' => $preview['event'] ?? $transport['workflow']['importEvent'] ?? 0,
+                'enabled'                    => !isset($transport['workflow']['importEvent'])],
             'ImportToken'      => ['value' => $preview['token'] ?? ''],
-            'ImportMessage'    => ['caption' => isset($result['reason']) ? $this->Translate($result['reason']) . (isset($result['summary']) ? "\n" . $result['summary'] : '') : $this->Translate('Check existing Symcon events, then select one for preview.')],
-            'ImportButton'     => ['enabled' => ($preview['token'] ?? '') !== '']];
+            'ImportMessage'    => ['caption' => $caption],
+            'ImportLoadButton' => ['enabled' => ($transport['workflow'] ?? null) === null],
+            'ImportButton'     => ['enabled' => ($preview['token'] ?? '') !== '' && ($transport['workflow'] ?? null) === null]];
     }
 
-    private function RefreshEventImportFields(): void
+    private function RefreshEventImportFields(?array $transport = null): void
     {
-        foreach ($this->EventImportFields() as $name => $changes) {
+        foreach ($this->EventImportFields($transport) as $name => $changes) {
             foreach ($changes as $parameter => $value) {
                 $this->UpdateFormField($name, $parameter, is_array($value) ? json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $value);
             }

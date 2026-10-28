@@ -123,6 +123,13 @@
                     "onClick": "Z2MA_ScanEventImports($id);"
                 },
                 {
+                    "type": "Button",
+                    "name": "ImportLoadButton",
+                    "caption": "Load device data for import",
+                    "confirm": "Load devices and stored rules from Z2M for this connection? This replaces the local automation draft, including unsaved changes. Original Symcon events and Z2M automations are not changed.",
+                    "onClick": "Z2MA_LoadImportDevices($id, $ImportEventID, true);"
+                },
+                {
                     "type": "List",
                     "name": "ImportEvents",
                     "caption": "Checked events",
@@ -133,6 +140,16 @@
                             "name": "Name",
                             "caption": "Event",
                             "width": "180px"
+                        },
+                        {
+                            "name": "Device",
+                            "caption": "Trigger device",
+                            "width": "200px"
+                        },
+                        {
+                            "name": "Instance",
+                            "caption": "Instance ID",
+                            "width": "90px"
                         },
                         {
                             "name": "Result",

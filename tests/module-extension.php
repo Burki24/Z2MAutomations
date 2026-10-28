@@ -48,6 +48,11 @@ class ObservedAutomationModule extends Z2MAutomations
     public array $debugMessages = [];
     public bool $debugFails = false;
     public array $formUpdates = [];
+    public function ClearSyntheticImportCatalog(): void
+    {
+        $this->WriteAttributeString('EditorSnapshot', '');
+    }
+
     public function CopySyntheticImportCatalog(self $source): void
     {
         $snapshot = json_decode($source->ReadAttributeString('EditorSnapshot'), true, 32, JSON_THROW_ON_ERROR);
