@@ -1,3 +1,37 @@
+## Native Ereignisziele und Wertänderungen
+
+Die bisherige Annahme, dass EventActionParameters immer TARGET enthält, war falsch.
+Symcon liefert TARGET aus dem Elternobjekt des Ereignisses. `ReadImportEvent`
+liest deshalb zusätzlich die Eltern-ID; `ResolveImportAction` normalisiert sie
+für die bestehende Variablen-/Gateway-/Topic-Prüfung. Explizite exportierte Ziele
+bleiben nur zulässig, wenn sie keinem vorhandenen Elternziel widersprechen.
+Der native Wrapper „Statusvariable schalten“ wird ausschließlich anhand seines
+bekannten Vertrags IDENT + ACTION aufgelöst: IDENT bezeichnet eine native
+Statusvariable der Instanz, ACTION ist ein begrenztes JSON-Objekt mit actionID
+und parameters. Kein eval, keine Skriptinterpretation, keine beliebigen
+verschachtelten Abläufe. Eigene TARGET-Overrides in der inneren Aktion werden
+abgewiesen. Freigabe und Werteprüfung erfolgen nach der Normalisierung unverändert.
+
+`TriggerSubsequentExecution=false` wird für bestimmte Werte als `on_change: true`
+übertragen. Die Schema-1-Erweiterung ist optional. „Nur bei Wertänderung“ erscheint
+als boolesches Changed-Feld im nativen Auslöserdialog und als kompakte Listenspalte.
+Callbacks, Vorbelegung und Übernahme erhalten die Einstellung; alte drei Felder
+bleiben gültig, unbekannte zusätzliche Felder werden weiterhin abgewiesen.
+Die Runtime merkt frühere Werte getrennt von den frischen Bedingungswerten.
+Nur konfigurierte Änderungs-Auslöser werden aus state.get(entity) initialisiert;
+Bedingungen behalten ihre Anforderung an frisch beobachtete Werte. Nicht im
+Z2M-Cache vorhandene Aktionseigenschaften starten mit der ersten frischen Meldung.
+Stopp verwirft die Beobachtung. Wiederholte Berichte, Cacheveröffentlichungen und
+fremde Eigenschaften lösen keine zusätzliche Änderung aus.
+
+Die lesende Praxisdiagnose belegte falsche Importannahmen; sie ist kein Nachweis
+einer produktiven Übernahme. Keine privaten Ereignisse, IDs oder Geräteantworten
+wurden in Repository oder Testfixtures übernommen. Native Speicherformen,
+IDENT-Auflösung, Änderungseinstellung, echte Formularcallbacks und Speicherung
+werden synthetisch geprüft. Produktionsänderungen waren nicht beauftragt und
+wurden nicht durchgeführt. Für die lokale Korrektur müssen Modul und Erweiterung
+anschließend auf der Testinstallation aktualisiert und praktisch geprüft werden.
+
 ## Import-Gerätedaten direkt laden
 
 `LoadImportDevices(EventID, Confirmed)` startet nach ausdrücklicher Bestätigung

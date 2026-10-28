@@ -29,6 +29,7 @@ export class AutomationRuntime {
         this.active = null;
         this.rules = [];
         this.values = new Map();
+        this.changes = new Map();
         this.references = new Map();
         this.holds = new Map();
         this.waits = new Map();
@@ -70,12 +71,21 @@ export class AutomationRuntime {
         if (!this.available || !this.zigbee?.resolveEntity || typeof this.dispatch !== 'function') throw new RuntimeError('runtime_unavailable');
         const rules = candidate.document.automations.filter(rule => rule.enabled);
         const references = new Map();
+        const changes = new Map();
         for (const rule of rules) {
             for (const clause of [...rule.triggers, ...rule.conditions]) {
                 if (!clause.device) continue;
                 if (!this.device(clause.device)) throw new RuntimeError('unknown_entity');
                 if (!references.has(clause.device)) references.set(clause.device, new Set());
                 references.get(clause.device).add(clause.property);
+                if (clause.on_change) {
+                    if (typeof this.readState !== 'function') throw new RuntimeError('runtime_unavailable');
+                    const cached = this.readState(this.device(clause.device));
+                    if (!changes.has(clause.device)) changes.set(clause.device, Object.create(null));
+                    if (object(cached) && Object.hasOwn(cached, clause.property) && scalar(cached[clause.property])) {
+                        changes.get(clause.device)[clause.property] = cached[clause.property];
+                    }
+                }
             }
             for (const action of rule.actions) {
                 this.target(action.target);
@@ -87,6 +97,7 @@ export class AutomationRuntime {
         this.active = candidate;
         this.rules = rules;
         this.references = references;
+        this.changes = changes;
         this.lastError = '';
         if (rules.some(rule => rule.triggers.some(trigger => trigger.type === 'time'))) {
             this.timer = this.clock.setInterval(() => this.tick(), 1000);
@@ -105,7 +116,9 @@ export class AutomationRuntime {
         this.waits.clear();
         for (const hold of this.holds.values()) if (hold.timer !== null) this.clock.clearTimeout(hold.timer);
         this.holds.clear();
-        this.values.clear(); this.references.clear(); this.cooldowns.clear(); this.days.clear(); this.formats.clear();
+        this.values.clear();
+        this.changes.clear();
+        this.references.clear(); this.cooldowns.clear(); this.days.clear(); this.formats.clear();
         this.running.clear();
         this.log('AKTION', 'Ausführung gestoppt; ausstehende Verzögerungen verworfen.');
     }
@@ -140,22 +153,26 @@ export class AutomationRuntime {
         const properties = this.references.get(id);
         if (!properties || !this.device(id)) return;
         const values = this.values.get(id) ?? Object.create(null);
+        const previous = {...(this.changes.get(id) ?? {})};
         for (const property of properties) {
             if (Object.hasOwn(event.payload, property)) values[property] = scalar(event.payload[property]) ? event.payload[property] : undefined;
         }
         this.values.set(id, values);
+        this.changes.set(id, {...previous, ...values});
         this.log('EMPFANG', 'Neue Eigenschaften einer konfigurierten Quelle ausgewertet.', {Eigenschaften: [...properties].filter(property => Object.hasOwn(event.payload, property)).length});
         for (const rule of this.rules) {
             rule.triggers.forEach((trigger, index) => {
                 if (trigger.type !== 'device' || trigger.device !== id || !Object.hasOwn(event.payload, trigger.property)) return;
                 const key = rule.id + ':' + index;
                 const matches = compare(values[trigger.property], trigger);
-                if (!trigger.for_seconds) { if (matches) this.launch(rule); return; }
+                const changed = !Object.hasOwn(previous, trigger.property) || previous[trigger.property] !== values[trigger.property];
+                if (matches && trigger.on_change && !changed) this.log('AKTION', 'Wert unverändert; Auslöser verlangt eine Wertänderung.', {Regel: rule.id, Auslöser: index + 1});
+                if (!trigger.for_seconds) { if (matches && (!trigger.on_change || changed)) this.launch(rule); return; }
                 const prior = this.holds.get(key);
                 if (!matches) {
                     if (prior?.timer !== null && prior?.timer !== undefined) this.clock.clearTimeout(prior.timer);
                     this.holds.delete(key);
-                } else if (!prior) {
+                } else if (!prior && (!trigger.on_change || changed)) {
                     const generation = this.generation;
                     const hold = {timer: this.clock.setTimeout(() => {
                         hold.timer = null;

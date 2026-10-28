@@ -2,6 +2,13 @@
 
 ## Fixes
 
+- Der Import löst native Ereignisziele aus dem Elternobjekt auf und unterstützt
+  Instanzaktionen mit einer über IDENT ausgewählten Statusvariable und eingebetteter
+  nativer Aktion. Ein gespeichertes TARGET ist dafür nicht erforderlich.
+- Auslöser bei einem bestimmten Wert werden mit und ohne wiederholte Ausführung
+  übernommen. „Nur bei Wertänderung“ bleibt im Klick-Editor bearbeitbar und wird
+  in Z2M ausgeführt; unveränderte Meldungen werden nachvollziehbar verworfen.
+
 - Die Ereignisübersicht und Auswahl zeigen das auslösende Gerät mit Namen und
   Symcon-Instanz-ID. Fehlende Gerätedaten werden mit verständlicher Handlungsanweisung
   erklärt. Ein direkter Ladebutton aktualisiert nach Bestätigung Übersicht und

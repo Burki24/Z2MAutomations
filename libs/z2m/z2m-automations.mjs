@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {TextDecoder} from 'node:util';
 import Ajv from 'ajv';
 import {parseEvents, constructFromEvents, JSON_SCHEMA, mapTag, EVENT_ID} from 'js-yaml';
-const AUTOMATIONS_SCHEMA = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"urn:burki24:z2m-automations:schema:1","title":"Z2MAutomations configuration v1","type":"object","additionalProperties":false,"properties":{"schema_version":{"const":1},"revision":{"type":"integer","minimum":1,"maximum":9007199254740991},"automations":{"type":"array","maxItems":100,"items":{"$ref":"#/definitions/automation"}}},"required":["schema_version","revision","automations"],"definitions":{"device":{"type":"string","pattern":"^0x[0-9a-f]{16}$"},"jsonValue":{"anyOf":[{"type":["string","number","boolean","null"],"maxLength":256},{"type":"array","maxItems":32,"items":{"$ref":"#/definitions/jsonValue"}},{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}}]},"deviceTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256},"for_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time"},"at":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64}},"required":["type","at","timezone"]},"deviceCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device_value"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time_window"},"after":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"before":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64},"weekdays":{"type":"array","minItems":1,"maxItems":7,"uniqueItems":true,"items":{"type":"integer","minimum":1,"maximum":7}}},"required":["type","after","before","timezone"]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"id":{"$ref":"#/definitions/device"}},"required":["type","id"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"group"},"id":{"type":"integer","minimum":1,"maximum":65535}},"required":["type","id"]}]},"action":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"set"},"target":{"$ref":"#/definitions/target"},"values":{"type":"object","minProperties":1,"maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","values"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"toggle"},"target":{"$ref":"#/definitions/target"},"property":{"type":"string","pattern":"^state(?:_[A-Za-z0-9_]+)?$","maxLength":64},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","property"]}]},"automation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z][a-z0-9_-]{0,63}$"},"name":{"type":"string","minLength":1,"maxLength":120},"enabled":{"type":"boolean"},"triggers":{"type":"array","minItems":1,"maxItems":8,"items":{"oneOf":[{"$ref":"#/definitions/deviceTrigger"},{"$ref":"#/definitions/timeTrigger"}]}},"conditions":{"type":"array","maxItems":16,"items":{"oneOf":[{"$ref":"#/definitions/deviceCondition"},{"$ref":"#/definitions/timeCondition"}]}},"actions":{"type":"array","minItems":1,"maxItems":16,"items":{"$ref":"#/definitions/action"}}},"required":["id","name","enabled","triggers","conditions","actions"]}}};
+const AUTOMATIONS_SCHEMA = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"urn:burki24:z2m-automations:schema:1","title":"Z2MAutomations configuration v1","type":"object","additionalProperties":false,"properties":{"schema_version":{"const":1},"revision":{"type":"integer","minimum":1,"maximum":9007199254740991},"automations":{"type":"array","maxItems":100,"items":{"$ref":"#/definitions/automation"}}},"required":["schema_version","revision","automations"],"definitions":{"device":{"type":"string","pattern":"^0x[0-9a-f]{16}$"},"jsonValue":{"anyOf":[{"type":["string","number","boolean","null"],"maxLength":256},{"type":"array","maxItems":32,"items":{"$ref":"#/definitions/jsonValue"}},{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}}]},"deviceTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256},"for_seconds":{"type":"integer","minimum":0,"maximum":86400},"on_change":{"type":"boolean"}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time"},"at":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64}},"required":["type","at","timezone"]},"deviceCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device_value"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time_window"},"after":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"before":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64},"weekdays":{"type":"array","minItems":1,"maxItems":7,"uniqueItems":true,"items":{"type":"integer","minimum":1,"maximum":7}}},"required":["type","after","before","timezone"]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"id":{"$ref":"#/definitions/device"}},"required":["type","id"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"group"},"id":{"type":"integer","minimum":1,"maximum":65535}},"required":["type","id"]}]},"action":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"set"},"target":{"$ref":"#/definitions/target"},"values":{"type":"object","minProperties":1,"maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","values"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"toggle"},"target":{"$ref":"#/definitions/target"},"property":{"type":"string","pattern":"^state(?:_[A-Za-z0-9_]+)?$","maxLength":64},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","property"]}]},"automation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z][a-z0-9_-]{0,63}$"},"name":{"type":"string","minLength":1,"maxLength":120},"enabled":{"type":"boolean"},"triggers":{"type":"array","minItems":1,"maxItems":8,"items":{"oneOf":[{"$ref":"#/definitions/deviceTrigger"},{"$ref":"#/definitions/timeTrigger"}]}},"conditions":{"type":"array","maxItems":16,"items":{"oneOf":[{"$ref":"#/definitions/deviceCondition"},{"$ref":"#/definitions/timeCondition"}]}},"actions":{"type":"array","minItems":1,"maxItems":16,"items":{"$ref":"#/definitions/action"}}},"required":["id","name","enabled","triggers","conditions","actions"]}}};
 // Library-local execution policy. No foreign automation implementation is bundled.
 export const RUNTIME_LIMITS = Object.freeze({concurrentRules: 16, commandsPerSecond: 20, ruleCooldownMs: 1000, publishTimeoutMs: 5000});
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -38,6 +38,7 @@ export class AutomationRuntime {
         this.active = null;
         this.rules = [];
         this.values = new Map();
+        this.changes = new Map();
         this.references = new Map();
         this.holds = new Map();
         this.waits = new Map();
@@ -79,12 +80,21 @@ export class AutomationRuntime {
         if (!this.available || !this.zigbee?.resolveEntity || typeof this.dispatch !== 'function') throw new RuntimeError('runtime_unavailable');
         const rules = candidate.document.automations.filter(rule => rule.enabled);
         const references = new Map();
+        const changes = new Map();
         for (const rule of rules) {
             for (const clause of [...rule.triggers, ...rule.conditions]) {
                 if (!clause.device) continue;
                 if (!this.device(clause.device)) throw new RuntimeError('unknown_entity');
                 if (!references.has(clause.device)) references.set(clause.device, new Set());
                 references.get(clause.device).add(clause.property);
+                if (clause.on_change) {
+                    if (typeof this.readState !== 'function') throw new RuntimeError('runtime_unavailable');
+                    const cached = this.readState(this.device(clause.device));
+                    if (!changes.has(clause.device)) changes.set(clause.device, Object.create(null));
+                    if (object(cached) && Object.hasOwn(cached, clause.property) && scalar(cached[clause.property])) {
+                        changes.get(clause.device)[clause.property] = cached[clause.property];
+                    }
+                }
             }
             for (const action of rule.actions) {
                 this.target(action.target);
@@ -96,6 +106,7 @@ export class AutomationRuntime {
         this.active = candidate;
         this.rules = rules;
         this.references = references;
+        this.changes = changes;
         this.lastError = '';
         if (rules.some(rule => rule.triggers.some(trigger => trigger.type === 'time'))) {
             this.timer = this.clock.setInterval(() => this.tick(), 1000);
@@ -114,7 +125,9 @@ export class AutomationRuntime {
         this.waits.clear();
         for (const hold of this.holds.values()) if (hold.timer !== null) this.clock.clearTimeout(hold.timer);
         this.holds.clear();
-        this.values.clear(); this.references.clear(); this.cooldowns.clear(); this.days.clear(); this.formats.clear();
+        this.values.clear();
+        this.changes.clear();
+        this.references.clear(); this.cooldowns.clear(); this.days.clear(); this.formats.clear();
         this.running.clear();
         this.log('AKTION', 'Ausführung gestoppt; ausstehende Verzögerungen verworfen.');
     }
@@ -149,22 +162,26 @@ export class AutomationRuntime {
         const properties = this.references.get(id);
         if (!properties || !this.device(id)) return;
         const values = this.values.get(id) ?? Object.create(null);
+        const previous = {...(this.changes.get(id) ?? {})};
         for (const property of properties) {
             if (Object.hasOwn(event.payload, property)) values[property] = scalar(event.payload[property]) ? event.payload[property] : undefined;
         }
         this.values.set(id, values);
+        this.changes.set(id, {...previous, ...values});
         this.log('EMPFANG', 'Neue Eigenschaften einer konfigurierten Quelle ausgewertet.', {Eigenschaften: [...properties].filter(property => Object.hasOwn(event.payload, property)).length});
         for (const rule of this.rules) {
             rule.triggers.forEach((trigger, index) => {
                 if (trigger.type !== 'device' || trigger.device !== id || !Object.hasOwn(event.payload, trigger.property)) return;
                 const key = rule.id + ':' + index;
                 const matches = compare(values[trigger.property], trigger);
-                if (!trigger.for_seconds) { if (matches) this.launch(rule); return; }
+                const changed = !Object.hasOwn(previous, trigger.property) || previous[trigger.property] !== values[trigger.property];
+                if (matches && trigger.on_change && !changed) this.log('AKTION', 'Wert unverändert; Auslöser verlangt eine Wertänderung.', {Regel: rule.id, Auslöser: index + 1});
+                if (!trigger.for_seconds) { if (matches && (!trigger.on_change || changed)) this.launch(rule); return; }
                 const prior = this.holds.get(key);
                 if (!matches) {
                     if (prior?.timer !== null && prior?.timer !== undefined) this.clock.clearTimeout(prior.timer);
                     this.holds.delete(key);
-                } else if (!prior) {
+                } else if (!prior && (!trigger.on_change || changed)) {
                     const generation = this.generation;
                     const hold = {timer: this.clock.setTimeout(() => {
                         hold.timer = null;

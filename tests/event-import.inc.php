@@ -125,7 +125,50 @@ $secondRule = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_O
 $secondRule = $secondRule[array_key_last($secondRule)];
 $check($secondRule['name'] === $importedRule['name'] && $secondRule['id'] !== $importedRule['id']
     && $secondRule['actions'][0]['values'] === ['state_l2' => 'ON'], 'Same-name events remain distinct and boolean values map to the exact channel command');
-foreach ([['TriggerSubsequentExecution' => false], ['TriggerType'   => 1], ['EventLimit' => 1], ['EventConditions' => [['Operation' => 0]]],
+// Native events supply their parent as TARGET, including status-variable wrappers.
+$implicit = $sourceRecord;
+$implicit['parent'] = IPS_GetObjectIDByIdent('cover_state', $syntheticDevices[4]);
+$implicit['event']['TriggerSubsequentExecution'] = false;
+$implicit['event']['EventActionID'] = '{FCE37F48-DA3F-45DD-AC77-71343792CC2D}';
+$implicit['event']['EventActionParameters'] = ['VALUE' => 'STOP'];
+$module->importEvents[900010] = $implicit;
+$check($module->PreviewEventImport(900010), 'Native variable-parent events with non-repeating specific-value triggers are importable');
+$fields = $importFields();
+$check($module->ImportSymconEvent(900010, $fields['ImportToken']['value'], $fields['YamlInput']['value'], true), 'Implicit target imports without a stored TARGET parameter');
+$fields = $importFields();
+$implicitRules = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'];
+$implicitRule = $implicitRules[array_key_last($implicitRules)];
+$check($implicitRule['triggers'][0]['on_change'] === true && $implicitRule['actions'][0]['values'] === ['cover_state' => 'STOP'], 'Native event retains changed-value behavior and exact enum action');
+$triggerRow = $fields['DeviceEditorTriggers']['values'][0];
+$check($triggerRow['Changed'] === true, 'Imported non-repeating trigger is prefilled in the click editor');
+$triggerDialog = formFields(json_decode($module->GetEditorItemForm('DeviceEditorTriggers', $triggerRow['Choice'], 0, 'eq', true), true, 512, JSON_THROW_ON_ERROR));
+$check($triggerDialog['Changed']['value'] === true, 'The trigger row dialog restores the changed-value switch');
+$runEditorScript($fields['DeviceUpdateRuleButton']['onClick'], $fields, [
+    'DeviceEditorActions'       => new ArrayIterator($fields['DeviceEditorActions']['values']),
+    'DeviceEditorTriggers'      => new ArrayIterator($fields['DeviceEditorTriggers']['values']),
+    'DeviceEditorConditionList' => new ArrayIterator([])]);
+$fields = $importFields();
+$roundTrip = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'];
+$check($roundTrip[array_key_last($roundTrip)]['triggers'][0]['on_change'] === true, 'Actual form callback preserves changed-value semantics while editing');
+$wrapped = $sourceRecord;
+$wrapped['parent'] = $syntheticDevices[2];
+$wrapped['event']['EventActionID'] = '{E616C2B2-A827-1712-4AE0-841C57B3DD74}';
+$wrapped['event']['EventActionParameters'] = ['IDENT' => 'state', 'ACTION' => json_encode([
+    'actionID' => '{46B65CA6-3098-4982-9A6C-B89DADBB0A96}', 'parameters' => ['VALUE' => false]], JSON_THROW_ON_ERROR)];
+$module->importEvents[900011] = $wrapped;
+$check($module->PreviewEventImport(900011), 'Native instance-level status-variable action is resolved through IDENT and its nested action');
+$fields = $importFields();
+$check($module->ImportSymconEvent(900011, $fields['ImportToken']['value'], $fields['YamlInput']['value'], true), 'Wrapped native action imports without TARGET in either parameter set');
+$fields = $importFields();
+$wrappedRules = json_decode($fields['YamlInput']['value'], true, 512, JSON_THROW_ON_ERROR)['automations'];
+$check($wrappedRules[array_key_last($wrappedRules)]['actions'][0]['values'] === ['state' => 'OFF'], 'Nested native boolean action becomes the exact Z2M OFF command');
+$check($module->ValidateAutomationDraft() !== '' && $module->StoreAutomationDraft() !== '', 'Both native layouts validate and persist through the real extension');
+foreach (['bad JSON', json_encode(['actionID' => '{46B65CA6-3098-4982-9A6C-B89DADBB0A96}', 'parameters' => ['TARGET' => $targetVariable, 'VALUE' => false]])] as $badNested) {
+    $module->importEvents[900012] = $wrapped;
+    $module->importEvents[900012]['event']['EventActionParameters']['ACTION'] = $badNested;
+    $check(!$module->PreviewEventImport(900012), 'Malformed nested actions and target overrides are rejected');
+}
+foreach ([['TriggerType' => 1], ['EventLimit'                       => 1], ['EventConditions' => [['Operation' => 0]]],
     ['EventScript' => 'synthetic-private-script'], ['EventActionID' => '{346AA8C1-30E0-1663-78EF-93EFADFAC650}'],
     ['EventActionParameters' => ['TARGET' => $targetVariable, 'EXTRA' => 'synthetic-private-parameter']]] as $unsupported) {
     $module->importEvents[900003] = ['name' => $sourceRecord['name'], 'event' => array_replace($sourceRecord['event'], $unsupported)];

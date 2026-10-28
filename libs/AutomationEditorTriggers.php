@@ -23,6 +23,7 @@ trait AutomationEditorTriggers
             $comparisons = array_count_values(array_column($triggers, 'operator'));
             $details = $Change === 'delete' ? ['AuslöserVorLöschen' => count($triggers)] : ['Auslöser' => count($triggers)];
             $details['Vergleiche'] = $comparisons;
+            $details['NurBeiWertänderung'] = count(array_filter($triggers, static fn (array $trigger): bool => $trigger['on_change'] ?? false));
             $this->DebugEvent('AKTION', $Change === 'delete'
                 ? 'Auslöser zum Löschen ausgewählt; Anzahl beschreibt den Vorbestand. Verbleibende Liste wird beim Übernehmen geprüft.'
                 : 'Auslöserliste im Formular bearbeitet; jedes Ereignis kann dieselbe Aktionsfolge starten (ODER).', $details);
@@ -52,8 +53,10 @@ trait AutomationEditorTriggers
         $snapshot = $this->EditorSnapshot();
         $triggers = [];
         foreach ($rows as $row) {
-            if (!is_array($row) || count($row) !== 3 || !is_string($row['Choice'] ?? null) || !is_int($row['Hold'] ?? null)
-                || $row['Hold'] < 0 || $row['Hold'] > 86400) {
+            if (!is_array($row) || !in_array(count($row), [3, 4], true)
+                || array_diff(array_keys($row), ['Choice', 'Compare', 'Hold', 'Changed']) !== []
+                || !is_string($row['Choice'] ?? null) || !is_int($row['Hold'] ?? null)
+                || $row['Hold'] < 0 || $row['Hold'] > 86400 || !is_bool($row['Changed'] ?? false)) {
                 return null;
             }
             $parts = explode(':', $row['Choice']);
@@ -67,6 +70,9 @@ trait AutomationEditorTriggers
             }
             $triggers[] = ['type' => 'device', 'device' => $device, 'property' => $choice['property'], 'operator' => $row['Compare'],
                 'value'           => $choice['value'], 'for_seconds' => $row['Hold']];
+            if ($row['Changed'] ?? false) {
+                $triggers[array_key_last($triggers)]['on_change'] = true;
+            }
         }
         return $triggers;
     }
@@ -98,7 +104,8 @@ trait AutomationEditorTriggers
             if ($choice === null || !$this->EditorComparisonAllowed($snapshot, $trigger['device'], $choice, $trigger['operator'] ?? null)) {
                 return null;
             }
-            $rows[] = ['Choice' => $found, 'Compare' => $trigger['operator'], 'Hold' => $trigger['for_seconds'] ?? 0];
+            $rows[] = ['Choice' => $found, 'Compare' => $trigger['operator'], 'Hold' => $trigger['for_seconds'] ?? 0]
+                + (($trigger['on_change'] ?? false) ? ['Changed' => true] : []);
         }
         return $rows;
     }
@@ -117,7 +124,9 @@ trait AutomationEditorTriggers
         return [['name' => 'Choice', 'caption' => $this->Translate('Device and event'), 'width' => 'auto', 'add' => '', 'edit' => ['type' => 'Select', 'options' => $options]],
             ['name' => 'Compare', 'caption' => $this->Translate('Comparison'), 'width' => '140px', 'add' => 'eq', 'edit' => ['type' => 'Select', 'options' => $this->EditorComparisonOptions('numeric')]],
             ['name'    => 'Hold', 'caption' => $this->Translate('Minimum duration (s)'), 'width' => '140px', 'add' => 0,
-                'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]]];
+                'edit' => ['type' => 'NumberSpinner', 'minimum' => 0, 'maximum' => 86400]],
+            ['name'    => 'Changed', 'caption' => $this->Translate('Value change'), 'width' => '110px', 'add' => false,
+                'edit' => ['type' => 'CheckBox']]];
     }
 
     private function FillTriggerSequenceForm(array &$form, array $selection, array $snapshot): void

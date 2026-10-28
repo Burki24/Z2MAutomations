@@ -127,7 +127,8 @@ trait SymconEventImport
     protected function ReadImportEvent(int $id): ?array
     {
         try {
-            return IPS_EventExists($id) ? ['name' => IPS_GetName($id), 'event' => IPS_GetEvent($id)] : null;
+            return IPS_EventExists($id) && IPS_ObjectExists($id)
+                ? ['name' => IPS_GetName($id), 'parent' => IPS_GetObject($id)['ParentID'], 'event' => IPS_GetEvent($id)] : null;
         } catch (Throwable) {
             return null;
         }
@@ -159,14 +160,18 @@ trait SymconEventImport
         }
         $event = $record['event'];
         if (($event['EventType'] ?? -1) !== 0 || ($event['TriggerType'] ?? -1) !== 4
-            || ($event['TriggerSubsequentExecution'] ?? false) !== true) {
-            return $reject('Only specific-value triggers with repeated execution are currently supported.');
+            || !is_bool($event['TriggerSubsequentExecution'] ?? null)) {
+            return $reject('Only specific-value triggers are currently supported.');
         }
         if (($event['EventLimit'] ?? -1) !== 0 || ($event['EventConditions'] ?? null) !== [] || ($event['EventScript'] ?? '') !== '') {
             return $reject('Execution limits, additional conditions and PHP scripts cannot yet be imported.');
         }
         $source = $this->ImportVariableBinding($snapshot, $event['TriggerVariableID'] ?? 0, 'Source');
-        $parameters = $event['EventActionParameters'] ?? [];
+        $action = $this->ResolveImportAction($record);
+        if ($action === null) {
+            return $reject('The event action target or nested status-variable action cannot be resolved.');
+        }
+        $parameters = $action['parameters'];
         $target = $this->ImportVariableBinding($snapshot, $parameters['TARGET'] ?? 0, 'Target');
         if ($source === null || $target === null) {
             return $reject('Source or target cannot be uniquely assigned to this Z2M catalog.');
@@ -175,7 +180,7 @@ trait SymconEventImport
         if ($trigger === null) {
             return $reject('The trigger value cannot be mapped without conversion loss.');
         }
-        $actionID = strtoupper($event['EventActionID'] ?? '');
+        $actionID = $action['id'];
         $toggle = $actionID === '{EF078D00-FBD5-8857-F5DC-F5B54B107DD3}';
         // Known native action contracts only; never execute or inspect user code.
         $setActions = ['{46B65CA6-3098-4982-9A6C-B89DADBB0A96}', '{A4C53C8D-795E-403A-9EEC-CC0D71E89A20}',
@@ -201,10 +206,68 @@ trait SymconEventImport
         return ['reason'  => 'Supported. Imported rules start disabled; the original event remains unchanged.',
             'fingerprint' => hash('sha256', json_encode([$record, $source, $target, $snapshot['scope'] ?? ''], JSON_THROW_ON_ERROR)),
             'rule'        => ['id' => 'import_' . substr(hash('sha256', $this->InstanceID . ':' . $id), 0, 32), 'name' => $record['name'], 'enabled' => false,
-                'triggers'         => [['type' => 'device', 'device' => $source['key'], 'property' => $source['property'], 'operator' => 'eq', 'value' => $trigger]],
+                'triggers'         => [array_merge(
+                    ['type' => 'device', 'device' => $source['key'], 'property' => $source['property'], 'operator' => 'eq', 'value' => $trigger],
+                    $event['TriggerSubsequentExecution'] ? [] : ['on_change' => true]
+                )],
                 'conditions'       => [], 'actions' => [$this->BuildEditorAction($target['key'], ['property' => $target['property'], 'value' => $value])]],
             'summary' => $snapshot['devices'][$source['key']]['name'] . ' / ' . $source['property'] . ' = ' . $this->EditorValueLabel($trigger)
-                . ' → ' . $snapshot['devices'][$target['key']]['name'] . ' / ' . $target['property'] . ': ' . $this->EditorValueLabel($value)];
+                . ' → ' . $snapshot['devices'][$target['key']]['name'] . ' / ' . $target['property'] . ': ' . $this->EditorValueLabel($value)
+                . ' · ' . $this->Translate($event['TriggerSubsequentExecution'] ? 'On every matching report' : 'Only when the value changes')];
+    }
+
+    private function ResolveImportAction(array $record): ?array
+    {
+        $event = $record['event'];
+        $parameters = $event['EventActionParameters'] ?? null;
+        $id = $event['EventActionID'] ?? null;
+        if (!is_array($parameters) || !is_string($id)) {
+            return null;
+        }
+        // Symcon supplies TARGET from the event's parent; it is normally absent
+        // from EventActionParameters. Explicit targets remain accepted for exports.
+        $target = $record['parent'] ?? $parameters['TARGET'] ?? 0;
+        if (!is_int($target) || $target <= 0 || (isset($parameters['TARGET']) && $parameters['TARGET'] !== $target)) {
+            return null;
+        }
+        unset($parameters['TARGET']);
+        $id = strtoupper($id);
+        if ($id === '{E616C2B2-A827-1712-4AE0-841C57B3DD74}') {
+            $keys = array_keys($parameters);
+            sort($keys);
+            if ($keys !== ['ACTION', 'IDENT'] || !is_string($parameters['IDENT'])
+                || preg_match('/\A[A-Za-z][A-Za-z0-9_]{0,63}\z/D', $parameters['IDENT']) !== 1
+                || !is_string($parameters['ACTION']) || strlen($parameters['ACTION']) > 4096
+                || $this->ReadZ2MInstanceScope($target) === null) {
+                return null;
+            }
+            try {
+                $nested = json_decode($parameters['ACTION'], true, 8, JSON_THROW_ON_ERROR);
+                $variable = null;
+                foreach (IPS_GetChildrenIDs($target) as $child) {
+                    if (!IPS_ObjectExists($child) || !IPS_VariableExists($child)) {
+                        continue;
+                    }
+                    if (IPS_GetObject($child)['ObjectIdent'] === $parameters['IDENT']) {
+                        if ($variable !== null) {
+                            return null;
+                        }
+                        $variable = $child;
+                    }
+                }
+                if ($variable === null || !is_array($nested) || count($nested) !== 2
+                    || !is_string($nested['actionID'] ?? null) || !is_array($nested['parameters'] ?? null)
+                    || array_key_exists('TARGET', $nested['parameters'])) {
+                    return null;
+                }
+                $target = $variable;
+                $id = strtoupper($nested['actionID']);
+                $parameters = $nested['parameters'];
+            } catch (Throwable) {
+                return null;
+            }
+        }
+        return ['id' => $id, 'parameters' => ['TARGET' => $target] + $parameters];
     }
 
     private function ImportVariableBinding(array $snapshot, int $id, string $side): ?array

@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+## Wertänderung als Import-Auslöser
+
+Die native Auslöserdiagnose zählt `NurBeiWertänderung`. Die Z2M-Runtime erklärt
+passende, aber unveränderte Meldungen mit „Wert unverändert; Auslöser verlangt
+eine Wertänderung“. Regelkennung und Auslösernummer bleiben nachvollziehbar;
+Gerätewerte und Namen werden nicht zusätzlich protokolliert.
+
+
 ## Import-Gerätedaten laden
 
 `LoadImportDevices` verwendet den kanonischen START-/ENDE-Ablauf. Deutsche

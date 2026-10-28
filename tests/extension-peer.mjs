@@ -29,6 +29,7 @@ const devices = new Map([
 devices.set('0x0000000000000004', {ID: '0x0000000000000004', ieeeAddr: '0x0000000000000004', name: 'synthetic/channel-switch', isDevice: () => true,
     exposes: () => [...[1, 2, 3].map(n => ({type: 'switch', endpoint: 'l' + n, features: [
         {name: 'state', property: 'state_l' + n, endpoint: 'l' + n, type: 'binary', access: 7, value_on: 'ON', value_off: 'OFF'}]})),
+    {property: 'cover_state', type: 'enum', access: 3, values: ['OPEN', 'CLOSE', 'STOP']},
     {property: 'level', label: 'Level', type: 'numeric', access: 3, value_min: 0, value_max: 100, value_step: 5},
     {property: 'write_only', label: 'Write only', type: 'numeric', access: 2, value_min: 10, value_max: 50, value_step: 10},
     {property: 'display_flag', label: 'Display flag', type: 'binary', access: 3, value_on: true, value_off: false}]});

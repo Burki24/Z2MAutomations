@@ -466,3 +466,52 @@ test('toggle reads the exact device channel and fails activation without the sta
         assert.equal((await h.activate()).error.code, 'runtime_unavailable');
     } finally { await h.close(); }
 });
+
+
+test('changed-value triggers suppress repeated reports and retain cached baselines across unrelated updates', async () => {
+    const h = await harness();
+    try {
+        const r = rule();
+        r.triggers[0].on_change = true;
+        h.targetStates.set(sourceID, {occupancy: true});
+        assert.equal((await h.store(yaml([r]))).status, 'ok');
+        assert.equal((await h.activate()).status, 'ok');
+        await h.event({temperature: 21});
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 0);
+        await h.event({occupancy: false});
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 1);
+        await h.clock.advance(1001);
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 1);
+        await h.event({occupancy: false}, {stateChangeReason: 'publishCached'});
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 1);
+        await h.event({occupancy: false});
+        await h.event({occupancy: true}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 2);
+        assert.ok(h.logs.some(text => text.includes('Wert unverändert')));
+    } finally { await h.close(); }
+});
+
+test('uncached event properties start from the first fresh report and restart their observation on activation', async () => {
+    const h = await harness();
+    try {
+        const r = rule();
+        r.triggers = [{type: 'device', device: sourceID, property: 'action', operator: 'eq', value: 'single', on_change: true}];
+        assert.equal((await h.store(yaml([r]))).status, 'ok');
+        assert.equal((await h.activate()).status, 'ok');
+        await h.event({action: 'single'}); await Promise.all([...h.extension.runtime.tasks]);
+        await h.clock.advance(1001);
+        await h.event({action: 'single'}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 1);
+        await h.event({action: 'double'});
+        await h.event({action: 'single'}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 2);
+        await h.deactivate();
+        assert.equal((await h.activate()).status, 'ok');
+        await h.event({action: 'single'}); await Promise.all([...h.extension.runtime.tasks]);
+        assert.equal(h.commands.length, 3);
+    } finally { await h.close(); }
+});

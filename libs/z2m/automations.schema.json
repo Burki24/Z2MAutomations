@@ -113,6 +113,9 @@
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 86400
+                },
+                "on_change": {
+                    "type": "boolean"
                 }
             },
             "required": [

@@ -54,13 +54,26 @@ werden verständlich angezeigt und bleiben beim erneuten Öffnen sichtbar.
    sich vorbefüllt im Bereich der geräteausgelösten Automationen und lässt sich
    dort ohne YAML bearbeiten. Anschließend gemeinsam prüfen und speichern.
 
-Der erste Import unterstützt ausgelöste Ereignisse **bei bestimmtem Wert** mit
-**mehrmaliger Auslösung bei wiederholt erfüllter Bedingung**, ohne zusätzliche
+Der Import unterstützt ausgelöste Ereignisse **bei bestimmtem Wert** mit oder
+ohne **mehrmalige Auslösung bei wiederholt erfüllter Bedingung**, ohne zusätzliche
 Bedingungen oder Ausführungsbegrenzung. Unterstützt sind native feste boolesche
 bzw. unmittelbar zuordenbare Text-/Auswahlwerte sowie **Wert umschalten** für
 Ein-/Aus-Zustände. Zahlenwerte mit möglicher Symcon-Skalierung, Prozent-/Farbaktionen,
 PHP-Code, Ablaufpläne und weitere Aktionsarten werden mit Begründung abgewiesen.
 Es wird keine teilweise vereinfachte Regel erzeugt.
+
+Aktionen direkt unter einer Variablen verwenden diese als Ziel. Auch die native
+Instanzaktion **Statusvariable schalten** wird unterstützt: Die Statusvariable
+wird über ihren Ident ausgewählt und ihre enthaltene feste Wert-/Umschaltaktion
+übernommen. Das Ereignis muss kein ausdrücklich gespeichertes TARGET enthalten.
+
+Ist die wiederholte Ausführung in Symcon ausgeschaltet, erhält der Auslöser im
+Klick-Editor die Einstellung **Nur bei Wertänderung**. Eine gleiche passende
+Meldung startet dann keinen zweiten Lauf. Die Einstellung lässt sich im
+Auslöserdialog ändern. Beim Aktivieren verwendet Z2M seinen vorhandenen
+Quellzustand als Ausgangspunkt. Für nicht gespeicherte Ereigniswerte (etwa
+Tastendrücke) zählt die erste frische Meldung als Änderung; danach wird der
+letzte beobachtete Wert verglichen. Ein-/Ausführung und Sperrzeit gelten weiter.
 
 Die Zuordnung verwendet die referenzierten Variablen-IDs, den Instanztyp, die
 Gateway-Verbindung, das konfigurierte Basistopic und die Z2M-Geräte-/Gruppenkennung. Namen sind nur Anzeige.

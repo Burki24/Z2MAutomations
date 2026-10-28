@@ -8,6 +8,17 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Reale Ereignisstrukturen auf ausdrücklich nur lesend freigegebener Produktion
+  geprüft. Zwei Implementierungsfehler lokal korrigiert: natives Aktionsziel aus
+  Event-Elternobjekt statt zwingendem TARGET; Statusvariable-schalten-Wrapper
+  mit IDENT und verschachtelter JSON-Aktion. Keine produktiven Änderungen.
+  Auslöser mit TriggerSubsequentExecution=false werden als `on_change: true`
+  importiert. Der Klick-Editor erhält „Nur bei Wertänderung“ mit Vorbelegung und
+  verlustfreier Übernahme. Schema/Runtime unterstützen den Vergleich gegen den
+  Z2M-Ausgangszustand bzw. den letzten frischen Bericht; Diagnose erklärt
+  unveränderte Meldungen. Quellen und Tests bleiben vollständig synthetisch.
+  Neuer Modul-/Erweiterungsstand noch nicht installiert oder live importiert.
+
 - Importformular verbessert: Ereignisse nennen das auslösende Gerät und auf
   ausdrücklichen Anwenderwunsch seine Symcon-Instanz-ID (auch in der Auswahl).
   Fehlende Z2M-Daten verweisen auf einen direkten, bestätigten Ladebutton.
@@ -30,7 +41,7 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 - Erster Import ausgelöster nativer Symcon-Ereignisse implementiert: lesende Suche,
   Vorschau, erneute Prüfung und deaktivierte lokale Übernahme, ohne Originaländerung.
-  Bestimmter Wert mit Wiederholung, native boolesche/Textwerte und Umschalten;
+  Bestimmter Wert mit oder ohne Wiederholung, native boolesche/Textwerte und Umschalten;
   Bedingungen, Begrenzung, Skripte und ungesicherte Zahlenskalierung werden abgewiesen.
   Gruppen werden mit der Editorantwort geladen und sind Aktionsziele mit nativer
   schaltbarer Variable. Neue Schema-1-Aktion `toggle` kehrt den Z2M-Cachezustand um;

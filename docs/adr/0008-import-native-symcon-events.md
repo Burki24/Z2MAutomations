@@ -43,3 +43,15 @@ eine Installation oder reale Geräteschaltung ist damit nicht belegt.
 
 Geprüft am 28.10.2026. Die Quellen definieren Schnittstellen; Implementierung und
 Tests dieses Projekts sind eigenständig.
+
+## Korrektur des nativen Ereignisvertrags
+
+TARGET ist bei Symcon-Ereignissen ein aus dem Elternobjekt bereitgestellter
+Spezialparameter und muss nicht in EventActionParameters stehen. Instanzaktionen
+können eine Statusvariable durch IDENT und eine enthaltene JSON-Aktion bestimmen.
+Der Import normalisiert diese beiden nativen Formen vor der bestehenden Prüfung.
+Die Eigenschaft on_change erhält die Semantik ausgeschalteter wiederholter
+Ausführung bei einem bestimmten Wert; ein engerer Importfilter war unbegründet.
+
+- [Symcon: IPS_SetEventAction, Spezialparameter](https://www.symcon.de/en/service/documentation/command-reference/management-events/ips-seteventaction/)
+- [Symcon: Wiederholte Ausführung](https://www.symcon.de/en/service/documentation/command-reference/management-events/ips-seteventtriggersubsequentexecution/)

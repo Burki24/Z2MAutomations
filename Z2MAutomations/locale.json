@@ -276,7 +276,6 @@
             "This event is already present in the draft. Edit the imported rule instead.": "Dieses Ereignis ist bereits im Entwurf vorhanden. Bitte die importierte Regel bearbeiten.",
             "Imported as a disabled draft. The Symcon event is unchanged. Review it and disable the original event before activation in Z2M.": "Als deaktivierter Entwurf importiert. Das Symcon-Ereignis ist unverändert. Regel prüfen und vor Aktivierung in Z2M das Originalereignis deaktivieren.",
             "Event no longer exists.": "Das Ereignis ist nicht mehr vorhanden.",
-            "Only specific-value triggers with repeated execution are currently supported.": "Derzeit werden nur Auslöser bei bestimmtem Wert mit wiederholter Ausführung unterstützt.",
             "Execution limits, additional conditions and PHP scripts cannot yet be imported.": "Ausführungsbegrenzungen, zusätzliche Bedingungen und PHP-Skripte können noch nicht importiert werden.",
             "Source or target cannot be uniquely assigned to this Z2M catalog.": "Quelle oder Ziel kann diesem Z2M-Katalog nicht eindeutig zugeordnet werden.",
             "The trigger value cannot be mapped without conversion loss.": "Der Auslösewert kann nicht verlustfrei zugeordnet werden.",
@@ -296,7 +295,12 @@
             "Device data not loaded yet.": "Gerätedaten noch nicht geladen.",
             "Device data are missing for this connection. Click \"Load device data for import\". The selected event will then be checked again.": "Für diese Verbindung fehlen die Gerätedaten aus Z2M. Klicke auf „Gerätedaten für den Import laden“. Danach wird das ausgewählte Ereignis erneut geprüft.",
             "Loading device data from Z2M. The selected event will be checked after the response.": "Gerätedaten werden aus Z2M geladen. Nach der Antwort wird das ausgewählte Ereignis erneut geprüft.",
-            "Device data could not be loaded:": "Gerätedaten konnten nicht geladen werden:"
+            "Device data could not be loaded:": "Gerätedaten konnten nicht geladen werden:",
+            "Only specific-value triggers are currently supported.": "Derzeit unterstützt der Import Auslöser bei einem bestimmten Wert.",
+            "The event action target or nested status-variable action cannot be resolved.": "Das Aktionsziel des Ereignisses oder die enthaltene Statusvariablen-Aktion kann nicht aufgelöst werden.",
+            "Only when the value changes": "Nur bei Wertänderung",
+            "Value change": "Wertänderung",
+            "On every matching report": "Bei jeder passenden Meldung"
         }
     }
 }

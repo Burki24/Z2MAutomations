@@ -136,3 +136,13 @@ alle Mitglieder erhalten denselben Zielwert. Ohne bekannten Zustand endet die
 Aktionsfolge mit `state_unavailable`. Die Laufzeit wartet weiterhin nicht auf
 eine physische Gerätebestätigung. Ein abweichender oder veralteter Symcon-Wert
 wird nicht zur Berechnung verwendet.
+
+## Nur bei Wertänderung
+
+Geräteauslöser können `on_change: true` enthalten. Ein passender Bericht startet
+nur dann einen Lauf, wenn sich der Wert gegenüber dem zuvor bekannten Wert
+unterscheidet. Der Z2M-Cache initialisiert diese Beobachtung bei Aktivierung;
+fehlt dort eine Eigenschaft (z. B. nicht gespeicherte Tastendrücke), zählt ihr
+erster frischer Bericht als Änderung. Cacheveröffentlichungen ändern diesen
+Vergleich nicht. Stopp löscht die Beobachtung. Bedingungen verwenden weiterhin
+ihr eigenes, aus frischen Berichten aufgebautes Wertebild.

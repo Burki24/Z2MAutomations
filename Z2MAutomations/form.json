@@ -356,9 +356,9 @@
                                         }
                                     ],
                                     "values": [],
-                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'add', 'device');",
-                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'edit', 'device');",
-                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'delete', 'device');",
+                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'add', 'device');",
+                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'edit', 'device');",
+                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), 'delete', 'device');",
                                     "form": [
                                         {
                                             "type": "Select",
@@ -440,6 +440,12 @@
                                             "value": 0,
                                             "minimum": 0,
                                             "maximum": 86400
+                                        },
+                                        {
+                                            "type": "CheckBox",
+                                            "name": "Changed",
+                                            "caption": "Only when the value changes",
+                                            "value": false
                                         }
                                     ],
                                     "width": "100%"
@@ -994,7 +1000,7 @@
                                 {
                                     "type": "Button",
                                     "caption": "Add automation to draft",
-                                    "onClick": "Z2MA_SaveScheduledAutomation($id, $DeviceEditorRule, $DeviceEditorEditToken, $DeviceEditorName, $DeviceEditorEnabled, $DeviceEditorSource, $DeviceEditorSourceChoice, $DeviceEditorTarget, $DeviceEditorTargetChoice, json_encode(['EditorTriggerType' => $DeviceEditorTriggerType, 'EditorAt' => $DeviceEditorAt, 'EditorTimezone' => $DeviceEditorTimezone, 'EditorHold' => $DeviceEditorHold, 'EditorDelay' => $DeviceEditorDelay, 'EditorWindow' => $DeviceEditorWindow, 'EditorAfter' => $DeviceEditorAfter, 'EditorBefore' => $DeviceEditorBefore, 'EditorWindowTimezone' => $DeviceEditorWindowTimezone, 'EditorMonday' => $DeviceEditorMonday, 'EditorTuesday' => $DeviceEditorTuesday, 'EditorWednesday' => $DeviceEditorWednesday, 'EditorThursday' => $DeviceEditorThursday, 'EditorFriday' => $DeviceEditorFriday, 'EditorSaturday' => $DeviceEditorSaturday, 'EditorSunday' => $DeviceEditorSunday, 'EditorConditionType' => $DeviceEditorConditionType, 'EditorCondition' => $DeviceEditorCondition, 'EditorConditionChoice' => $DeviceEditorConditionChoice, 'EditorNumericProperty' => $DeviceEditorNumericProperty, 'EditorCompare' => $DeviceEditorCompare, 'EditorNumber' => $DeviceEditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = array_intersect_key((array) $row, ['Choice' => true, 'Delay' => true]); } return $steps; })($DeviceEditorActions), JSON_THROW_ON_ERROR), 'device', json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR));",
+                                    "onClick": "Z2MA_SaveScheduledAutomation($id, $DeviceEditorRule, $DeviceEditorEditToken, $DeviceEditorName, $DeviceEditorEnabled, $DeviceEditorSource, $DeviceEditorSourceChoice, $DeviceEditorTarget, $DeviceEditorTargetChoice, json_encode(['EditorTriggerType' => $DeviceEditorTriggerType, 'EditorAt' => $DeviceEditorAt, 'EditorTimezone' => $DeviceEditorTimezone, 'EditorHold' => $DeviceEditorHold, 'EditorDelay' => $DeviceEditorDelay, 'EditorWindow' => $DeviceEditorWindow, 'EditorAfter' => $DeviceEditorAfter, 'EditorBefore' => $DeviceEditorBefore, 'EditorWindowTimezone' => $DeviceEditorWindowTimezone, 'EditorMonday' => $DeviceEditorMonday, 'EditorTuesday' => $DeviceEditorTuesday, 'EditorWednesday' => $DeviceEditorWednesday, 'EditorThursday' => $DeviceEditorThursday, 'EditorFriday' => $DeviceEditorFriday, 'EditorSaturday' => $DeviceEditorSaturday, 'EditorSunday' => $DeviceEditorSunday, 'EditorConditionType' => $DeviceEditorConditionType, 'EditorCondition' => $DeviceEditorCondition, 'EditorConditionChoice' => $DeviceEditorConditionChoice, 'EditorNumericProperty' => $DeviceEditorNumericProperty, 'EditorCompare' => $DeviceEditorCompare, 'EditorNumber' => $DeviceEditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = array_intersect_key((array) $row, ['Choice' => true, 'Delay' => true]); } return $steps; })($DeviceEditorActions), JSON_THROW_ON_ERROR), 'device', json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR));",
                                     "name": "DeviceCreateRuleButton"
                                 },
                                 {
@@ -1002,7 +1008,7 @@
                                     "name": "DeviceUpdateRuleButton",
                                     "caption": "Apply changes to draft",
                                     "visible": false,
-                                    "onClick": "Z2MA_SaveScheduledAutomation($id, $DeviceEditorRule, $DeviceEditorEditToken, $DeviceEditorName, $DeviceEditorEnabled, $DeviceEditorSource, $DeviceEditorSourceChoice, $DeviceEditorTarget, $DeviceEditorTargetChoice, json_encode(['EditorTriggerType' => $DeviceEditorTriggerType, 'EditorAt' => $DeviceEditorAt, 'EditorTimezone' => $DeviceEditorTimezone, 'EditorHold' => $DeviceEditorHold, 'EditorDelay' => $DeviceEditorDelay, 'EditorWindow' => $DeviceEditorWindow, 'EditorAfter' => $DeviceEditorAfter, 'EditorBefore' => $DeviceEditorBefore, 'EditorWindowTimezone' => $DeviceEditorWindowTimezone, 'EditorMonday' => $DeviceEditorMonday, 'EditorTuesday' => $DeviceEditorTuesday, 'EditorWednesday' => $DeviceEditorWednesday, 'EditorThursday' => $DeviceEditorThursday, 'EditorFriday' => $DeviceEditorFriday, 'EditorSaturday' => $DeviceEditorSaturday, 'EditorSunday' => $DeviceEditorSunday, 'EditorConditionType' => $DeviceEditorConditionType, 'EditorCondition' => $DeviceEditorCondition, 'EditorConditionChoice' => $DeviceEditorConditionChoice, 'EditorNumericProperty' => $DeviceEditorNumericProperty, 'EditorCompare' => $DeviceEditorCompare, 'EditorNumber' => $DeviceEditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = array_intersect_key((array) $row, ['Choice' => true, 'Delay' => true]); } return $steps; })($DeviceEditorActions), JSON_THROW_ON_ERROR), 'device', json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR));"
+                                    "onClick": "Z2MA_SaveScheduledAutomation($id, $DeviceEditorRule, $DeviceEditorEditToken, $DeviceEditorName, $DeviceEditorEnabled, $DeviceEditorSource, $DeviceEditorSourceChoice, $DeviceEditorTarget, $DeviceEditorTargetChoice, json_encode(['EditorTriggerType' => $DeviceEditorTriggerType, 'EditorAt' => $DeviceEditorAt, 'EditorTimezone' => $DeviceEditorTimezone, 'EditorHold' => $DeviceEditorHold, 'EditorDelay' => $DeviceEditorDelay, 'EditorWindow' => $DeviceEditorWindow, 'EditorAfter' => $DeviceEditorAfter, 'EditorBefore' => $DeviceEditorBefore, 'EditorWindowTimezone' => $DeviceEditorWindowTimezone, 'EditorMonday' => $DeviceEditorMonday, 'EditorTuesday' => $DeviceEditorTuesday, 'EditorWednesday' => $DeviceEditorWednesday, 'EditorThursday' => $DeviceEditorThursday, 'EditorFriday' => $DeviceEditorFriday, 'EditorSaturday' => $DeviceEditorSaturday, 'EditorSunday' => $DeviceEditorSunday, 'EditorConditionType' => $DeviceEditorConditionType, 'EditorCondition' => $DeviceEditorCondition, 'EditorConditionChoice' => $DeviceEditorConditionChoice, 'EditorNumericProperty' => $DeviceEditorNumericProperty, 'EditorCompare' => $DeviceEditorCompare, 'EditorNumber' => $DeviceEditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = array_intersect_key((array) $row, ['Choice' => true, 'Delay' => true]); } return $steps; })($DeviceEditorActions), JSON_THROW_ON_ERROR), 'device', json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($DeviceEditorTriggers), JSON_THROW_ON_ERROR), json_encode((function ($rows) { $conditions = []; foreach ($rows as $row) { $conditions[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true]); } return $conditions; })($DeviceEditorConditionList), JSON_THROW_ON_ERROR));"
                                 },
                                 {
                                     "type": "Button",
@@ -1218,9 +1224,9 @@
                                         }
                                     ],
                                     "values": [],
-                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'add', 'time');",
-                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'edit', 'time');",
-                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'delete', 'time');",
+                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'add', 'time');",
+                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'edit', 'time');",
+                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($TimeEditorTriggers), JSON_THROW_ON_ERROR), 'delete', 'time');",
                                     "form": [
                                         {
                                             "type": "Select",
@@ -1302,6 +1308,12 @@
                                             "value": 0,
                                             "minimum": 0,
                                             "maximum": 86400
+                                        },
+                                        {
+                                            "type": "CheckBox",
+                                            "name": "Changed",
+                                            "caption": "Only when the value changes",
+                                            "value": false
                                         }
                                     ],
                                     "width": "100%"
@@ -2013,9 +2025,9 @@
                                         }
                                     ],
                                     "values": [],
-                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'add', '');",
-                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'edit', '');",
-                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'delete', '');",
+                                    "onAdd": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'add', '');",
+                                    "onEdit": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'edit', '');",
+                                    "onDelete": "Z2MA_InspectEditorTriggers($id, json_encode((function ($rows) { $triggers = []; foreach ($rows as $row) { $triggers[] = array_intersect_key((array) $row, ['Choice' => true, 'Compare' => true, 'Hold' => true, 'Changed' => true]); } return $triggers; })($EditorTriggers), JSON_THROW_ON_ERROR), 'delete', '');",
                                     "form": [
                                         {
                                             "type": "Select",
@@ -2097,6 +2109,12 @@
                                             "value": 0,
                                             "minimum": 0,
                                             "maximum": 86400
+                                        },
+                                        {
+                                            "type": "CheckBox",
+                                            "name": "Changed",
+                                            "caption": "Only when the value changes",
+                                            "value": false
                                         }
                                     ],
                                     "width": "100%"

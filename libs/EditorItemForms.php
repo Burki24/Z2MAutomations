@@ -6,9 +6,9 @@ namespace Z2MAutomations;
 
 trait EditorItemForms
 {
-    public function GetEditorItemForm(string $List, string $Choice, int $Duration, string $Compare = 'eq'): string
+    public function GetEditorItemForm(string $List, string $Choice, int $Duration, string $Compare = 'eq', bool $Changed = false): string
     {
-        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($List, $Choice, $Duration, $Compare): string
+        return $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($List, $Choice, $Duration, $Compare, $Changed): string
         {
             $context = $this->EditorItemContext($List);
             if ($context === null || !$this->CheckEditorArea($context['area'])) {
@@ -43,6 +43,8 @@ trait EditorItemForms
                     $field['options'] = $this->EditorItemValues($snapshot, $device, $meta, $context['side']);
                     $field['value'] = !$numeric && $choice !== null ? $parts[1] : '';
                     $field['visible'] = !$numeric;
+                } elseif ($name === 'Changed') {
+                    $field['value'] = $Changed;
                 } elseif ($name === 'Compare') {
                     $field['options'] = $this->EditorComparisonOptions($numeric ? 'numeric' : 'state');
                     $field['value'] = $Compare;
@@ -206,7 +208,7 @@ trait EditorItemForms
             $context = $this->EditorItemContext($name);
             if ($context !== null) {
                 $duration = $context['duration'] === '' ? '0' : '$' . $name . "['" . $context['duration'] . "'] ?? 0";
-                $field['form'] = "return json_decode(Z2MA_GetEditorItemForm(\$id, '" . $name . "', $" . $name . "['Choice'] ?? '', " . $duration . ', $' . $name . "['Compare'] ?? 'eq'), true);";
+                $field['form'] = "return json_decode(Z2MA_GetEditorItemForm(\$id, '" . $name . "', $" . $name . "['Choice'] ?? '', " . $duration . ', $' . $name . "['Compare'] ?? 'eq', $" . $name . "['Changed'] ?? false), true);";
             }
         }
         unset($field);
