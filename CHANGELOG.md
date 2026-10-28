@@ -2,6 +2,14 @@
 
 ## Fixes
 
+- Deutsche Status-, Fehler- und Hilfetexte für Einrichtung, Bearbeitung,
+  Prüfung, Speicherung, Ausführung und Ereignisimport verständlicher formuliert.
+  Meldungen nennen Ergebnis und nächsten Schritt; längere Hinweise nutzen die
+  verfügbare Formularbreite. Technische Kennungen und Abläufe bleiben erhalten.
+
+- Die Importprüfung nennt zuerst „Importierbar“, „Nicht importierbar“ oder
+  „Noch nicht prüfbar“ und erklärt anschließend den Grund bzw. nächsten Schritt.
+
 - Die Liste „Geprüfte Ereignisse“ zeigt 15 statt 5 Zeilen gleichzeitig,
   damit sich größere Ereignisbestände übersichtlicher durchsuchen lassen.
 

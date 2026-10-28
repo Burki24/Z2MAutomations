@@ -1,5 +1,20 @@
 # Z2MAutomations
 
+## Entwurf, Speichern und Starten
+
+Ein **Entwurf** sind die Automationen, die Sie gerade in Symcon bearbeiten.
+**Prüfen** kontrolliert, ob Z2M diesen Entwurf verwenden kann. **Speichern** sendet
+ihn an Z2M und ersetzt dort die bisher gespeicherten Automationen. Bei geändertem
+Inhalt wird die bisherige Ausführung gestoppt. Erst **Aktivieren** startet alle
+in diesem gespeicherten Stand eingeschalteten Regeln. **Stoppen** beendet die
+Ausführung, ohne die gespeicherten Regeln zu löschen.
+
+Die Meldungen zeigen, ob ein Vorgang erfolgreich, fehlgeschlagen oder noch offen
+ist. Wenn eine Aktion erforderlich ist, nennt die Meldung den nächsten Schritt.
+„Noch nicht geprüft“ oder „Noch nicht bestätigt“ bedeutet nicht automatisch,
+dass die Verbindung gestört ist. Mit **Erweiterungsstatus abfragen** lässt sich
+der aktuelle Stand aus Z2M laden.
+
 ## MQTT-Gateway und Suchbereich
 
 Für zwei MQTT-Server werden zwei getrennte Automationsinstanzen verwendet.
@@ -31,8 +46,11 @@ Die Übersicht zeigt Ereignisname, **auslösendes Gerät** und dessen
 weitere Einträge sind durch Scrollen erreichbar. Auch in der Ereignisauswahl stehen diese Angaben, damit
 sich gleichnamige Ereignisse unterscheiden lassen.
 
+Die Importprüfung nennt das Ergebnis ausdrücklich: **Importierbar** oder
+**Nicht importierbar**, jeweils mit einer Erklärung.
+
 Fehlt die Gerätezuordnung aus Z2M für die gewählte Verbindung, steht in der
-Übersicht **Gerätedaten noch nicht geladen**. Die Meldung darunter verweist direkt
+Übersicht **Noch nicht prüfbar: Gerätedaten fehlen**. Die Meldung darunter verweist direkt
 auf **Gerätedaten für den Import laden**. Dieser Button lädt Geräte, Gruppen und
 gespeicherte Regeln über die Erweiterung. Nach der Antwort wird die Übersicht
 aktualisiert und das gewählte Ereignis erneut geprüft. Dafür ist kein erneutes

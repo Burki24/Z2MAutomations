@@ -834,3 +834,20 @@ git diff --check ist sauber. GitHub-CI wurde lokal nicht ausgeführt.
   anschließend unverändert zurückgelegt. Offizielle Quellen bleiben unverändert.
 - Noch keine reale Installation, kein Broker-Verbindungstest und keine Abnahme
   in Z2M; keine Ausführungsengine implementiert oder geprüft.
+
+## Verständliche Anwendertexte
+
+Alle 300 deutschen Übersetzungseinträge wurden auf Verständlichkeit geprüft.
+Status- und Fehlermeldungen nennen zuerst das Ergebnis und anschließend eine
+konkrete Handlung, sofern eine erforderlich ist. „Entwurf“ bezeichnet die noch
+in Symcon bearbeitete Fassung, „Speichern“ die Übertragung nach Z2M und
+„Aktivieren“ den Start der eingeschalteten Regeln. Unbekannter Status wird nicht
+als bestätigter Fehler dargestellt. Fehlende Gerätedaten bleiben „Noch nicht
+prüfbar“, abgewiesene Ereignisse „Nicht importierbar“.
+
+Interne Begriffe wie Empfänger, Revision, Sitzungskennung oder Protokollversion
+werden in Bedienmeldungen vermieden bzw. erklärt. Technische Einstellungen,
+Variablennamen, Fehlercodes, Platzhalter und Debug-Strukturen bleiben stabil.
+Für längere Meldungen verwenden Formular-Labels die verfügbare Breite.
+Die Übersetzungsprüfung umfasst gültiges JSON und unveränderte sprintf-Argumente.
+Die Fachlogik und die Z2M-Erweiterung wurden dabei nicht geändert.

@@ -30,7 +30,8 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events."
+                    "caption": "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events.",
+                    "width": "100%"
                 },
                 {
                     "type": "NumberSpinner",
@@ -41,11 +42,13 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Use the existing MQTT gateway. Subscribe to BaseTopic/bridge/# and BaseTopic/symcon/automations/#."
+                    "caption": "Use the existing MQTT gateway. Subscribe to BaseTopic/bridge/# and BaseTopic/symcon/automations/#.",
+                    "width": "100%"
                 },
                 {
                     "type": "Label",
-                    "caption": "Installation requires external JavaScript already enabled in Z2M. Storing YAML does not activate automations."
+                    "caption": "Installation requires external JavaScript already enabled in Z2M. Storing YAML does not activate automations.",
+                    "width": "100%"
                 }
             ]
         }
@@ -79,12 +82,14 @@
         {
             "type": "Label",
             "name": "ExecutionInfo",
-            "caption": "Execution state unknown. Refresh extension status."
+            "caption": "Execution state unknown. Refresh extension status.",
+            "width": "100%"
         },
         {
             "type": "Label",
             "name": "RuntimeErrorInfo",
-            "caption": "No execution error."
+            "caption": "No execution error.",
+            "width": "100%"
         },
         {
             "type": "Button",
@@ -94,7 +99,8 @@
         },
         {
             "type": "Label",
-            "caption": "Load devices and stored automations first. Choose a section to create or edit a rule."
+            "caption": "Load devices and stored automations first. Choose a section to create or edit a rule.",
+            "width": "100%"
         },
         {
             "type": "Button",
@@ -105,7 +111,8 @@
         {
             "type": "Label",
             "name": "EditorPreview",
-            "caption": "Load the editor to choose devices."
+            "caption": "Load the editor to choose devices.",
+            "width": "100%"
         },
         {
             "type": "ExpansionPanel",
@@ -115,7 +122,8 @@
             "items": [
                 {
                     "type": "Label",
-                    "caption": "Import supported events as disabled drafts. Original events remain unchanged. Disable the original event before activation in Z2M to avoid duplicate execution. Runtime limits and the one-second cooldown also apply to imported rules."
+                    "caption": "Import supported events as disabled drafts. Original events remain unchanged. Disable the original event before activation in Z2M to avoid duplicate execution. Runtime limits and the one-second cooldown also apply to imported rules.",
+                    "width": "100%"
                 },
                 {
                     "type": "Button",
@@ -182,7 +190,8 @@
                 {
                     "type": "Label",
                     "name": "ImportMessage",
-                    "caption": "Check existing Symcon events, then select one for preview."
+                    "caption": "Check existing Symcon events, then select one for preview.",
+                    "width": "100%"
                 },
                 {
                     "type": "Button",
@@ -201,7 +210,8 @@
             "items": [
                 {
                     "type": "Label",
-                    "caption": "A device reports an event or changes its state."
+                    "caption": "A device reports an event or changes its state.",
+                    "width": "100%"
                 },
                 {
                     "type": "List",
@@ -278,7 +288,8 @@
                         {
                             "type": "Label",
                             "name": "DeviceEditorEditInfo",
-                            "caption": "Changes affect the local draft. Validate and store it afterwards."
+                            "caption": "Changes affect the local draft. Validate and store it afterwards.",
+                            "width": "100%"
                         },
                         {
                             "type": "ValidationTextBox",
@@ -318,7 +329,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately."
+                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -517,7 +529,8 @@
                                 {
                                     "type": "Label",
                                     "name": "DeviceScheduleHelp",
-                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match."
+                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match.",
+                                    "width": "100%"
                                 }
                             ],
                             "visible": false
@@ -614,7 +627,8 @@
                                 {
                                     "type": "Label",
                                     "name": "DeviceWindowHelp",
-                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00."
+                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -736,12 +750,14 @@
                                 {
                                     "type": "Label",
                                     "name": "DeviceConditionHelp",
-                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition."
+                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Label",
                                     "name": "DeviceEditorConditionListHelp",
-                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction."
+                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -842,7 +858,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards."
+                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -1035,7 +1052,8 @@
             "items": [
                 {
                     "type": "Label",
-                    "caption": "The automation starts at the selected time."
+                    "caption": "The automation starts at the selected time.",
+                    "width": "100%"
                 },
                 {
                     "type": "List",
@@ -1112,7 +1130,8 @@
                         {
                             "type": "Label",
                             "name": "TimeEditorEditInfo",
-                            "caption": "Changes affect the local draft. Validate and store it afterwards."
+                            "caption": "Changes affect the local draft. Validate and store it afterwards.",
+                            "width": "100%"
                         },
                         {
                             "type": "ValidationTextBox",
@@ -1173,7 +1192,8 @@
                                 {
                                     "type": "Label",
                                     "name": "TimeScheduleHelp",
-                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match."
+                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match.",
+                                    "width": "100%"
                                 }
                             ],
                             "visible": false
@@ -1186,7 +1206,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately."
+                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -1449,7 +1470,8 @@
                                 {
                                     "type": "Label",
                                     "name": "TimeWindowHelp",
-                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00."
+                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -1571,12 +1593,14 @@
                                 {
                                     "type": "Label",
                                     "name": "TimeConditionHelp",
-                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition."
+                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Label",
                                     "name": "TimeEditorConditionListHelp",
-                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction."
+                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -1677,7 +1701,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards."
+                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -1870,7 +1895,8 @@
             "items": [
                 {
                     "type": "Label",
-                    "caption": "Rules with multiple or advanced triggers remain available here."
+                    "caption": "Rules with multiple or advanced triggers remain available here.",
+                    "width": "100%"
                 },
                 {
                     "type": "List",
@@ -1947,7 +1973,8 @@
                         {
                             "type": "Label",
                             "name": "EditorEditInfo",
-                            "caption": "Changes affect the local draft. Validate and store it afterwards."
+                            "caption": "Changes affect the local draft. Validate and store it afterwards.",
+                            "width": "100%"
                         },
                         {
                             "type": "ValidationTextBox",
@@ -1987,7 +2014,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately."
+                                    "caption": "Any listed event can start this automation (OR). Conditions apply to every trigger. Duration 0 reacts immediately.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -2186,7 +2214,8 @@
                                 {
                                     "type": "Label",
                                     "name": "ScheduleHelp",
-                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match."
+                                    "caption": "Times use the selected time zone. Missed times are not replayed. All enabled conditions must match.",
+                                    "width": "100%"
                                 }
                             ],
                             "visible": false
@@ -2283,7 +2312,8 @@
                                 {
                                     "type": "Label",
                                     "name": "WindowHelp",
-                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00."
+                                    "caption": "An overnight window belongs to its starting weekday. For example Monday 22:00 to Tuesday 06:00.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Select",
@@ -2405,12 +2435,14 @@
                                 {
                                     "type": "Label",
                                     "name": "ConditionHelp",
-                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition."
+                                    "caption": "Device conditions use values observed since activation. Unknown values never satisfy a condition.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "Label",
                                     "name": "EditorConditionListHelp",
-                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction."
+                                    "caption": "All listed conditions AND the optional time window must match. An empty list adds no device restriction.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -2511,7 +2543,8 @@
                             "items": [
                                 {
                                     "type": "Label",
-                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards."
+                                    "caption": "Actions run from top to bottom. Add or edit steps and drag them into order. Each wait applies before its step; 0 means immediately. Apply the automation to the draft afterwards.",
+                                    "width": "100%"
                                 },
                                 {
                                     "type": "List",
@@ -2698,12 +2731,14 @@
         {
             "caption": "Idle",
             "name": "OperationInfo",
-            "type": "Label"
+            "type": "Label",
+            "width": "100%"
         },
         {
             "caption": "No extension error.",
             "name": "ErrorInfo",
-            "type": "Label"
+            "type": "Label",
+            "width": "100%"
         },
         {
             "type": "ExpansionPanel",
@@ -2719,7 +2754,8 @@
                 {
                     "caption": "No current YAML validation.",
                     "name": "ValidationInfo",
-                    "type": "Label"
+                    "type": "Label",
+                    "width": "100%"
                 },
                 {
                     "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Activation is a separate step.",
@@ -2730,7 +2766,8 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "Storing transfers the draft. Activation starts all enabled stored rules; stopping stops all rules."
+                    "caption": "Storing transfers the draft. Activation starts all enabled stored rules; stopping stops all rules.",
+                    "width": "100%"
                 },
                 {
                     "type": "Button",
@@ -2800,7 +2837,8 @@
                     {
                         "type": "Label",
                         "name": "InstallResultMessage",
-                        "caption": "Extension installation"
+                        "caption": "Extension installation",
+                        "width": "100%"
                     }
                 ]
             }
