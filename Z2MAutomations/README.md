@@ -209,8 +209,9 @@ oder dem Speichern einer geänderten Revision ist bewusst neu zu aktivieren.
 
 ## Erweiterte YAML-Ansicht
 
-Mit „Erweiterte YAML-Ansicht anzeigen“ kann der zusätzliche Editor eingeblendet
-werden. Für die einfache Geräteautomation ist er nicht erforderlich.
+Den Bereich „Erweiterter YAML-Editor“ aufklappen, um die YAML direkt anzuzeigen
+oder zu bearbeiten. Für die grafische Erstellung muss dieser Bereich nicht
+geöffnet werden.
 
 1. YAML in „YAML-Entwurf der Automationen“ einfügen. Ein
    [synthetisches Beispiel](../libs/z2m/examples/automations.yaml) und der

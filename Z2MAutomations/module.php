@@ -102,9 +102,7 @@ class Z2MAutomations extends IPSModuleStrict
             foreach ($this->EditorFormFields($form['actions']) as &$field) {
                 if (($field['name'] ?? '') === 'YamlInput') {
                     $field['value'] = $this->ReadAttributeString('YamlDraft');
-                    $field['visible'] = $this->ReadAttributeBoolean('ShowYaml');
-                } elseif (($field['name'] ?? '') === 'ShowYamlControl') {
-                    $field['value'] = $this->ReadAttributeBoolean('ShowYaml');
+                    $field['visible'] = true;
                 } elseif (($field['name'] ?? '') === 'ExecutionInfo') {
                     $field['caption'] = $this->ExecutionText($state);
                 } elseif (($field['name'] ?? '') === 'RuntimeErrorInfo') {

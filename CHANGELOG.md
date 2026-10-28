@@ -2,6 +2,10 @@
 
 ## Fixes
 
+- Zusätzlichen YAML-Anzeigeschalter entfernt. Die YAML ist direkt im aufklappbaren
+  Expertenbereich verfügbar. Prüfung und Speicherung verwenden den Editorinhalt;
+  manuelle Änderungen bleiben beim grafischen Bearbeiten geschützt.
+
 - Grundlegende Ein-/Aus-Auswahlwerte werden im begrenzten Gerätekatalog vor
   Sonderoptionen berücksichtigt. Viele Optionen früher Geräte verdrängen dadurch
   nicht mehr die normalen Schaltaktionen späterer Geräte. Erweiterung aktualisieren

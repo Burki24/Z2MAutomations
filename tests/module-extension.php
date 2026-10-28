@@ -190,7 +190,7 @@ try {
     $fields = formFields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['actions']);
     $createdYaml = $fields['YamlInput']['value'];
     $created = json_decode($createdYaml, true, 512, JSON_THROW_ON_ERROR);
-    $check($created['revision'] === 3 && count($created['automations']) === 1 && $fields['YamlInput']['visible'] === false, 'Advanced YAML remains hidden while draft is generated');
+    $check($created['revision'] === 3 && count($created['automations']) === 1 && $fields['YamlInput']['visible'] === true && !isset($fields['ShowYamlControl']) && !$fields['EditorExpert']['expanded'], 'YAML is directly available inside its collapsed panel without a second toggle');
     $check($module->ValidateAutomationDraft() !== '' && $state()['operation']['status'] === 'validated', 'Generated JSON/YAML validates without exposing or reading a hidden form field');
     $check($module->StoreAutomationDraft() !== '' && $state()['operation']['status'] === 'stored', 'Generated rule persists without handwritten YAML');
     $check($module->ActivateAutomations() !== '' && $state()['operation']['status'] === 'activated', 'Activation waits for native command acknowledgement and an additional fresh status');

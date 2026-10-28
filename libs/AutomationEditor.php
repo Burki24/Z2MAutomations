@@ -51,8 +51,8 @@ trait AutomationEditor
         $this->TraceModuleCall(__FUNCTION__, __LINE__, function () use ($Visible): void
         {
             $this->WriteAttributeBoolean('ShowYaml', $Visible);
-            $this->UpdateFormField('YamlInput', 'visible', $Visible);
-            $this->DebugEvent('AKTION', 'Erweiterte YAML-Ansicht geändert.', ['Sichtbar' => $Visible]);
+            $this->UpdateFormField('EditorExpert', 'expanded', $Visible);
+            $this->DebugEvent('AKTION', 'YAML-Bereich auf- oder zugeklappt.', ['Aufgeklappt' => $Visible]);
         });
     }
 

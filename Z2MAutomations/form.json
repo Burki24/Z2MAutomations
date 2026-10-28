@@ -117,14 +117,14 @@
                             "value": ""
                         }
                     ],
-                    "onChange": "Z2MA_SelectAutomation($id, $EditorDeviceRule, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, 'device');",
+                    "onChange": "Z2MA_SelectAutomation($id, $EditorDeviceRule, $YamlInput, true, 'device');",
                     "visible": true
                 },
                 {
                     "type": "Button",
                     "name": "NewDeviceRuleButton",
                     "caption": "New device-triggered automation",
-                    "onClick": "Z2MA_SelectAutomation($id, '', $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, 'device');"
+                    "onClick": "Z2MA_SelectAutomation($id, '', $YamlInput, true, 'device');"
                 }
             ],
             "visible": true
@@ -180,14 +180,14 @@
                             "value": ""
                         }
                     ],
-                    "onChange": "Z2MA_SelectAutomation($id, $EditorTimeRule, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, 'time');",
+                    "onChange": "Z2MA_SelectAutomation($id, $EditorTimeRule, $YamlInput, true, 'time');",
                     "visible": true
                 },
                 {
                     "type": "Button",
                     "name": "NewTimeRuleButton",
                     "caption": "New time-controlled automation",
-                    "onClick": "Z2MA_SelectAutomation($id, '', $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, 'time');"
+                    "onClick": "Z2MA_SelectAutomation($id, '', $YamlInput, true, 'time');"
                 }
             ],
             "visible": true
@@ -243,7 +243,7 @@
                             "value": ""
                         }
                     ],
-                    "onChange": "Z2MA_SelectAutomation($id, $EditorAdvancedRule, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);",
+                    "onChange": "Z2MA_SelectAutomation($id, $EditorAdvancedRule, $YamlInput, true);",
                     "visible": true
                 }
             ],
@@ -266,7 +266,7 @@
                             "value": ""
                         }
                     ],
-                    "onChange": "Z2MA_SelectAutomation($id, $EditorRule, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);",
+                    "onChange": "Z2MA_SelectAutomation($id, $EditorRule, $YamlInput, true);",
                     "visible": false
                 },
                 {
@@ -688,7 +688,7 @@
                         {
                             "type": "Button",
                             "caption": "Add automation to draft",
-                            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));",
+                            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));",
                             "name": "CreateRuleButton"
                         },
                         {
@@ -696,7 +696,7 @@
                             "name": "UpdateRuleButton",
                             "caption": "Apply changes to draft",
                             "visible": false,
-                            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $ShowYamlControl ? $YamlInput : '', $ShowYamlControl, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));"
+                            "onClick": "Z2MA_SaveScheduledAutomation($id, $EditorRule, $EditorEditToken, $EditorName, $EditorEnabled, $EditorSource, $EditorSourceChoice, $EditorTarget, $EditorTargetChoice, json_encode(['EditorTriggerType' => $EditorTriggerType, 'EditorAt' => $EditorAt, 'EditorTimezone' => $EditorTimezone, 'EditorHold' => $EditorHold, 'EditorDelay' => $EditorDelay, 'EditorWindow' => $EditorWindow, 'EditorAfter' => $EditorAfter, 'EditorBefore' => $EditorBefore, 'EditorWindowTimezone' => $EditorWindowTimezone, 'EditorMonday' => $EditorMonday, 'EditorTuesday' => $EditorTuesday, 'EditorWednesday' => $EditorWednesday, 'EditorThursday' => $EditorThursday, 'EditorFriday' => $EditorFriday, 'EditorSaturday' => $EditorSaturday, 'EditorSunday' => $EditorSunday, 'EditorConditionType' => $EditorConditionType, 'EditorCondition' => $EditorCondition, 'EditorConditionChoice' => $EditorConditionChoice, 'EditorNumericProperty' => $EditorNumericProperty, 'EditorCompare' => $EditorCompare, 'EditorNumber' => $EditorNumber], JSON_THROW_ON_ERROR), $YamlInput, true, json_encode((function ($rows) { $steps = []; foreach ($rows as $row) { $steps[] = $row; } return $steps; })($EditorActions), JSON_THROW_ON_ERROR));"
                         },
                         {
                             "type": "Button",
@@ -704,7 +704,7 @@
                             "caption": "Delete selected automation from draft",
                             "enabled": false,
                             "confirm": "Delete the selected automation from the local draft? The running Z2M configuration changes only after validating and storing the draft.",
-                            "onClick": "Z2MA_DeleteAutomation($id, $EditorRule, $EditorEditToken, $ShowYamlControl ? $YamlInput : '', $ShowYamlControl);"
+                            "onClick": "Z2MA_DeleteAutomation($id, $EditorRule, $EditorEditToken, $YamlInput, true);"
                         }
                     ]
                 }
@@ -729,7 +729,7 @@
                 {
                     "caption": "Validate draft in Z2M",
                     "type": "Button",
-                    "onClick": "$ShowYamlControl ? Z2MA_ValidateYaml($id, $YamlInput) : Z2MA_ValidateAutomationDraft($id);"
+                    "onClick": "Z2MA_ValidateYaml($id, $YamlInput);"
                 },
                 {
                     "caption": "No current YAML validation.",
@@ -740,7 +740,7 @@
                     "confirm": "Store exactly the validated YAML in Z2M and replace its stored configuration? Activation is a separate step.",
                     "caption": "Store validated draft in Z2M",
                     "type": "Button",
-                    "onClick": "$ShowYamlControl ? Z2MA_StoreYaml($id, $YamlInput) : Z2MA_StoreAutomationDraft($id);",
+                    "onClick": "Z2MA_StoreYaml($id, $YamlInput);",
                     "name": "StoreButton"
                 },
                 {
@@ -764,19 +764,12 @@
             "expanded": false,
             "items": [
                 {
-                    "type": "CheckBox",
-                    "name": "ShowYamlControl",
-                    "caption": "Show advanced YAML editor",
-                    "value": false,
-                    "onChange": "Z2MA_ShowYamlEditor($id, $ShowYamlControl);"
-                },
-                {
                     "value": "",
                     "caption": "Automation YAML draft",
                     "name": "YamlInput",
                     "rowCount": 18,
                     "type": "ScriptEditor",
-                    "visible": false
+                    "visible": true
                 },
                 {
                     "type": "List",

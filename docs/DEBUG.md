@@ -1,5 +1,10 @@
 # Debug und MQTT-Diagnose
 
+Der kompatible Aufruf `ShowYamlEditor` klappt jetzt den YAML-Bereich auf oder zu
+und protokolliert diesen Zustand. Der Editor selbst bleibt innerhalb des Bereichs
+verfügbar. Formularaktionen prüfen den aktuellen YAML-Inhalt unabhängig vom
+Aufklappzustand; manuelle Änderungen werden beim grafischen Bearbeiten geschützt.
+
 `SelectAutomation` protokolliert beim Öffnen der Bearbeitung den festen deutschen
 Bereich „Geräteausgelöst“, „Zeitgesteuert“ oder „Weitere Auslöser“ sowie die
 Unterscheidung zwischen neuer und bestehender Regel. `ConfigureEditorSchedule`

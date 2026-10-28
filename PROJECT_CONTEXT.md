@@ -8,6 +8,10 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Der zusätzliche YAML-Anzeigeschalter entfällt. YAML ist direkt im eingeklappten
+  Expertenbereich verfügbar; Formularaktionen berücksichtigen immer dessen Inhalt.
+  Der bestehende ShowYamlEditor-Aufruf bedient kompatibel den Panelzustand.
+
 - Native Formularbereiche trennen geräteausgelöste und zeitgesteuerte Regeln.
   Jede Übersicht bietet eine gefilterte Auswahl und einen Neu-Button; mehrere
   oder andere Auslöser bleiben unter weiteren Automationen erreichbar. Bearbeitung
