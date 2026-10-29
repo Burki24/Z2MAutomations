@@ -12,8 +12,8 @@ final class ExtensionContract
     public const VERSION = '0.1.0';
     public const PREFIX = 'symcon/automations/';
     public const MAX_YAML_BYTES = 131072;
-    public const ERROR_CODES = ['invalid_request', 'invalid_yaml', 'invalid_schema', 'invalid_semantics', 'session_mismatch', 'revision_conflict', 'revision_reused', 'storage_unavailable', 'storage_error', 'busy', 'not_ready', 'activation_expired', 'checksum_mismatch', 'unknown_entity', 'runtime_unavailable'];
-    public const RUNTIME_ERRORS = ['', 'unknown_entity', 'action_failed', 'action_timeout', 'rate_limited', 'state_unavailable'];
+    public const ERROR_CODES = ['invalid_request', 'invalid_yaml', 'invalid_schema', 'invalid_semantics', 'session_mismatch', 'revision_conflict', 'revision_reused', 'storage_unavailable', 'storage_error', 'busy', 'not_ready', 'activation_expired', 'checksum_mismatch', 'unknown_entity', 'runtime_unavailable', 'mesh_unavailable', 'mesh_not_allowed'];
+    public const RUNTIME_ERRORS = ['', 'unknown_entity', 'action_failed', 'action_timeout', 'rate_limited', 'state_unavailable', 'mesh_unavailable', 'mesh_not_allowed', 'mesh_timeout', 'mesh_rejected', 'mesh_stopped', 'mesh_busy'];
 
     public static function ValidYamlText(string $yaml): bool
     {
@@ -72,7 +72,15 @@ final class ExtensionContract
         } elseif ($data->executing) {
             return null;
         }
-        return $storage + $runtime + ['session' => $data->session, 'ready' => $data->state === 'ready', 'version' => $data->extension_version];
+        $mesh = [];
+        if (property_exists($data, 'mesh_version')) {
+            if ($data->mesh_version !== 1 || !is_bool($data->mesh_ready ?? null) || !is_int($data->mesh_peer_count ?? null)
+                || $data->mesh_peer_count < 0 || $data->mesh_peer_count > 8 || ($data->mesh_ready && (!$data->executing || $data->mesh_peer_count === 0))) {
+                return null;
+            }
+            $mesh = ['meshReady' => $data->mesh_ready, 'meshPeerCount' => $data->mesh_peer_count];
+        }
+        return $storage + $runtime + $mesh + ['session' => $data->session, 'ready' => $data->state === 'ready', 'version' => $data->extension_version];
     }
 
     public static function ErrorText(string $code): string
@@ -94,7 +102,7 @@ final class ExtensionContract
             'invalid_request'      => 'Invalid request envelope.',
             'invalid_yaml'         => 'Invalid or oversized YAML text.',
             'invalid_schema'       => 'The YAML does not conform to automation schema version 1.',
-            'invalid_semantics'    => 'The YAML contains duplicate IDs, an invalid timezone or an empty time window.',
+            'invalid_semantics'    => 'Check duplicate rule IDs, timezones, time windows and permissions for actions in the second system.',
             'session_mismatch'     => 'The extension restarted. Validate the YAML again.',
             'revision_conflict'    => 'The stored revision changed. Refresh the state and validate the YAML again.',
             'revision_reused'      => 'Use the next revision or an unchanged copy of the stored YAML.',
@@ -106,6 +114,12 @@ final class ExtensionContract
             'state_unavailable'    => 'The current Z2M target state is unknown. Toggle was not executed.',
             'unknown_entity'       => 'A configured device or group is unavailable in Z2M.',
             'runtime_unavailable'  => 'Update the bundled extension to use execution controls.',
+            'mesh_unavailable'     => 'The connection to the second Z2M system is unavailable. Check the bridge and Z2M permissions.',
+            'mesh_not_allowed'     => 'The second Z2M system is not allowed. Select the partner module, store and activate both systems.',
+            'mesh_timeout'         => 'The second Z2M system did not respond in time. The action will not be repeated automatically.',
+            'mesh_rejected'        => 'The second Z2M system rejected the action. Check its activation, target device and debug output.',
+            'mesh_stopped'         => 'The pending action was cancelled because execution was stopped.',
+            'mesh_busy'            => 'Too many actions are pending for the second Z2M system. This action was not repeated.',
             'runtime_mismatch'     => 'Z2M did not confirm the requested execution state. Refresh the status.',
             'action_failed'        => 'Z2M could not hand over an action. The remaining sequence was cancelled.',
             'action_timeout'       => 'An action handover timed out. No automatic retry was started.',

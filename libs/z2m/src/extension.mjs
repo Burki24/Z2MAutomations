@@ -7,6 +7,7 @@ import Ajv from 'ajv';
 import {parseEvents, constructFromEvents, JSON_SCHEMA, mapTag, EVENT_ID} from 'js-yaml';
 import AUTOMATIONS_SCHEMA from '../automations.schema.json' with {type: 'json'};
 import {AutomationRuntime, RuntimeError} from './runtime.mjs';
+import {MeshTransport, meshSystemValid} from './mesh.mjs';
 
 export const LIMITS = Object.freeze({yamlBytes: 131072, requestBytes: 1048576, queuedRequests: 16});
 const PREFIX = 'symcon/automations';
@@ -15,7 +16,7 @@ const ERRORS = Object.freeze({
     invalid_request: 'Invalid request envelope.',
     invalid_yaml: 'YAML must contain one bounded JSON-compatible document without anchors, aliases or tags.',
     invalid_schema: 'Automation configuration does not conform to schema version 1.',
-    invalid_semantics: 'Duplicate automation ID, invalid timezone or empty time window.',
+    invalid_semantics: 'Duplicate automation ID, invalid timezone, empty time window or unapproved remote action.',
     session_mismatch: 'Request does not belong to the current extension session.',
     revision_conflict: 'Expected revision does not match the stored configuration.',
     revision_reused: 'New revision must be exactly the stored revision plus one.',
@@ -26,7 +27,9 @@ const ERRORS = Object.freeze({
     runtime_unavailable: 'Required Z2M runtime interfaces are unavailable.',
     unknown_entity: 'A configured device or group is unavailable.',
     checksum_mismatch: 'Activation checksum does not match the stored configuration.',
-    activation_expired: 'Request a fresh activation token before activating the stored revision.'
+    activation_expired: 'Request a fresh activation token before activating the stored revision.',
+    mesh_unavailable: 'The bridge transport is unavailable.',
+    mesh_not_allowed: 'The second Z2M system is not permitted.'
 });
 
 class ConfigurationError extends Error {
@@ -41,6 +44,7 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 const isRevision = value => Number.isSafeInteger(value) && value >= 0;
 const hash = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const validateSchema = new Ajv({strict: true, allowUnionTypes: true, allErrors: false}).compile(AUTOMATIONS_SCHEMA);
+const validateMeshAction = new Ajv({strict: true, allowUnionTypes: true}).addSchema(AUTOMATIONS_SCHEMA).getSchema(AUTOMATIONS_SCHEMA.$id + '#/definitions/action');
 const yamlSchema = JSON_SCHEMA.withTags({
     ...mapTag,
     create: () => Object.create(null),
@@ -73,6 +77,7 @@ export function validateYaml(yaml) {
     for (const automation of document.automations) {
         if (ids.has(automation.id)) fail('invalid_semantics');
         ids.add(automation.id);
+        if (automation.enabled && automation.actions.some(action => action.target.system !== undefined && !document.mesh_peers?.includes(action.target.system))) fail('invalid_semantics');
         for (const clause of [...automation.triggers, ...automation.conditions]) {
             if (clause.timezone !== undefined) {
                 try {
@@ -294,7 +299,10 @@ export default class Z2MAutomationsExtension {
         this.settings = settings;
         this.logger = logger;
         this.zigbee = _zigbee;
+        this.clock = options.clock;
         this.runtime = new AutomationRuntime({zigbee: _zigbee, logger, clock: options.clock,
+            remoteDispatch: action => this.mesh.dispatch(action),
+            onDeactivate: () => this.mesh?.cancel(),
             readState: typeof _state?.get === 'function' ? entity => _state.get(entity) : undefined,
             dispatch: (topic, message) => this.eventBus.emitMQTTMessage({topic: this.baseTopic + '/' + topic, message}),
             available: typeof eventBus.onPublishEntityState === 'function' && typeof eventBus.emitMQTTMessage === 'function'});
@@ -311,6 +319,8 @@ export default class Z2MAutomationsExtension {
 
     status() {
         return {protocol_version: 1, schema_version: 1, extension_version: '0.1.0',
+            mesh_version: 1, mesh_ready: Boolean(this.mesh?.subscribed && this.runtime.active?.document.mesh_peers?.length),
+            mesh_peer_count: this.runtime.active?.document.mesh_peers?.length ?? 0,
             session: this.session, state: this.accepting ? 'ready' : 'stopped', ...this.store.metadata(), ...this.runtime.metadata()};
     }
 
@@ -327,6 +337,7 @@ export default class Z2MAutomationsExtension {
         try {
             if (this.accepting) return;
             this.baseTopic = this.settings.get().mqtt.base_topic;
+            this.mesh = new MeshTransport({mqtt: this.mqtt, system: this.baseTopic, runtime: this.runtime, validateAction: validateMeshAction, clock: this.clock});
             this.session = randomUUID();
             this.activationToken = null;
             await this.store.load();
@@ -347,6 +358,7 @@ export default class Z2MAutomationsExtension {
             this.activationToken = null;
             this.eventBus.removeListeners(this);
             this.runtime.deactivate();
+            await this.mesh?.stop();
             await this.queue;
             await this.runtime.stop();
             await this.publish('status', this.status(), true);
@@ -354,6 +366,7 @@ export default class Z2MAutomationsExtension {
     }
 
     async receive(event) {
+        if (this.accepting && this.mesh && await this.mesh.receive(event)) return;
         const prefix = this.baseTopic + '/' + PREFIX + '/request/';
         if (typeof event?.topic !== 'string' || !event.topic.startsWith(prefix)) return;
         const operation = event.topic.slice(prefix.length);
@@ -424,6 +437,12 @@ export default class Z2MAutomationsExtension {
                         if (!this.accepting) fail('not_ready');
                         if (request.expected_revision !== this.store.current.document.revision) fail('revision_conflict');
                         if (request.checksum !== this.store.current.checksum) fail('checksum_mismatch');
+                        const peers = this.store.current.document.mesh_peers ?? [];
+                        if (peers.length) {
+                            if (peers.includes(this.baseTopic) || !meshSystemValid(this.baseTopic)) fail('mesh_not_allowed');
+                            await this.mesh.start();
+                        }
+                        if (!this.accepting) fail('not_ready');
                         this.runtime.activate(this.store.current);
                     } else {
                         this.activationToken = null;

@@ -21,6 +21,7 @@ $check($schema['properties']['schema_version']['const'] === 1, 'Versioned automa
 foreach (['libs/z2m/src/extension.mjs', 'libs/z2m/src/runtime.mjs', 'libs/z2m/z2m-automations.mjs', 'libs/z2m/examples/automations.yaml', 'tests/extension.test.mjs', 'tests/runtime.test.mjs', 'tests/build-extension.mjs', 'package.json', 'package-lock.json'] as $file) {
     $check(is_file($root . '/' . $file), 'Missing extension file: ' . $file);
 }
+$check(is_file($root . '/libs/z2m/src/mesh.mjs') && is_file($root . '/tests/mesh.test.mjs'), 'Cross-system source and tests');
 $check($library['name'] === 'Z2MAutomations' && $library['compatibility']['version'] === '9.0', 'Library identity and platform');
 $check(str_contains(file_get_contents($root . '/LICENSE'), 'PolyForm Noncommercial License 1.0.0'), 'Project license');
 $ids = [$library['id']];

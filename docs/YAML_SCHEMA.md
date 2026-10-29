@@ -1,5 +1,20 @@
 # Automationsschema Version 1
 
+## Aktionen im zweiten System
+
+Optionales Dokumentfeld `mesh_peers`: bis zu acht eindeutige Basistopics,
+jeweils 1–128 Zeichen aus Buchstaben, Ziffern, Unterstrich und Bindestrich,
+getrennt durch einzelne `/`. Der Klick-Editor verwaltet einen ausgewählten
+Partner. Alle neuen Felder sind optional; lokale Dokumente bleiben gültig.
+
+Ein Geräte- oder Gruppenziel kann zusätzlich `system` mit dem Basistopic des
+Zielsystems enthalten, beispielsweise `{type: group, id: 7, system: synthetic/b}`.
+Ohne `system` bleibt es ein lokales Ziel. Bei eingeschalteten Regeln muss das
+Zielsystem in `mesh_peers` enthalten sein. Das empfangende Dokument muss
+umgekehrt die Quelle freigeben und ausdrücklich aktiviert sein. Ein deaktivierter
+Entwurf darf entfernte Referenzen behalten, ohne eine Empfangsfreigabe zu erteilen.
+Auslöser und Bedingungen bleiben lokal. Siehe [ADR 0009](adr/0009-cross-system-actions-over-mqtt-bridge.md).
+
 Die kanonische maschinenlesbare Definition steht in
 [automations.schema.json](../libs/z2m/automations.schema.json).
 Sie wird unverändert in das eigene Einzeldatei-Artefakt eingebettet.

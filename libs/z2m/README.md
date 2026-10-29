@@ -1,5 +1,12 @@
 # Eigene Zigbee2MQTT-Erweiterung
 
+Aktionen können über eine vorhandene Broker-Bridge an ein zweites Z2M-System
+übergeben werden. Der eigene Mesh-Transport nutzt ausschließlich `z2ma/mesh/#`
+und verlangt eine aktivierte Empfangsfreigabe auf der Gegenseite. Kurzlebige
+Einmalfreigaben verhindern zusätzliche Ausführung durch alte oder doppelte
+Execute-Nachrichten. Der neue Stand wurde noch nicht praktisch installiert;
+siehe [ADR 0009](../../docs/adr/0009-cross-system-actions-over-mqtt-bridge.md).
+
 Die eigene Erweiterung empfängt Automationen über MQTT, validiert YAML und
 Schema und speichert die letzte gültige Fassung im persistenten Z2M-Datenordner.
 Eine gespeicherte Revision kann anschließend ausdrücklich aktiviert werden.
@@ -11,7 +18,7 @@ und die bereits gespeicherte Konfiguration bereit. Nach der Aktivierung laufen
 Regeln ohne Symcon weiter; ein Z2M-Neustart erfordert weiterhin erneutes Aktivieren.
 
 - Hochladbare Einzeldatei: z2m-automations.mjs.
-- Eigener Quellcode: src/extension.mjs und src/runtime.mjs.
+- Eigener Quellcode: src/extension.mjs, src/runtime.mjs und src/mesh.mjs.
 - Kanonisches Schema: automations.schema.json, JSON Schema Draft 7.
 - Synthetisches Beispiel: examples/automations.yaml.
 

@@ -11,7 +11,7 @@
         "build:extension": "node tests/build-extension.mjs",
         "check:extension": "node tests/build-extension.mjs --check",
         "pretest": "node tests/build-extension.mjs --check",
-        "test": "node --test tests/extension.test.mjs tests/runtime.test.mjs"
+        "test": "node --test tests/extension.test.mjs tests/runtime.test.mjs tests/mesh.test.mjs"
     },
     "devDependencies": {
         "ajv": "8.20.0",

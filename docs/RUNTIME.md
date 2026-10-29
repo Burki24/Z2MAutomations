@@ -1,5 +1,17 @@
 # Automationen ausführen
 
+## Systemübergreifende Aktionen
+
+`target.system` delegiert Set-/Toggle-Aktionen an das ausgewählte zweite Z2M.
+Beide Engines müssen aktiviert sein und sich über `mesh_peers` freigeben.
+Die empfangende Engine benötigt dafür keine eingeschaltete eigene Regel.
+Lokale Auslöser, Bedingungen und Verzögerungen bleiben auf dem Quellsystem.
+Ein Stopp verwirft ausstehende Anfragen und Empfangsfreigaben. Die Folge wartet
+vor ihrem nächsten Schritt auf die Bestätigung der nativen Befehlsübergabe.
+Fehlende oder verspätete Antworten sind ein Fehler, keine Gerätebestätigung.
+Kein automatisches Nachholen, Wiederholen oder Starten nach Neustart.
+Siehe [ADR 0009](adr/0009-cross-system-actions-over-mqtt-bridge.md).
+
 Die Erweiterung kann gespeicherte Schema-1-Automationen ausführen. Sie lädt die
 YAML beim Start, bleibt zunächst aber inaktiv. Speichern, Validieren und
 Aktivieren sind getrennte Vorgänge. Die Symcon-Oberfläche bietet dafür eigene

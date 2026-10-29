@@ -16,7 +16,7 @@ trait Z2MInstanceDiscovery
 
     private ?array $gatewayZ2MInstances = null;
 
-    private function ReadZ2MInstanceScope(int $id): ?array
+    private function ReadZ2MInstanceScope(int $id, bool $allowPeer = false): ?array
     {
         // A variable may belong to a category, script or entirely different module.
         // Existence and module identity must be checked before any configuration read.
@@ -30,7 +30,9 @@ trait Z2MInstanceDiscovery
             }
             $type = self::Z2M_MODULE_TYPES[$info['ModuleInfo']['ModuleID'] ?? ''] ?? null;
             $gateway = $this->GetParentID();
-            if ($type === null || $gateway <= 0 || !IPS_InstanceExists($gateway) || ($info['ConnectionID'] ?? 0) !== $gateway) {
+            $peer = $allowPeer ? $this->PeerContext() : null;
+            $remote = $peer !== null && ($info['ConnectionID'] ?? 0) === $peer['gateway'];
+            if ($type === null || $gateway <= 0 || !IPS_InstanceExists($gateway) || (($info['ConnectionID'] ?? 0) !== $gateway && !$remote)) {
                 return null;
             }
             $configuration = json_decode(IPS_GetConfiguration($id), true, 32, JSON_THROW_ON_ERROR);
@@ -50,6 +52,12 @@ trait Z2MInstanceDiscovery
                     return null;
                 }
                 $key = 'group.' . $group;
+            }
+            if ($remote) {
+                if ($topic !== $peer['system'] || $type === 'bridge') {
+                    return null;
+                }
+                $key = 'remote.' . hash('sha256', $topic) . '.' . $key;
             }
             return ['type' => $type, 'key' => $key, 'topic' => $topic];
         } catch (Throwable) {

@@ -51,6 +51,27 @@
                     "width": "100%"
                 }
             ]
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "Actions across two Z2M systems",
+            "expanded": false,
+            "items": [
+                {
+                    "type": "SelectInstance",
+                    "name": "PeerModuleID",
+                    "caption": "Automation module of the second Z2M system",
+                    "validModules": [
+                        "{23D57681-8424-48DC-9FF0-25C110C533A9}"
+                    ],
+                    "width": "100%"
+                },
+                {
+                    "type": "Label",
+                    "caption": "Select the other automation module on each side. Load its device data first, then reopen this form. Its switchable devices and groups become additional action targets. Store and activate both systems, even if the receiving system has no enabled rules. Stop also blocks incoming actions.",
+                    "width": "100%"
+                }
+            ]
         }
     ],
     "actions": [

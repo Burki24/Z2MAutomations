@@ -227,6 +227,15 @@ trait AutomationEditor
 
     private function SaveEditorDraft(array $draft, string $yaml): void
     {
+        $peer = $this->PeerContext();
+        if ($peer !== null || array_key_exists('mesh_peers', $draft['configuration'])) {
+            $peers = $peer === null ? [] : [$peer['system']];
+            if (($draft['configuration']['mesh_peers'] ?? []) !== $peers) {
+                $draft['configuration']['revision'] = $draft['baseRevision'] + 1;
+            }
+            $draft['configuration']['mesh_peers'] = $peers;
+            $yaml = json_encode($draft['configuration'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
+        }
         $draft['draftChecksum'] = hash('sha256', $yaml);
         $this->WriteAttributeString('EditorDraft', json_encode($draft, JSON_THROW_ON_ERROR));
         $this->WriteAttributeString('YamlDraft', $yaml);
@@ -239,6 +248,11 @@ trait AutomationEditor
 
     private function EditorSnapshot(): array
     {
+        return $this->AddRemoteTargets($this->LocalEditorSnapshot());
+    }
+
+    private function LocalEditorSnapshot(): array
+    {
         $json = $this->ReadAttributeString('EditorSnapshot');
         return $json === '' ? [] : $this->FilterEditorActions($this->AddEditorGroupTargets(json_decode($json, true, 32, JSON_THROW_ON_ERROR)));
     }
@@ -248,10 +262,15 @@ trait AutomationEditor
         $options = [['caption' => $this->Translate('Choose device'), 'value' => '']];
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
             if ($this->EditorProperties($snapshot, $id, $side) !== [] || ($side === 'Condition' && ($device['numeric'] ?? []) !== [])) {
-                $options[] = ['caption' => $device['name'] . ' (' . $id . ')', 'value' => $id];
+                $options[] = ['caption' => $this->EditorDeviceLabel($device, $id), 'value' => $id];
             }
         }
         return $options;
+    }
+
+    private function EditorDeviceLabel(array $device, string $id): string
+    {
+        return $device['name'] . ' (' . ($device['remoteTarget']['id'] ?? $id) . ')';
     }
 
     private function EditorChoices(array $snapshot, string $id, string $side): array

@@ -24,6 +24,9 @@ geordneten Geräteaktionen. Die Wartezeit ist pro Schritt einstellbar;
 YAML-Kenntnisse sind dafür nicht erforderlich. Unterstützte ausgelöste
 Symcon-Ereignisse lassen sich nach Prüfung und Vorschau als deaktivierte Regeln
 importieren. Gruppen und zustandsabhängiges Umschalten sind als Aktionsziele verfügbar.
+Mit zwei Automationsmodulen und einer eingerichteten MQTT-Bridge lassen sich
+auch Geräte und Gruppen des jeweils zweiten Z2M-Systems als Aktionsziele wählen.
+Beide Systeme benötigen dafür gespeicherte und ausdrücklich aktivierte Freigaben.
 [Bedienung](Z2MAutomations/README.md), [Ausführung und Grenzen](docs/RUNTIME.md).
 Ein [synthetisches YAML-Beispiel](libs/z2m/examples/automations.yaml) zeigt das
 eigene Format; der [YAML-Vertrag](docs/YAML_SCHEMA.md) beschreibt die Felder.

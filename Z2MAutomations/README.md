@@ -1,5 +1,36 @@
 # Z2MAutomations
 
+## Ein Gerät auf dem zweiten Z2M-System schalten
+
+Jedes Z2M-System erhält sein eigenes Automationsmodul am zugehörigen MQTT-Client.
+Unter **Aktionen zwischen zwei Z2M-Systemen** wählen Sie in beiden Modulen das
+jeweils andere Modul. Die Basistopics müssen verschieden sein. Anschließend
+die Gerätedaten in beiden Modulen laden und das Formular erneut öffnen.
+
+Bei den Aktionen erscheinen die schaltbaren Geräte und Gruppen des zweiten
+Systems mit dessen Basistopic vor dem Namen. Gerät, Kanal und Wert werden wie
+bei lokalen Aktionen ausgewählt. Vorhandene Regeln lassen sich damit bearbeiten
+und passende Symcon-Ereignisse als deaktivierte Entwürfe importieren. Ein
+Geräteauslöser und seine Bedingungen gehören weiterhin zum eigenen System.
+
+Beide Entwürfe prüfen, speichern und aktivieren. Die empfangende Seite muss
+auch dann aktiviert werden, wenn sie keine eigene eingeschaltete Regel besitzt.
+Die Statusvariable **Aktionen vom zweiten Z2M-System freigegeben** zeigt die
+bestätigte Empfangsbereitschaft nach einer Statusabfrage. **Stoppen** auf der
+empfangenden Seite sperrt auch Aktionen des anderen Systems. Bereits gesendete
+Gerätebefehle lassen sich dadurch nicht zurückholen.
+
+Voraussetzung ist eine eingerichtete Broker-Verbindung für `z2ma/mesh/#`.
+Der Benutzer, mit dem sich **Z2M selbst** anmeldet, benötigt auf seinem Broker
+zusätzlich Lese- und Schreibrecht für diesen Bereich. Der Bridge-Benutzer allein
+genügt nicht. Das Modul ändert keine Brokerberechtigungen und benötigt keine
+Brokerpasswörter. Details für die Einrichtung stehen in [MQTT](../docs/MQTT.md).
+
+Die Regel läuft nach erfolgreicher Einrichtung ohne Symcon. Bei fehlender
+Gegenstelle wird die Aktionsfolge abgebrochen und nicht automatisch nachgeholt.
+Eine Bestätigung bedeutet, dass das Ziel-Z2M den Gerätebefehl übernommen hat;
+die tatsächliche Gerätewirkung ist damit noch nicht bestätigt.
+
 ## Entwurf, Speichern und Starten
 
 Ein **Entwurf** sind die Automationen, die Sie gerade in Symcon bearbeiten.

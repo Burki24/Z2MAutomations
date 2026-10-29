@@ -19,6 +19,14 @@
             "items": {
                 "$ref": "#/definitions/automation"
             }
+        },
+        "mesh_peers": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "#/definitions/system"
+            }
         }
     },
     "required": [
@@ -294,6 +302,9 @@
                         },
                         "id": {
                             "$ref": "#/definitions/device"
+                        },
+                        "system": {
+                            "$ref": "#/definitions/system"
                         }
                     },
                     "required": [
@@ -312,6 +323,9 @@
                             "type": "integer",
                             "minimum": 1,
                             "maximum": 65535
+                        },
+                        "system": {
+                            "$ref": "#/definitions/system"
                         }
                     },
                     "required": [
@@ -455,6 +469,12 @@
                 "conditions",
                 "actions"
             ]
+        },
+        "system": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$"
         }
     }
 }

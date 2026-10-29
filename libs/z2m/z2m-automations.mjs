@@ -1,4 +1,4 @@
-// Generated from src/extension.mjs, src/runtime.mjs and automations.schema.json. Do not edit.
+// Generated from src/extension.mjs, src/runtime.mjs, src/mesh.mjs and automations.schema.json. Do not edit.
 import {createHash, randomUUID} from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import {join} from 'node:path';
@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {TextDecoder} from 'node:util';
 import Ajv from 'ajv';
 import {parseEvents, constructFromEvents, JSON_SCHEMA, mapTag, EVENT_ID} from 'js-yaml';
-const AUTOMATIONS_SCHEMA = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"urn:burki24:z2m-automations:schema:1","title":"Z2MAutomations configuration v1","type":"object","additionalProperties":false,"properties":{"schema_version":{"const":1},"revision":{"type":"integer","minimum":1,"maximum":9007199254740991},"automations":{"type":"array","maxItems":100,"items":{"$ref":"#/definitions/automation"}}},"required":["schema_version","revision","automations"],"definitions":{"device":{"type":"string","pattern":"^0x[0-9a-f]{16}$"},"jsonValue":{"anyOf":[{"type":["string","number","boolean","null"],"maxLength":256},{"type":"array","maxItems":32,"items":{"$ref":"#/definitions/jsonValue"}},{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}}]},"deviceTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256},"for_seconds":{"type":"integer","minimum":0,"maximum":86400},"on_change":{"type":"boolean"}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time"},"at":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64}},"required":["type","at","timezone"]},"deviceCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device_value"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time_window"},"after":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"before":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64},"weekdays":{"type":"array","minItems":1,"maxItems":7,"uniqueItems":true,"items":{"type":"integer","minimum":1,"maximum":7}}},"required":["type","after","before","timezone"]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"id":{"$ref":"#/definitions/device"}},"required":["type","id"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"group"},"id":{"type":"integer","minimum":1,"maximum":65535}},"required":["type","id"]}]},"action":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"set"},"target":{"$ref":"#/definitions/target"},"values":{"type":"object","minProperties":1,"maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","values"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"toggle"},"target":{"$ref":"#/definitions/target"},"property":{"type":"string","pattern":"^state(?:_[A-Za-z0-9_]+)?$","maxLength":64},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","property"]}]},"automation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z][a-z0-9_-]{0,63}$"},"name":{"type":"string","minLength":1,"maxLength":120},"enabled":{"type":"boolean"},"triggers":{"type":"array","minItems":1,"maxItems":8,"items":{"oneOf":[{"$ref":"#/definitions/deviceTrigger"},{"$ref":"#/definitions/timeTrigger"}]}},"conditions":{"type":"array","maxItems":16,"items":{"oneOf":[{"$ref":"#/definitions/deviceCondition"},{"$ref":"#/definitions/timeCondition"}]}},"actions":{"type":"array","minItems":1,"maxItems":16,"items":{"$ref":"#/definitions/action"}}},"required":["id","name","enabled","triggers","conditions","actions"]}}};
+const AUTOMATIONS_SCHEMA = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"urn:burki24:z2m-automations:schema:1","title":"Z2MAutomations configuration v1","type":"object","additionalProperties":false,"properties":{"schema_version":{"const":1},"revision":{"type":"integer","minimum":1,"maximum":9007199254740991},"automations":{"type":"array","maxItems":100,"items":{"$ref":"#/definitions/automation"}},"mesh_peers":{"type":"array","maxItems":8,"uniqueItems":true,"items":{"$ref":"#/definitions/system"}}},"required":["schema_version","revision","automations"],"definitions":{"device":{"type":"string","pattern":"^0x[0-9a-f]{16}$"},"jsonValue":{"anyOf":[{"type":["string","number","boolean","null"],"maxLength":256},{"type":"array","maxItems":32,"items":{"$ref":"#/definitions/jsonValue"}},{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}}]},"deviceTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256},"for_seconds":{"type":"integer","minimum":0,"maximum":86400},"on_change":{"type":"boolean"}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeTrigger":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time"},"at":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64}},"required":["type","at","timezone"]},"deviceCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device_value"},"device":{"$ref":"#/definitions/device"},"property":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"operator":{"enum":["eq","ne","gt","gte","lt","lte"]},"value":{"type":["string","number","boolean","null"],"maxLength":256}},"required":["type","device","property","operator","value"],"allOf":[{"if":{"properties":{"operator":{"enum":["gt","gte","lt","lte"]}}},"then":{"properties":{"value":{"type":"number"}}}}]},"timeCondition":{"type":"object","additionalProperties":false,"properties":{"type":{"const":"time_window"},"after":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"before":{"type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"},"timezone":{"type":"string","minLength":1,"maxLength":64},"weekdays":{"type":"array","minItems":1,"maxItems":7,"uniqueItems":true,"items":{"type":"integer","minimum":1,"maximum":7}}},"required":["type","after","before","timezone"]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"device"},"id":{"$ref":"#/definitions/device"},"system":{"$ref":"#/definitions/system"}},"required":["type","id"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"group"},"id":{"type":"integer","minimum":1,"maximum":65535},"system":{"$ref":"#/definitions/system"}},"required":["type","id"]}]},"action":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"type":{"const":"set"},"target":{"$ref":"#/definitions/target"},"values":{"type":"object","minProperties":1,"maxProperties":32,"propertyNames":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_]{0,63}$","not":{"enum":["__proto__","constructor","prototype"]}},"additionalProperties":{"$ref":"#/definitions/jsonValue"}},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","values"]},{"type":"object","additionalProperties":false,"properties":{"type":{"const":"toggle"},"target":{"$ref":"#/definitions/target"},"property":{"type":"string","pattern":"^state(?:_[A-Za-z0-9_]+)?$","maxLength":64},"delay_seconds":{"type":"integer","minimum":0,"maximum":86400}},"required":["type","target","property"]}]},"automation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z][a-z0-9_-]{0,63}$"},"name":{"type":"string","minLength":1,"maxLength":120},"enabled":{"type":"boolean"},"triggers":{"type":"array","minItems":1,"maxItems":8,"items":{"oneOf":[{"$ref":"#/definitions/deviceTrigger"},{"$ref":"#/definitions/timeTrigger"}]}},"conditions":{"type":"array","maxItems":16,"items":{"oneOf":[{"$ref":"#/definitions/deviceCondition"},{"$ref":"#/definitions/timeCondition"}]}},"actions":{"type":"array","minItems":1,"maxItems":16,"items":{"$ref":"#/definitions/action"}}},"required":["id","name","enabled","triggers","conditions","actions"]},"system":{"type":"string","minLength":1,"maxLength":128,"pattern":"^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$"}}};
 // Library-local execution policy. No foreign automation implementation is bundled.
 export const RUNTIME_LIMITS = Object.freeze({concurrentRules: 16, commandsPerSecond: 20, ruleCooldownMs: 1000, publishTimeoutMs: 5000});
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -27,10 +27,12 @@ function compare(actual, clause) {
 }
 
 export class AutomationRuntime {
-    constructor({zigbee, dispatch, logger, clock = nativeClock, available = true, readState}) {
+    constructor({zigbee, dispatch, logger, clock = nativeClock, available = true, readState, remoteDispatch, onDeactivate}) {
         this.zigbee = zigbee;
         this.dispatch = dispatch;
         this.readState = readState;
+        this.remoteDispatch = remoteDispatch;
+        this.onDeactivate = onDeactivate;
         this.logger = logger;
         this.clock = clock;
         this.available = available;
@@ -97,6 +99,10 @@ export class AutomationRuntime {
                 }
             }
             for (const action of rule.actions) {
+                if (action.target.system !== undefined) {
+                    if (!candidate.document.mesh_peers?.includes(action.target.system) || typeof this.remoteDispatch !== 'function') throw new RuntimeError('mesh_not_allowed');
+                    continue;
+                }
                 this.target(action.target);
                 if (action.type === 'toggle' && typeof this.readState !== 'function') throw new RuntimeError('runtime_unavailable');
             }
@@ -117,6 +123,7 @@ export class AutomationRuntime {
 
     deactivate() {
         this.generation++;
+        this.onDeactivate?.();
         this.active = null;
         this.rules = [];
         if (this.timer !== null) this.clock.clearInterval(this.timer);
@@ -246,29 +253,200 @@ export class AutomationRuntime {
             if (!await this.wait((action.delay_seconds ?? 0) * 1000, generation)) return;
             if (!this.active || this.generation !== generation) return;
             if (!this.conditions(rule)) { this.log('AKTION', 'Bedingung vor Aktion nicht mehr erfüllt.', {Regel: rule.id}); return; }
-            const entity = this.target(action.target);
-            let values = action.values;
-            if (action.type === 'toggle') {
-                const current = this.readState(entity)?.[action.property];
-                if (current !== 'ON' && current !== 'OFF') throw new RuntimeError('state_unavailable');
-                values = {[action.property]: current === 'ON' ? 'OFF' : 'ON'};
-                this.log('AKTION', 'Umschaltziel aus dem aktuellen Z2M-Zustand ermittelt.', {Regel: rule.id, Zielart: action.target.type});
+            if (action.target.system !== undefined) {
+                await this.remoteDispatch(action);
+            } else {
+                await this.executeLocal(action, generation);
             }
-            const now = this.clock.now();
-            this.sentAt = this.sentAt.filter(time => now - time < 1000);
-            if (this.sentAt.length >= RUNTIME_LIMITS.commandsPerSecond) throw new RuntimeError('rate_limited');
-            this.sentAt.push(now);
-            this.log('SENDEN', 'Set-Aktion an native Z2M-Befehlsverarbeitung übergeben; Gerätewirkung nicht bestätigt.', {Regel: rule.id, Zielart: action.target.type, Eigenschaften: Object.keys(values).length});
-            let timeout;
-            try {
-                await Promise.race([
-                    Promise.resolve().then(() => {
-                        if (this.active && this.generation === generation) return this.dispatch(entity.name + '/set', JSON.stringify(values));
-                    }),
-                    new Promise((_, reject) => { timeout = this.clock.setTimeout(() => reject(new RuntimeError('action_timeout')), RUNTIME_LIMITS.publishTimeoutMs); })
-                ]);
-            } finally { this.clock.clearTimeout(timeout); }
         }
+    }
+
+    async executeLocal(action, generation = this.generation) {
+        if (!this.active || generation !== this.generation) throw new RuntimeError('mesh_stopped');
+        const entity = this.target(action.target);
+        let values = action.values;
+        if (action.type === 'toggle') {
+            const current = this.readState(entity)?.[action.property];
+            if (current !== 'ON' && current !== 'OFF') throw new RuntimeError('state_unavailable');
+            values = {[action.property]: current === 'ON' ? 'OFF' : 'ON'};
+            this.log('AKTION', 'Umschaltziel aus dem aktuellen Z2M-Zustand ermittelt.', {Zielart: action.target.type});
+        }
+        const now = this.clock.now();
+        this.sentAt = this.sentAt.filter(time => now - time < 1000);
+        if (this.sentAt.length >= RUNTIME_LIMITS.commandsPerSecond) throw new RuntimeError('rate_limited');
+        this.sentAt.push(now);
+        this.log('SENDEN', 'Set-Aktion an native Z2M-Befehlsverarbeitung übergeben; Gerätewirkung nicht bestätigt.', {Zielart: action.target.type, Eigenschaften: Object.keys(values).length});
+        let timeout;
+        try {
+            await Promise.race([
+                Promise.resolve().then(() => {
+                    if (!this.active || this.generation !== generation) throw new RuntimeError('mesh_stopped');
+                    return this.dispatch(entity.name + '/set', JSON.stringify(values));
+                }),
+                new Promise((_, reject) => { timeout = this.clock.setTimeout(() => reject(new RuntimeError('action_timeout')), RUNTIME_LIMITS.publishTimeoutMs); })
+            ]);
+        } finally { this.clock.clearTimeout(timeout); }
+    }
+}
+
+
+// Library-local bridge protocol. Credentials and broker configuration stay outside Z2M.
+const MESH_ROOT = 'z2ma/mesh/';
+const MESH_TIMEOUT = 4000;
+const meshObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+export const meshSystemValid = value => typeof value === 'string' && value.length <= 128 && /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/.test(value);
+export const meshSystemKey = value => createHash('sha256').update(value).digest('hex');
+
+export class MeshTransport {
+    constructor({mqtt, system, runtime, validateAction, clock, uuid = randomUUID}) {
+        this.mqtt = mqtt;
+        this.system = system;
+        this.runtime = runtime;
+        this.validateAction = validateAction;
+        this.clock = clock ?? {now: () => performance.now(), setTimeout, clearTimeout};
+        this.uuid = uuid;
+        this.waiters = new Map();
+        this.challenges = new Map();
+        this.subscribed = false;
+        this.closed = false;
+    }
+
+    async start() {
+        if (!meshSystemValid(this.system) || typeof this.mqtt.subscribe !== 'function'
+            || typeof this.mqtt.isConnected !== 'function' || !this.mqtt.isConnected() || this.closed) throw new RuntimeError('mesh_unavailable');
+        if (!this.subscribed) {
+            let timer;
+            try {
+                await Promise.race([this.mqtt.subscribe(MESH_ROOT + meshSystemKey(this.system) + '/#'),
+                    new Promise((_, reject) => { timer = this.clock.setTimeout(() => reject(new RuntimeError('mesh_unavailable')), MESH_TIMEOUT); })]);
+                if (this.closed) {
+                    await this.mqtt.unsubscribe?.(MESH_ROOT + meshSystemKey(this.system) + '/#');
+                    throw new RuntimeError('mesh_unavailable');
+                }
+                this.subscribed = true;
+            } catch { throw new RuntimeError('mesh_unavailable'); }
+            finally { this.clock.clearTimeout(timer); }
+        }
+    }
+
+    allowed(system) {
+        return this.subscribed && this.runtime.active !== null && system !== this.system
+            && this.runtime.active.document.mesh_peers?.includes(system);
+    }
+
+    cancel() {
+        this.challenges.clear();
+        for (const waiter of this.waiters.values()) {
+            this.clock.clearTimeout(waiter.timer);
+            waiter.reject(new RuntimeError('mesh_stopped'));
+        }
+        this.waiters.clear();
+    }
+
+    async stop() {
+        this.closed = true;
+        this.cancel();
+        if (this.subscribed) {
+            this.subscribed = false;
+            try { await this.mqtt.unsubscribe?.(MESH_ROOT + meshSystemKey(this.system) + '/#'); }
+            catch { this.runtime.log('FEHLER', 'Bridge-Abonnement konnte beim Stopp nicht entfernt werden.'); }
+        }
+    }
+
+    async publish(destination, phase, message) {
+        if (!this.mqtt.isConnected()) throw new RuntimeError('mesh_unavailable');
+        await this.mqtt.publish('mesh/' + meshSystemKey(destination) + '/' + phase,
+            JSON.stringify({mesh_version: 1, source: this.system, ...message}),
+            {baseTopic: 'z2ma', skipReceive: false, skipLog: true, clientOptions: {qos: 0, retain: false}});
+    }
+
+    exchange(destination, phase, message, responsePhase) {
+        if (this.waiters.size >= 16) return Promise.reject(new RuntimeError('mesh_busy'));
+        return new Promise((resolve, reject) => {
+            const timer = this.clock.setTimeout(() => {
+                this.waiters.delete(message.transaction);
+                reject(new RuntimeError('mesh_timeout'));
+            }, MESH_TIMEOUT);
+            timer?.unref?.();
+            this.waiters.set(message.transaction, {destination, phase: responsePhase, resolve, reject, timer});
+            this.publish(destination, phase, message).catch(() => {
+                const waiter = this.waiters.get(message.transaction);
+                if (!waiter) return;
+                this.waiters.delete(message.transaction);
+                this.clock.clearTimeout(timer);
+                reject(new RuntimeError('mesh_unavailable'));
+            });
+        });
+    }
+
+    async dispatch(action) {
+        const destination = action.target.system;
+        if (!this.allowed(destination)) throw new RuntimeError('mesh_not_allowed');
+        const generation = this.runtime.generation;
+        const local = {...action, target: {...action.target}};
+        delete local.target.system;
+        delete local.delay_seconds;
+        const digest = createHash('sha256').update(JSON.stringify(local)).digest('hex');
+        const transaction = this.uuid();
+        this.runtime.log('SENDEN', 'Freigabe für eine Aktion im zweiten Z2M-System angefordert.');
+        const challenge = await this.exchange(destination, 'prepare', {transaction, digest}, 'challenge');
+        if (generation !== this.runtime.generation || !this.allowed(destination)) throw new RuntimeError('mesh_stopped');
+        if (challenge.status !== 'ok' || typeof challenge.token !== 'string' || !/^[a-f0-9-]{36}$/.test(challenge.token)) throw new RuntimeError('mesh_rejected');
+        const result = await this.exchange(destination, 'execute', {transaction, token: challenge.token, action: local}, 'result');
+        if (result.status !== 'ok') throw new RuntimeError('mesh_rejected');
+        this.runtime.log('EMPFANG', 'Zielsystem hat die native Befehlsübergabe bestätigt; Gerätewirkung nicht bestätigt.');
+    }
+
+    async receive(event) {
+        const prefix = MESH_ROOT + meshSystemKey(this.system) + '/';
+        if (typeof event?.topic !== 'string' || !event.topic.startsWith(prefix)) return false;
+        try {
+            if (event.retain === true || typeof event.message !== 'string' || Buffer.byteLength(event.message) > 16384) throw new RuntimeError('mesh_invalid');
+            const message = JSON.parse(event.message);
+            const phase = event.topic.slice(prefix.length);
+            if (!meshObject(message) || message.mesh_version !== 1 || !meshSystemValid(message.source)
+                || typeof message.transaction !== 'string' || !/^[a-f0-9-]{36}$/.test(message.transaction)
+                || !this.allowed(message.source)) throw new RuntimeError('mesh_not_allowed');
+            if (['challenge', 'result'].includes(phase)) {
+                const waiter = this.waiters.get(message.transaction);
+                if (!waiter || waiter.destination !== message.source || waiter.phase !== phase) return true;
+                this.waiters.delete(message.transaction);
+                this.clock.clearTimeout(waiter.timer);
+                waiter.resolve(message);
+                return true;
+            }
+            const key = message.source + ':' + message.transaction;
+            if (phase === 'prepare') {
+                if (Object.keys(message).sort().join(',') !== 'digest,mesh_version,source,transaction'
+                    || typeof message.digest !== 'string' || !/^[a-f0-9]{64}$/.test(message.digest)) throw new RuntimeError('mesh_invalid');
+                for (const [id, entry] of this.challenges) if (entry.expires <= this.clock.now()) this.challenges.delete(id);
+                if (this.challenges.has(key) || this.challenges.size >= 64) throw new RuntimeError('mesh_busy');
+                const token = this.uuid();
+                this.challenges.set(key, {token, digest: message.digest, generation: this.runtime.generation, expires: this.clock.now() + MESH_TIMEOUT});
+                await this.publish(message.source, 'challenge', {transaction: message.transaction, status: 'ok', token});
+            } else if (phase === 'execute') {
+                const challenge = this.challenges.get(key);
+                // Consume before any dispatch, including malformed, duplicate or failing commands.
+                this.challenges.delete(key);
+                if (Object.keys(message).sort().join(',') !== 'action,mesh_version,source,token,transaction'
+                    || !challenge || challenge.token !== message.token || challenge.expires <= this.clock.now()
+                    || challenge.generation !== this.runtime.generation || !this.validateAction(message.action)
+                    || message.action.target.system !== undefined || message.action.delay_seconds !== undefined
+                    || createHash('sha256').update(JSON.stringify(message.action)).digest('hex') !== challenge.digest) throw new RuntimeError('mesh_rejected');
+                this.runtime.log('EMPFANG', 'Einmalig freigegebene Aktion vom zweiten Z2M-System empfangen.');
+                let status = 'ok';
+                try { await this.runtime.executeLocal(message.action); }
+                catch (error) {
+                    status = 'error';
+                    this.runtime.lastError = error instanceof RuntimeError ? error.code : 'action_failed';
+                    this.runtime.log('FEHLER', 'Empfangene Aktion nicht ausgeführt; keine automatische Wiederholung.', {Grund: this.runtime.lastError});
+                }
+                await this.publish(message.source, 'result', {transaction: message.transaction, status});
+            }
+        } catch (error) {
+            this.runtime.log('FEHLER', 'Bridge-Nachricht verworfen; keine zusätzliche Geräteaktion.', {Grund: error instanceof RuntimeError ? error.code : 'mesh_invalid'});
+        }
+        return true;
     }
 }
 
@@ -280,7 +458,7 @@ const ERRORS = Object.freeze({
     invalid_request: 'Invalid request envelope.',
     invalid_yaml: 'YAML must contain one bounded JSON-compatible document without anchors, aliases or tags.',
     invalid_schema: 'Automation configuration does not conform to schema version 1.',
-    invalid_semantics: 'Duplicate automation ID, invalid timezone or empty time window.',
+    invalid_semantics: 'Duplicate automation ID, invalid timezone, empty time window or unapproved remote action.',
     session_mismatch: 'Request does not belong to the current extension session.',
     revision_conflict: 'Expected revision does not match the stored configuration.',
     revision_reused: 'New revision must be exactly the stored revision plus one.',
@@ -291,7 +469,9 @@ const ERRORS = Object.freeze({
     runtime_unavailable: 'Required Z2M runtime interfaces are unavailable.',
     unknown_entity: 'A configured device or group is unavailable.',
     checksum_mismatch: 'Activation checksum does not match the stored configuration.',
-    activation_expired: 'Request a fresh activation token before activating the stored revision.'
+    activation_expired: 'Request a fresh activation token before activating the stored revision.',
+    mesh_unavailable: 'The bridge transport is unavailable.',
+    mesh_not_allowed: 'The second Z2M system is not permitted.'
 });
 
 class ConfigurationError extends Error {
@@ -306,6 +486,7 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 const isRevision = value => Number.isSafeInteger(value) && value >= 0;
 const hash = text => createHash('sha256').update(text, 'utf8').digest('hex');
 const validateSchema = new Ajv({strict: true, allowUnionTypes: true, allErrors: false}).compile(AUTOMATIONS_SCHEMA);
+const validateMeshAction = new Ajv({strict: true, allowUnionTypes: true}).addSchema(AUTOMATIONS_SCHEMA).getSchema(AUTOMATIONS_SCHEMA.$id + '#/definitions/action');
 const yamlSchema = JSON_SCHEMA.withTags({
     ...mapTag,
     create: () => Object.create(null),
@@ -338,6 +519,7 @@ export function validateYaml(yaml) {
     for (const automation of document.automations) {
         if (ids.has(automation.id)) fail('invalid_semantics');
         ids.add(automation.id);
+        if (automation.enabled && automation.actions.some(action => action.target.system !== undefined && !document.mesh_peers?.includes(action.target.system))) fail('invalid_semantics');
         for (const clause of [...automation.triggers, ...automation.conditions]) {
             if (clause.timezone !== undefined) {
                 try {
@@ -559,7 +741,10 @@ export default class Z2MAutomationsExtension {
         this.settings = settings;
         this.logger = logger;
         this.zigbee = _zigbee;
+        this.clock = options.clock;
         this.runtime = new AutomationRuntime({zigbee: _zigbee, logger, clock: options.clock,
+            remoteDispatch: action => this.mesh.dispatch(action),
+            onDeactivate: () => this.mesh?.cancel(),
             readState: typeof _state?.get === 'function' ? entity => _state.get(entity) : undefined,
             dispatch: (topic, message) => this.eventBus.emitMQTTMessage({topic: this.baseTopic + '/' + topic, message}),
             available: typeof eventBus.onPublishEntityState === 'function' && typeof eventBus.emitMQTTMessage === 'function'});
@@ -576,6 +761,8 @@ export default class Z2MAutomationsExtension {
 
     status() {
         return {protocol_version: 1, schema_version: 1, extension_version: '0.1.0',
+            mesh_version: 1, mesh_ready: Boolean(this.mesh?.subscribed && this.runtime.active?.document.mesh_peers?.length),
+            mesh_peer_count: this.runtime.active?.document.mesh_peers?.length ?? 0,
             session: this.session, state: this.accepting ? 'ready' : 'stopped', ...this.store.metadata(), ...this.runtime.metadata()};
     }
 
@@ -592,6 +779,7 @@ export default class Z2MAutomationsExtension {
         try {
             if (this.accepting) return;
             this.baseTopic = this.settings.get().mqtt.base_topic;
+            this.mesh = new MeshTransport({mqtt: this.mqtt, system: this.baseTopic, runtime: this.runtime, validateAction: validateMeshAction, clock: this.clock});
             this.session = randomUUID();
             this.activationToken = null;
             await this.store.load();
@@ -612,6 +800,7 @@ export default class Z2MAutomationsExtension {
             this.activationToken = null;
             this.eventBus.removeListeners(this);
             this.runtime.deactivate();
+            await this.mesh?.stop();
             await this.queue;
             await this.runtime.stop();
             await this.publish('status', this.status(), true);
@@ -619,6 +808,7 @@ export default class Z2MAutomationsExtension {
     }
 
     async receive(event) {
+        if (this.accepting && this.mesh && await this.mesh.receive(event)) return;
         const prefix = this.baseTopic + '/' + PREFIX + '/request/';
         if (typeof event?.topic !== 'string' || !event.topic.startsWith(prefix)) return;
         const operation = event.topic.slice(prefix.length);
@@ -689,6 +879,12 @@ export default class Z2MAutomationsExtension {
                         if (!this.accepting) fail('not_ready');
                         if (request.expected_revision !== this.store.current.document.revision) fail('revision_conflict');
                         if (request.checksum !== this.store.current.checksum) fail('checksum_mismatch');
+                        const peers = this.store.current.document.mesh_peers ?? [];
+                        if (peers.length) {
+                            if (peers.includes(this.baseTopic) || !meshSystemValid(this.baseTopic)) fail('mesh_not_allowed');
+                            await this.mesh.start();
+                        }
+                        if (!this.accepting) fail('not_ready');
                         this.runtime.activate(this.store.current);
                     } else {
                         this.activationToken = null;

@@ -25,6 +25,7 @@ require_once __DIR__ . '/../libs/AutomationEditorConditions.php';
 require_once __DIR__ . '/../libs/EditorSymconVariables.php';
 require_once __DIR__ . '/../libs/EditorPropertyCatalog.php';
 require_once __DIR__ . '/../libs/EditorItemForms.php';
+require_once __DIR__ . '/../libs/RemoteAutomationTargets.php';
 
 use Z2MAutomations\Z2MProtocol;
 
@@ -51,6 +52,7 @@ class Z2MAutomations extends IPSModuleStrict
     use Z2MAutomations\EditorSymconVariables;
     use Z2MAutomations\EditorPropertyCatalog;
     use Z2MAutomations\EditorItemForms;
+    use Z2MAutomations\RemoteAutomationTargets;
 
     public function Create(): void
     {
@@ -59,6 +61,7 @@ class Z2MAutomations extends IPSModuleStrict
             parent::Create();
             $this->RegisterPropertyBoolean('Active', false);
             $this->RegisterPropertyString('BaseTopic', 'zigbee2mqtt');
+            $this->RegisterPropertyInteger('PeerModuleID', 0);
             $this->RegisterPropertyInteger('RequestTimeout', 10);
             $this->RegisterAttributeInteger('ObservedParentID', 0);
             $this->RegisterAttributeString('YamlDraft', '');
@@ -90,6 +93,7 @@ class Z2MAutomations extends IPSModuleStrict
             $this->RegisterVariableInteger('EnabledAutomations', $this->Translate('Enabled automations'), $this->ValuePresentation(), 120);
             $this->RegisterVariableString('ExecutionStatus', $this->Translate('Automation execution'), $this->TextPresentation(), 130);
             $this->RegisterVariableString('RuntimeError', $this->Translate('Last execution error'), $this->TextPresentation(), 140);
+            $this->RegisterVariableBoolean('MeshReady', $this->Translate('Incoming actions from second Z2M enabled'), $this->BooleanPresentation($this->Translate('Active'), $this->Translate('Stopped or unknown')), 150);
         });
     }
 
@@ -398,13 +402,20 @@ class Z2MAutomations extends IPSModuleStrict
     private function ValidConfiguration(): bool
     {
         return Z2MProtocol::IsValidBaseTopic($this->ReadPropertyString('BaseTopic'))
+            && ($this->ReadPropertyInteger('PeerModuleID') === 0 || ($this->PeerContext() !== null
+                && strlen($this->ReadPropertyString('BaseTopic')) <= 128
+                && preg_match('/\A[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\z/D', $this->ReadPropertyString('BaseTopic')) === 1))
             && $this->ReadPropertyInteger('RequestTimeout') >= 1 && $this->ReadPropertyInteger('RequestTimeout') <= 120;
     }
 
     private function RefreshState(): array
     {
         $parent = $this->GetParentID();
-        $scope = json_encode([$parent, $this->ReadPropertyString('BaseTopic'), $this->ReadPropertyBoolean('Active'), $this->ReadPropertyInteger('RequestTimeout')], JSON_THROW_ON_ERROR);
+        $context = [$parent, $this->ReadPropertyString('BaseTopic'), $this->ReadPropertyBoolean('Active'), $this->ReadPropertyInteger('RequestTimeout')];
+        if ($this->ReadPropertyInteger('PeerModuleID') !== 0) {
+            $context[] = $this->PeerContext();
+        }
+        $scope = json_encode($context, JSON_THROW_ON_ERROR);
         $connected = $this->ReadPropertyBoolean('Active') && $this->ValidConfiguration() && $this->HasParent()
             && in_array(IPS_GetInstance($parent)['ModuleInfo']['ModuleID'], [Z2MProtocol::MQTT_CLIENT, Z2MProtocol::MQTT_SERVER], true)
             && $this->HasActiveParent();

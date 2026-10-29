@@ -1,3 +1,25 @@
+## Systemübergreifende Aktionen
+
+Der neue Stand erweitert den Klick-Editor und die eigene Engine um Aktionen auf
+einem gewählten zweiten Z2M-System. Kein neues Helper-Bundle: Katalogbindung,
+Mesh-Protokoll und Laufzeit sind librarylokale Automationslogik. Vorhandene
+DataFlow-, Formular- und DebugFlow-Helper bleiben unverändert eingebunden.
+
+`tests/mesh.test.mjs` prüft zwei Instanzen des erzeugten Artefakts mit getrennten
+Speichern, MQTT-Subscription-/Publish-Grenze und nativer Z2M-Befehlsübergabe.
+Gleichlautende Gruppen werden anhand des Systems auseinandergehalten. Tests
+prüfen Umschalten am Ziel, doppelte/abgelaufene/veränderte Execute-Pakete,
+unberechtigte Quellen, fehlerhaftes JSON, fehlende Ziele, Stopp und Verbindungsfehler.
+`tests/remote-targets.inc.php` ergänzt die PHP-/JavaScript-Integration um echte
+Modulauswahl, getrennte Gateways, Rechteentzug, deaktivierten Import,
+Vorbelegung, Schema-Prüfung und persistente Speicherung. Testdaten sind synthetisch.
+
+Lokale Nachweise: `php tests/run.php` einschließlich neun neuer Mesh-Tests,
+Struktur-/Helper-/Kodierungsprüfung, offizielle StylePHP-JSON-Prüfung eigener
+Projektdateien und php-cs-fixer 3.95.27 im Prüfmodus. Native Formularbedienung,
+Broker-/ACL-Reconnect, reale Geräteausführung und GitHub Actions sind für diesen
+Stand noch nicht geprüft. Keine Änderungen an Test- oder Live-Installation.
+
 ## Native Ereignisziele und Wertänderungen
 
 Die bisherige Annahme, dass EventActionParameters immer TARGET enthält, war falsch.

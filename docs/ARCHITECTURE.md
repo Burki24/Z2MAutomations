@@ -1,5 +1,17 @@
 # Architektur
 
+## Zwei eigenständige Z2M-Systeme
+
+`RemoteAutomationTargets` erweitert nur Aktionsziele um den ausdrücklich
+gewählten Partner am anderen Gateway. `GetActionCatalog` exportiert dessen
+lokale, nach Symcon-Schaltrechten gefilterten Geräte und Gruppen. Ein Export
+enthält nie erneut fremde Ziele. Der Katalog wird je öffentlichem Aufruf gelesen;
+die Variablenrechte werden vor jeder Verwendung erneut geprüft. Eigene Quellen
+und Ereignissuche bleiben an das eigene Gateway gebunden. YAML verwendet keine
+Symcon-IDs. Der Import unterstützt lokale Quellen mit gezielt gewählten
+entfernten Aktionszielen. [ADR 0009](adr/0009-cross-system-actions-over-mqtt-bridge.md)
+definiert Einmalfreigaben, Fehlergrenzen und den separaten Mesh-Bereich.
+
 ## Symcon-Ereignisimport
 
 Ein lesender Import übersetzt ausdrücklich unterstützte Kernel-Ereignisse über

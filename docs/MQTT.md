@@ -1,5 +1,25 @@
 # MQTT-Vertrag und Nachweise
 
+## Verbindung zwischen zwei Brokern
+
+Die eigene Erweiterung ab diesem Stand transportiert entfernte Aktionen über
+`z2ma/mesh/#`; siehe [ADR 0009](adr/0009-cross-system-actions-over-mqtt-bridge.md).
+Die Broker-Bridge muss diesen Bereich in beide Richtungen übertragen. Die
+bestehenden gerätebezogenen Basistopics werden nicht miteinander gespiegelt.
+Jeder **Z2M-Benutzer** benötigt zusätzlich zu seinem bisherigen Bereich:
+
+```text
+topic readwrite z2ma/mesh/#
+```
+
+Diese Zeile gehört in den vorhandenen Abschnitt `user z2m` des jeweiligen
+Brokers. Die Berechtigungen des Bridge-Benutzers sind davon unabhängig.
+Symcons MQTT-Clients benötigen für die Regelverwaltung keine Mesh-Berechtigung;
+sie kommunizieren weiterhin nur über ihre eigenen Basistopics.
+Keine Passwörter, echten Adressen oder lokalen Konfigurationen in der Library.
+Berechtigungen und Praxisabnahme werden auf ausdrücklichen Auftrag separat
+durchgeführt; der neue Code wurde noch nicht auf den Z2M-Systemen installiert.
+
 Diese Datei beschreibt den Symcon-Transport einschließlich der Installation und
 des [Empfängervertrags der Z2M-Erweiterung](EXTENSION_PROTOCOL.md).
 

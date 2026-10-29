@@ -132,7 +132,7 @@ trait AutomationEditorActions
         foreach ($snapshot['devices'] ?? [] as $id => $device) {
             foreach ($this->EditorChoices($snapshot, $id, 'Target') as $choice) {
                 if ($choice['value'] !== '') {
-                    $options[] = ['caption' => $device['name'] . ' (' . $id . ') — ' . $choice['caption'], 'value' => $id . ':' . $choice['value']];
+                    $options[] = ['caption' => $this->EditorDeviceLabel($device, $id) . ' — ' . $choice['caption'], 'value' => $id . ':' . $choice['value']];
                 }
             }
         }

@@ -194,7 +194,7 @@ trait EditorItemForms
             [$device, $key] = $parts;
             $choice = $this->FindEditorChoice($snapshot, $device, $key, $side);
             if ($choice !== null) {
-                $options[] = ['caption'                                                                                                                      => $snapshot['devices'][$device]['name'] . ' (' . $device . ') — '
+                $options[] = ['caption'                                                                                                                      => $this->EditorDeviceLabel($snapshot['devices'][$device], $device) . ' — '
                     . $this->EditorPropertyLabel($snapshot, $device, $choice['property'], $side) . ': ' . $this->EditorValueLabel($choice['value']), 'value' => $encoded];
             }
         }

@@ -85,11 +85,15 @@ trait EditorGroupTargets
 
     private function EditorTargetIdentity(string $key): array
     {
+        if (str_starts_with($key, 'remote.')) {
+            return $this->EditorSnapshot()['devices'][$key]['remoteTarget'] ?? [];
+        }
         return str_starts_with($key, 'group.') ? ['type' => 'group', 'id' => (int) substr($key, 6)] : ['type' => 'device', 'id' => $key];
     }
 
     private function EditorTargetKey(array $target): string
     {
-        return ($target['type'] ?? '') === 'group' ? 'group.' . $target['id'] : (string) ($target['id'] ?? '');
+        $local = ($target['type'] ?? '') === 'group' ? 'group.' . $target['id'] : (string) ($target['id'] ?? '');
+        return isset($target['system']) ? 'remote.' . hash('sha256', $target['system']) . '.' . $local : $local;
     }
 }

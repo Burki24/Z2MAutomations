@@ -1,5 +1,16 @@
 # Debug und MQTT-Diagnose
 
+## Aktionen im zweiten Z2M-System
+
+`GetActionCatalog` verwendet den zentralen START-/ENDE-Ablauf und meldet die
+Anzahl schaltbarer Ziele. Fehlende Partnerdaten werden mit dem nächsten
+Bedienungsschritt erklärt. Variablenbindungen werden erneut geprüft; keine
+Kataloginhalte, Gerätenamen oder Aktionswerte werden zusätzlich protokolliert.
+Die Erweiterung meldet Freigabeanforderung, Empfang der einmalig freigegebenen
+Aktion, native Übergabe und deren Bestätigung. Fehler nennen feste Codes und
+keine Netzwerk-/Exception-Inhalte. Kennungen, Tokens und Fingerabdrücke werden
+nicht geloggt. Bestätigte Übergabe und Gerätewirkung bleiben sprachlich getrennt.
+
 ## Wertänderung als Import-Auslöser
 
 Die native Auslöserdiagnose zählt `NurBeiWertänderung`. Die Z2M-Runtime erklärt

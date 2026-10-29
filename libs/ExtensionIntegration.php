@@ -484,6 +484,7 @@ trait ExtensionIntegration
         $this->SetValue('ExtensionReady', $ready);
         $this->SetValue('StoredRevision', $state['extension']['storedRevision'] ?? 0);
         $confirmed = $state['runtimeConfirmed'] && $state['extensionConfirmed'];
+        $this->SetValue('MeshReady', $confirmed && ($state['extension']['meshReady'] ?? false));
         $executing = $confirmed && ($state['extension']['executing'] ?? false);
         $this->DebugFlowWriteValue('ExecutionActive', $executing, __FUNCTION__, __LINE__);
         $this->DebugFlowWriteValue('ActiveRevision', $executing ? $state['extension']['activeRevision'] : 0, __FUNCTION__, __LINE__);

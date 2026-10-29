@@ -1,5 +1,17 @@
 # Unveröffentlicht
 
+## Features
+
+- Aktionen können Geräte und Gruppen eines ausdrücklich ausgewählten zweiten
+  Z2M-Systems schalten. Klick-Editor, Vorbelegung und Ereignisimport erhalten
+  systemgebundene Ziele und prüfen weiterhin native Symcon-Schaltrechte.
+- Eigener Mesh-Transport über eine vorhandene MQTT-Bridge mit kurzlebigen
+  Einmalfreigaben, Rückmeldung der Befehlsübergabe und Schutz gegen doppelte
+  oder alte Ausführung. Beide Seiten benötigen gespeicherte, ausdrücklich
+  aktivierte Freigaben. Stopp sperrt auch eingehende Aktionen.
+- Zusätzliche Statusvariable für freigegebene eingehende Aktionen und
+  verständliche Debug-/Fehlermeldungen. Noch keine Installation dieses Stands.
+
 ## Fixes
 
 - Gerätedaten für den Ereignisimport lassen sich nachladen, ohne vorhandene

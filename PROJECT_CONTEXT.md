@@ -8,6 +8,19 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Systemübergreifende Aktionen lokal implementiert: pro Modul ein ausdrücklich
+  gewählter Partner am anderen Gateway; dessen schaltbare Geräte/Gruppen werden
+  aus dem lokalen Partnerkatalog angeboten. Quellen und Bedingungen bleiben lokal.
+  Auswahl, Import deaktivierter Regeln, Vorbelegung und Speicherung sind offline
+  geprüft. `mesh_peers` und `target.system` erweitern Schema 1 additiv.
+  Zwei aktivierte Z2M-Engines kommunizieren über `z2ma/mesh/#` mit kurzlebiger,
+  aktionsgebundener Einmalfreigabe und Bestätigung der nativen Übergabe.
+  Stopp sperrt auch Empfang; keine Wiederholung und kein Start nach Neustart.
+  Neue Statusvariable und sichere deutsche Debug-Ausgaben; siehe ADR 0009.
+  Dieser Stand ist noch nicht installiert oder real geschaltet. Vor der späteren
+  Praxisprüfung benötigen auch die Z2M-Benutzer Mesh-Rechte; die Bridge-Rechte
+  allein genügen nicht. Keine Live-Konfiguration durch diese Implementierung.
+
 - Reale Ereignisstrukturen auf ausdrücklich nur lesend freigegebener Produktion
   geprüft. Zwei Implementierungsfehler lokal korrigiert: natives Aktionsziel aus
   Event-Elternobjekt statt zwingendem TARGET; Statusvariable-schalten-Wrapper
