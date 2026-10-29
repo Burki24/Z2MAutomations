@@ -31,13 +31,18 @@ trait Z2MInstanceDiscovery
             $type = self::Z2M_MODULE_TYPES[$info['ModuleInfo']['ModuleID'] ?? ''] ?? null;
             $gateway = $this->GetParentID();
             $peer = $allowPeer ? $this->PeerContext() : null;
-            $remote = $peer !== null && ($info['ConnectionID'] ?? 0) === $peer['gateway'];
-            if ($type === null || $gateway <= 0 || !IPS_InstanceExists($gateway) || (($info['ConnectionID'] ?? 0) !== $gateway && !$remote)) {
+            $peerGateway = $peer !== null && ($info['ConnectionID'] ?? 0) === $peer['gateway'];
+            if ($type === null || $gateway <= 0 || !IPS_InstanceExists($gateway) || (($info['ConnectionID'] ?? 0) !== $gateway && !$peerGateway)) {
                 return null;
             }
             $configuration = json_decode(IPS_GetConfiguration($id), true, 32, JSON_THROW_ON_ERROR);
             $topic = $configuration['MQTTBaseTopic'] ?? null;
             if (!is_string($topic) || !Z2MProtocol::IsValidBaseTopic($topic)) {
+                return null;
+            }
+            // A common MQTT parent does not identify the Z2M system: match its topic as well.
+            $remote = $peerGateway && $topic === $peer['system'];
+            if (($info['ConnectionID'] ?? 0) !== $gateway && !$remote) {
                 return null;
             }
             $key = '';

@@ -1,5 +1,15 @@
 ## Systemübergreifende Aktionen
 
+`tests/shared-gateway.inc.php` reproduzierte zuerst die abgewiesene Partnerwahl
+am gemeinsamen MQTT-Client. Nach der Korrektur prüft die PHP-/JS-Integration
+identische IEEE-/Gruppenkennungen auf unterschiedlichen Topics desselben Clients:
+getrennte Auswahl, lokale und systemübergreifende Importprüfung, deaktivierte
+Übernahme, Vorbelegung, Schema-Prüfung und Speicherung. Rechteentzug betrifft nur
+das richtige Topic; fremde Quellen und nicht ausgewählte Verbindungen bleiben
+ausgeschlossen. Gleiche Basistopics und Selbstzuordnung werden weiterhin abgewiesen.
+Der neue Debug-Bezug benennt den gemeinsam genutzten MQTT-Elternknoten als Boolean.
+Keine Änderung am Mesh-Protokoll, an der Erweiterung oder an Broker-Einstellungen.
+
 Der neue Stand erweitert den Klick-Editor und die eigene Engine um Aktionen auf
 einem gewählten zweiten Z2M-System. Kein neues Helper-Bundle: Katalogbindung,
 Mesh-Protokoll und Laufzeit sind librarylokale Automationslogik. Vorhandene

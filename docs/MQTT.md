@@ -4,7 +4,10 @@
 
 Die eigene Erweiterung ab diesem Stand transportiert entfernte Aktionen über
 `z2ma/mesh/#`; siehe [ADR 0009](adr/0009-cross-system-actions-over-mqtt-bridge.md).
-Die Broker-Bridge muss diesen Bereich in beide Richtungen übertragen. Die
+Bei getrennten Brokern muss die Broker-Bridge diesen Bereich in beide Richtungen
+übertragen. Bei einem gemeinsamen Broker entfällt die Bridge. Die beiden
+Automationsmodule dürfen auch denselben Symcon-MQTT-Client nutzen; dieser muss
+die Verwaltungs-Topics beider Basistopics abonniert haben. Die
 bestehenden gerätebezogenen Basistopics werden nicht miteinander gespiegelt.
 Jeder **Z2M-Benutzer** benötigt zusätzlich zu seinem bisherigen Bereich:
 

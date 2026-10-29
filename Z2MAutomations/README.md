@@ -2,7 +2,10 @@
 
 ## Ein Gerät auf dem zweiten Z2M-System schalten
 
-Jedes Z2M-System erhält sein eigenes Automationsmodul am zugehörigen MQTT-Client.
+Jedes Z2M-System erhält sein eigenes Automationsmodul mit eigenem Basistopic.
+Die Systeme dürfen einen Broker und denselben Symcon-MQTT-Client verwenden.
+Bei einem gemeinsamen Broker wird keine Broker-Bridge benötigt; beide Z2M-Benutzer
+brauchen Zugriff auf den gemeinsamen Bereich `z2ma/mesh/#`.
 Unter **Aktionen zwischen zwei Z2M-Systemen** wählen Sie in beiden Modulen das
 jeweils andere Modul. Die Basistopics müssen verschieden sein. Anschließend
 die Gerätedaten in beiden Modulen laden und das Formular erneut öffnen.
@@ -20,7 +23,8 @@ bestätigte Empfangsbereitschaft nach einer Statusabfrage. **Stoppen** auf der
 empfangenden Seite sperrt auch Aktionen des anderen Systems. Bereits gesendete
 Gerätebefehle lassen sich dadurch nicht zurückholen.
 
-Voraussetzung ist eine eingerichtete Broker-Verbindung für `z2ma/mesh/#`.
+Bei getrennten Brokern ist eine eingerichtete Broker-Verbindung für `z2ma/mesh/#`
+Voraussetzung.
 Der Benutzer, mit dem sich **Z2M selbst** anmeldet, benötigt auf seinem Broker
 zusätzlich Lese- und Schreibrecht für diesen Bereich. Der Bridge-Benutzer allein
 genügt nicht. Das Modul ändert keine Brokerberechtigungen und benötigt keine
@@ -48,7 +52,9 @@ der aktuelle Stand aus Z2M laden.
 
 ## MQTT-Gateway und Suchbereich
 
-Für zwei MQTT-Server werden zwei getrennte Automationsinstanzen verwendet.
+Für zwei Z2M-Systeme mit unterschiedlichen Basistopics werden zwei getrennte
+Automationsinstanzen verwendet, auch bei einem gemeinsamen MQTT-Broker oder
+Symcon-MQTT-Client.
 Jede Instanz nutzt ausschließlich ihre eigene übergeordnete MQTT-Verbindung
 und das unter **Zigbee2MQTT-Basistopic** konfigurierte Topic (Groß-/Kleinschreibung
 beachten). Gleichlautende Topics, IEEE-Kennungen oder Gruppen-IDs an anderen

@@ -756,6 +756,7 @@ try {
     require __DIR__ . '/event-import.inc.php';
     require __DIR__ . '/event-import-scope.inc.php';
     require __DIR__ . '/remote-targets.inc.php';
+    require __DIR__ . '/shared-gateway.inc.php';
     $stack = [];
     $captured = json_encode($module->debugMessages, JSON_THROW_ON_ERROR);
     $check(!str_contains($captured, 'Synthetic click automation') && !str_contains($captured, 'Synthetic timed rule') && !str_contains($captured, 'Synthetic sequence')

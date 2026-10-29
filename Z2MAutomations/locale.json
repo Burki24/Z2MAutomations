@@ -286,7 +286,6 @@
             "The current Z2M target state is unknown. Toggle was not executed.": "Umschalten nicht ausgeführt: Z2M kennt den aktuellen Zustand des Geräts oder der Gruppe noch nicht. Bitte warten, bis ein Zustand gemeldet wurde, und danach erneut versuchen.",
             "Base topics found on this MQTT gateway": "An diesem MQTT-Gateway gefundene Basistopics",
             "Choose a detected base topic": "Gefundenes Basistopic auswählen",
-            "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events.": "Für jeden MQTT-Server wird eine eigene Automationsinstanz benötigt. Das Basistopic muss zur gewünschten Zigbee2MQTT-Installation passen. Ein gefundenes Topic auswählen oder manuell eintragen, die Einstellungen übernehmen und danach die Gerätedaten neu laden.",
             "Load device data for import": "Gerätedaten für den Import laden",
             "Trigger device": "Auslösendes Gerät",
             "Instance ID": "Instanz-ID",
@@ -328,7 +327,8 @@
             "The second Z2M system rejected the action. Check its activation, target device and debug output.": "Das zweite Z2M-System hat die Aktion abgelehnt. Bitte dort die Aktivierung, das Zielgerät und die Debug-Ausgaben prüfen.",
             "The pending action was cancelled because execution was stopped.": "Die ausstehende Aktion wurde durch den Stopp abgebrochen.",
             "Too many actions are pending for the second Z2M system. This action was not repeated.": "Es stehen zu viele Aktionen für das zweite Z2M-System aus. Diese Aktion wurde nicht wiederholt.",
-            "Check duplicate rule IDs, timezones, time windows and permissions for actions in the second system.": "Bitte prüfen: Jede Regel benötigt eine eigene Kennung, Zeitzonen und Zeitfenster müssen gültig und Aktionen im zweiten System freigegeben sein."
+            "Check duplicate rule IDs, timezones, time windows and permissions for actions in the second system.": "Bitte prüfen: Jede Regel benötigt eine eigene Kennung, Zeitzonen und Zeitfenster müssen gültig und Aktionen im zweiten System freigegeben sein.",
+            "One automation module per Z2M system and base topic. MQTT clients and brokers may be shared. Choose a topic, apply the settings and reload the device data before importing events.": "Für jedes Z2M-System mit eigenem Basistopic wird ein Automationsmodul benötigt. MQTT-Client und Broker dürfen gemeinsam genutzt werden. Topic auswählen, Einstellungen übernehmen und vor dem Import die Gerätedaten neu laden."
         }
     }
 }

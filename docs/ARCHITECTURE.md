@@ -3,7 +3,10 @@
 ## Zwei eigenständige Z2M-Systeme
 
 `RemoteAutomationTargets` erweitert nur Aktionsziele um den ausdrücklich
-gewählten Partner am anderen Gateway. `GetActionCatalog` exportiert dessen
+gewählten Partner mit anderem Basistopic. Beide Module dürfen dasselbe
+MQTT-Gateway verwenden. Die Zuordnung prüft immer Gateway und Basistopic
+zusammen; die Gateway-Gleichheit allein macht ein Ziel nicht lokal oder fremd.
+`GetActionCatalog` exportiert dessen
 lokale, nach Symcon-Schaltrechten gefilterten Geräte und Gruppen. Ein Export
 enthält nie erneut fremde Ziele. Der Katalog wird je öffentlichem Aufruf gelesen;
 die Variablenrechte werden vor jeder Verwendung erneut geprüft. Eigene Quellen
@@ -16,7 +19,7 @@ definiert Einmalfreigaben, Fehlergrenzen und den separaten Mesh-Bereich.
 
 Ein lesender Import übersetzt ausdrücklich unterstützte Kernel-Ereignisse über
 Variablen-IDs in lokale Regeln. `Z2MInstanceDiscovery` bindet die Zuordnung an
-die eigene MQTT-ConnectionID und das ausgewählte Basistopic; pro Gateway wird
+die eigene MQTT-ConnectionID und das ausgewählte Basistopic; pro Z2M-System wird
 eine eigene Automationsinstanz verwendet. Fremde Elternobjekte werden vor
 Instanzzugriffen ausgeschlossen. Die Ereignissuche ist vom geladenen Katalog
 unabhängig, die Importfreigabe erfordert weiterhin dessen passenden Kontext. Ein direkter

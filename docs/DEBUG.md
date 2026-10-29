@@ -2,6 +2,10 @@
 
 ## Aktionen im zweiten Z2M-System
 
+Die Katalogzuordnung meldet `GemeinsamesMQTTGateway` und die Zielanzahl. Ein
+gemeinsamer MQTT-Client wird ausdrücklich erkannt; Gateway und Basistopic werden
+gemeinsam geprüft. Gerätewerte, Namen und Transportkennungen bleiben geschützt.
+
 `GetActionCatalog` verwendet den zentralen START-/ENDE-Ablauf und meldet die
 Anzahl schaltbarer Ziele. Fehlende Partnerdaten werden mit dem nächsten
 Bedienungsschritt erklärt. Variablenbindungen werden erneut geprüft; keine

@@ -55,7 +55,7 @@ trait RemoteAutomationTargets
             $configuration = json_decode(IPS_GetConfiguration($id), true, 32, JSON_THROW_ON_ERROR);
             $base = $configuration['BaseTopic'] ?? '';
             $gateway = $instance['ConnectionID'];
-            return $gateway > 0 && $gateway !== $this->GetParentID() && is_string($base) && strlen($base) <= 128
+            return $gateway > 0 && is_string($base) && strlen($base) <= 128
                 && preg_match('/\A[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\z/D', $base) === 1 && $base !== $this->ReadPropertyString('BaseTopic')
                 ? ['module' => $id, 'system' => $base, 'gateway' => $gateway] : null;
         } catch (Throwable) {
@@ -70,10 +70,14 @@ trait RemoteAutomationTargets
             return $snapshot;
         }
         try {
+            $freshCatalog = $this->peerActionCatalog === null;
             $catalog = $this->peerActionCatalog ??= $this->ReadPeerActionCatalog($context['module']);
             if (($catalog['system'] ?? '') !== $context['system'] || ($catalog['gateway'] ?? 0) !== $context['gateway']
                 || !is_array($catalog['devices'] ?? null) || count($catalog['devices']) > 512) {
                 return $snapshot;
+            }
+            if ($freshCatalog) {
+                $this->DebugEvent('AKTION', 'Aktionsziele des zweiten Systems anhand von MQTT-Verbindung und Basistopic zugeordnet.', ['GemeinsamesMQTTGateway' => $context['gateway'] === $this->GetParentID(), 'Ziele' => count($catalog['devices'])]);
             }
             foreach ($catalog['devices'] as $key => $entry) {
                 if (!is_string($key) || preg_match('/\A(?:0x[a-f0-9]{16}|group\.[1-9][0-9]{0,4})\z/D', $key) !== 1

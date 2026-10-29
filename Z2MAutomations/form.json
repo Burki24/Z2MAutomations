@@ -30,7 +30,7 @@
                 },
                 {
                     "type": "Label",
-                    "caption": "One automation module per MQTT gateway. Choose a detected topic or enter it manually, apply the settings and reload the device catalog before importing events.",
+                    "caption": "One automation module per Z2M system and base topic. MQTT clients and brokers may be shared. Choose a topic, apply the settings and reload the device data before importing events.",
                     "width": "100%"
                 },
                 {

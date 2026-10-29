@@ -308,14 +308,15 @@ trait SymconEventImport
                 return $reject('%s "%s": The variable does not belong to a supported Zigbee2MQTT instance.');
             }
             $peer = $side === 'Target' ? $this->PeerContext() : null;
-            $remote = $peer !== null && ($info['ConnectionID'] ?? 0) === $peer['gateway'];
-            if (($info['ConnectionID'] ?? 0) !== $this->GetParentID() && !$remote) {
+            $peerGateway = $peer !== null && ($info['ConnectionID'] ?? 0) === $peer['gateway'];
+            if (($info['ConnectionID'] ?? 0) !== $this->GetParentID() && !$peerGateway) {
                 return $reject('%s "%s": The device belongs to another MQTT connection.');
             }
-            $scope = $this->ReadZ2MInstanceScope($instance, $remote);
+            $scope = $this->ReadZ2MInstanceScope($instance, $side === 'Target');
             if ($scope === null) {
                 return $reject('%s "%s": The Zigbee2MQTT instance has an invalid base topic or device identity.');
             }
+            $remote = $peerGateway && $scope['topic'] === $peer['system'];
             if ($scope['topic'] !== ($remote ? $peer['system'] : $this->ReadPropertyString('BaseTopic'))) {
                 return $reject('%s "%s": The device uses another Zigbee2MQTT base topic.');
             }

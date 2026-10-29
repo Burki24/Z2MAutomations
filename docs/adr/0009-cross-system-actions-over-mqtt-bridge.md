@@ -7,13 +7,17 @@ Status: lokal implementiert, Praxisabnahme offen.
 Eine Regel gehört zum Z2M-System ihrer Auslöser. Geräteauslöser und Bedingungen
 bleiben lokal; Aktionen dürfen ein ausdrücklich ausgewähltes zweites System
 ansprechen. Für die Gegenrichtung wird eine Regel im anderen Automationsmodul
-angelegt. Beide Systeme bleiben eigenständige Z2M-Installationen und Broker.
+angelegt. Beide Systeme bleiben eigenständige Z2M-Installationen mit
+unterschiedlichen Basistopics. Sie dürfen einen Broker und denselben nativen
+Symcon-MQTT-Client gemeinsam nutzen. Gateway und Basistopic bilden zusammen
+die Zuordnung; weder gleiche Gruppen-IDs noch IEEE-Adressen heben die Topicgrenze auf.
 
 Die Module wählen einander über `PeerModuleID`. Der zweite Katalog kommt aus
 dem lesenden `GetActionCatalog` des ausgewählten Moduls, ohne rekursive Exporte.
 Er enthält nur lokale, nach nativen Symcon-Schaltrechten gefilterte Ziele.
 Beim Verwenden werden Bindung, Gateway, Basistopic und Schaltrecht erneut geprüft.
-Quellen werden nicht über Gatewaygrenzen hinweg entdeckt oder zusammengeführt.
+Quellen bleiben an das eigene Gateway und Basistopic gebunden und werden nicht
+mit Quellen anderer Z2M-Systeme zusammengeführt.
 Gruppen und IEEE-Adressen erhalten im Editor einen systemgebundenen Schlüssel.
 
 Der additive Schema-1-Vertrag verwendet `mesh_peers` als Empfangsfreigabe und
@@ -26,8 +30,9 @@ Stopp sperrt auch eingehende Aktionen. Neustarts starten keine Engine automatisc
 
 ## Transport
 
-Eine außerhalb der Library konfigurierte Mosquitto-Bridge transportiert nur
-`z2ma/mesh/#`. Die Erweiterung nutzt Z2Ms bestehendes MQTT-Objekt mit absolutem
+Bei getrennten Brokern transportiert eine außerhalb der Library konfigurierte
+Mosquitto-Bridge nur `z2ma/mesh/#`. Auf einem gemeinsamen Broker ist keine Bridge
+erforderlich. Die Erweiterung nutzt Z2Ms bestehendes MQTT-Objekt mit absolutem
 Topic-Präfix (`baseTopic: 'z2ma'`), explizitem Abonnement und `skipReceive: false`.
 Z2M ergänzt immer einen Slash zwischen Präfix und Topic; ein leeres Präfix
 würde deshalb fälschlich `/z2ma/mesh/...` statt `z2ma/mesh/...` erzeugen.

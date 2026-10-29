@@ -1,7 +1,7 @@
 # Eigene Zigbee2MQTT-Erweiterung
 
-Aktionen können über eine vorhandene Broker-Bridge an ein zweites Z2M-System
-übergeben werden. Der eigene Mesh-Transport nutzt ausschließlich `z2ma/mesh/#`
+Aktionen können über einen gemeinsamen Broker oder eine vorhandene Broker-Bridge
+an ein zweites Z2M-System übergeben werden. Der eigene Mesh-Transport nutzt ausschließlich `z2ma/mesh/#`
 und verlangt eine aktivierte Empfangsfreigabe auf der Gegenseite. Kurzlebige
 Einmalfreigaben verhindern zusätzliche Ausführung durch alte oder doppelte
 Execute-Nachrichten. Der neue Stand wurde noch nicht praktisch installiert;

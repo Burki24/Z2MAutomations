@@ -14,6 +14,12 @@
 
 ## Fixes
 
+- Zwei Z2M-Systeme mit unterschiedlichen Basistopics dürfen denselben
+  Symcon-MQTT-Client verwenden. Partnerwahl, Gerätezuordnung und Ereignisimport
+  prüfen Verbindung und Topic gemeinsam; lokale und fremde Ziele bleiben auch
+  bei identischen IEEE-Adressen oder Gruppen-IDs getrennt. Bei einem gemeinsamen
+  Broker ist keine Bridge nötig. Formularhilfe und Debug-Ausgaben erklären dies.
+
 - Gerätedaten für den Ereignisimport lassen sich nachladen, ohne vorhandene
   Entwürfe zu ersetzen. Abweichende gespeicherte Z2M-Stände und unübernommene
   YAML-Änderungen werden erkannt; es erfolgt kein stilles Überschreiben.
