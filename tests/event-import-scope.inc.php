@@ -82,9 +82,9 @@ $check(str_contains($scopeMessage, 'another MQTT connection'), 'An actual gatewa
 $check($GLOBALS['invalidImportKernelReads'] === 0, 'Unrelated category variables and modules never cause invalid instance or MQTTBaseTopic reads');
 $firstMqtt = formFields($firstForm['elements']);
 $secondMqtt = formFields($secondForm['elements']);
-$check(array_column($firstMqtt['DetectedBaseTopic']['options'], 'caption') === ['Choose a detected base topic', 'synthetic/other-topic', 'synthetic/z2m'], 'Detected topic options belong exclusively to the first gateway');
-$check(array_column($secondMqtt['DetectedBaseTopic']['options'], 'caption') === ['Choose a detected base topic', 'synthetic/Z2M-2', 'synthetic/z2m'], 'The second gateway has its own topic choices');
-foreach (array_slice($secondMqtt['DetectedBaseTopic']['options'], 1) as $option) {
+$check(array_column($firstMqtt['DetectedBaseTopic']['options'], 'caption') === ['synthetic/other-topic', 'synthetic/z2m'], 'Detected topic options belong exclusively to the first gateway');
+$check(array_column($secondMqtt['DetectedBaseTopic']['options'], 'caption') === ['synthetic/Z2M-2', 'synthetic/z2m'], 'The second gateway has its own topic choices');
+foreach ($secondMqtt['DetectedBaseTopic']['options'] as $option) {
     $check($option['value'] === [['name' => 'BaseTopic', 'value' => $option['caption']]], 'Native topic selection changes only the existing BaseTopic field');
 }
 $check(IPS_GetInstance($id)['ConnectionID'] === $parentID && IPS_GetInstance($otherModuleID)['ConnectionID'] === $otherGateway, 'Discovery and topic selection never alter either gateway assignment');

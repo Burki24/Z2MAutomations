@@ -68,6 +68,16 @@ Die Auswahl ändert weder das Gateway noch Konfigurationen anderer Instanzen.
 Die Vorschläge werden beim Öffnen des Formulars aus der lokalen Installation
 ermittelt; es wird kein MQTT-Netzwerkscan durchgeführt.
 
+Nach **Gateway ändern** wird die Topic-Auswahl im geöffneten Formular erneuert.
+Das bisher gespeicherte Basistopic bleibt erhalten. Steht dort **hier nicht
+gefunden**, wählen Sie das passende Topic aus der Liste oder tragen es manuell
+ein und übernehmen die Einstellungen. Bei mehreren Z2M-Systemen am selben
+Gateway muss das gewünschte System ausdrücklich ausgewählt werden. Ein
+Gateway-Wechsel allein ändert keine Regelentwürfe. Passt das bisher gespeicherte
+Topic nach dem Wechsel nicht zu den erkannten Topics, wartet die automatische
+Statusprüfung auf die Übernahme der Einstellungen. Auch ein bewusst manuell
+eingetragenes Topic lässt sich übernehmen und prüfen.
+
 **Vorhandene Ereignisse prüfen** findet passende Symcon-Ereignisse anhand ihrer
 Quellvariablen unabhängig vom Ablageort im Objektbaum. Auch ohne geladenen
 Z2M-Katalog werden diese Ereignisse angezeigt. Ob sie importierbar sind, wird

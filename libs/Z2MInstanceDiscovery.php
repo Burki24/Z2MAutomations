@@ -87,7 +87,7 @@ trait Z2MInstanceDiscovery
         return $this->gatewayZ2MInstances = $instances;
     }
 
-    private function FillGatewayTopics(array &$form): void
+    private function GatewayBaseTopics(): array
     {
         $topics = [];
         foreach ($this->GatewayZ2MInstances() as $scope) {
@@ -95,19 +95,55 @@ trait Z2MInstanceDiscovery
         }
         $names = array_keys($topics);
         sort($names, SORT_STRING);
-        // Native multi-select changes only the form's BaseTopic field, not the gateway.
-        // The editable text field remains available for installations without devices.
-        $options = [['caption' => $this->Translate('Choose a detected base topic'), 'value' => []]];
+        return $names;
+    }
+
+    private function GatewayTopicFields(): array
+    {
+        $names = $this->GatewayBaseTopics();
+        $current = $this->ReadPropertyString('BaseTopic');
+        $options = [];
+        // Every native MultiSelect option must bind the same nonempty property set.
+        // Keep manual/previous settings representable without inventing a detected topic.
+        if (!in_array($current, $names, true)) {
+            $options[] = ['caption' => sprintf($this->Translate('Saved base topic: %s (not detected here)'), $current),
+                'value'             => [['name' => 'BaseTopic', 'value' => $current]]];
+        }
         foreach ($names as $topic) {
             $options[] = ['caption' => $topic, 'value' => [['name' => 'BaseTopic', 'value' => $topic]]];
         }
+        $hint = !$this->HasParent() ? 'Connect an MQTT gateway, then select or enter the Z2M base topic.'
+            : ($names === [] ? 'No base topic was detected on this gateway. Enter the Z2M base topic manually.'
+                : (!in_array($current, $names, true) ? 'The saved base topic was not found on this gateway. Choose a detected topic or enter it manually, then apply the settings.'
+                    : (count($names) > 1 ? 'Several base topics were found. Select the intended Z2M system; the gateway alone does not determine its topic.'
+                        : 'The saved base topic matches the devices on this gateway.')));
+        return ['options' => $options, 'value' => [['name' => 'BaseTopic', 'value' => $current]], 'enabled' => $names !== [], 'hint' => $this->Translate($hint)];
+    }
+
+    private function FillGatewayTopics(array &$form): void
+    {
+        $fields = $this->GatewayTopicFields();
         foreach ($this->EditorFormFields($form['elements']) as &$field) {
             if (($field['name'] ?? '') === 'DetectedBaseTopic') {
-                $field['options'] = $options;
-                $field['enabled'] = $names !== [];
+                foreach (['options', 'value', 'enabled'] as $parameter) {
+                    $field[$parameter] = $fields[$parameter];
+                }
+            } elseif (($field['name'] ?? '') === 'GatewayTopicInfo') {
+                $field['caption'] = $fields['hint'];
             }
         }
         unset($field);
-        $this->DebugEvent('AKTION', 'Basistopics aus Z2M-Instanzen am eigenen MQTT-Gateway ermittelt; Einstellungen unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($names)]);
+        $this->DebugEvent('AKTION', 'Basistopics aus Z2M-Instanzen am eigenen MQTT-Gateway ermittelt; Einstellungen unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($this->GatewayBaseTopics())]);
+    }
+
+    private function RefreshGatewayTopicFields(): void
+    {
+        $fields = $this->GatewayTopicFields();
+        foreach (['options', 'value', 'enabled'] as $parameter) {
+            $value = is_array($fields[$parameter]) ? json_encode($fields[$parameter], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $fields[$parameter];
+            $this->UpdateFormField('DetectedBaseTopic', $parameter, $value);
+        }
+        $this->UpdateFormField('GatewayTopicInfo', 'caption', $fields['hint']);
+        $this->DebugEvent('AKTION', 'Topic-Auswahl nach Verbindungs- oder Einstellungswechsel aktualisiert; gespeichertes Basistopic und Entwurf unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($this->GatewayBaseTopics())]);
     }
 }

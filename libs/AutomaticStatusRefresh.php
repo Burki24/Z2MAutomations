@@ -44,6 +44,15 @@ trait AutomaticStatusRefresh
         $this->WithTransportLock(function () use ($reason): void
         {
             $state = $this->RefreshState();
+            $topics = $this->GatewayBaseTopics();
+            $review = json_decode($this->GetBuffer('GatewayTopicReview'), true);
+            if (($review['parent'] ?? 0) === $this->GetParentID() && ($review['base'] ?? null) === $this->ReadPropertyString('BaseTopic')
+                && $topics !== [] && !in_array($this->ReadPropertyString('BaseTopic'), $topics, true)) {
+                $this->SetTimerInterval('StatusRefresh', 0);
+                $this->SetBuffer('AutomaticStatusRefresh', '');
+                $this->DebugEvent('AKTION', 'Automatische Prüfung wartet: gespeichertes Basistopic an diesem Gateway nicht gefunden. Topic auswählen oder manuell prüfen und Einstellungen übernehmen.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($topics)]);
+                return;
+            }
             if (IPS_GetKernelRunlevel() !== KR_READY || !$state['mqttConnected']) {
                 $this->SetTimerInterval('StatusRefresh', 0);
                 $this->SetBuffer('AutomaticStatusRefresh', '');

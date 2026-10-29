@@ -1,5 +1,13 @@
 # Debug und MQTT-Diagnose
 
+## Gateway- und Topic-Wechsel
+
+Nach Übernahme oder Verbindungswechsel meldet die native Diagnose das tatsächliche
+Gateway und die Anzahl neu ermittelter Topics. Sie erklärt, dass Topic und Entwurf
+erhalten bleiben. Eine ausgesetzte automatische Prüfung nennt das nicht passende
+gespeicherte Topic als Ursache und fordert Auswahl/Eingabe mit anschließender
+Übernahme. Keine Topics oder Entwürfe werden dafür ungefragt umgeschrieben.
+
 ## Aktionen im zweiten Z2M-System
 
 Die Katalogzuordnung meldet `GemeinsamesMQTTGateway` und die Zielanzahl. Ein

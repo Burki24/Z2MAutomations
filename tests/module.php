@@ -53,7 +53,7 @@ foreach (formFields($form['elements']) as $field) {
         }
         continue;
     }
-    if (isset($field['name']) && $field['type'] !== 'ExpansionPanel') {
+    if (isset($field['name']) && !in_array($field['type'], ['ExpansionPanel', 'Label'], true)) {
         IPS_GetProperty($id, $field['name']);
     }
 }

@@ -18,15 +18,26 @@
                     "options": [
                         {
                             "caption": "Choose a detected base topic",
-                            "value": []
+                            "value": [
+                                {
+                                    "name": "BaseTopic",
+                                    "value": "zigbee2mqtt"
+                                }
+                            ]
                         }
                     ],
-                    "value": []
+                    "width": "100%"
                 },
                 {
                     "type": "ValidationTextBox",
                     "name": "BaseTopic",
                     "caption": "Zigbee2MQTT base topic"
+                },
+                {
+                    "type": "Label",
+                    "name": "GatewayTopicInfo",
+                    "caption": "Select the base topic for the connected gateway, then apply the settings.",
+                    "width": "100%"
                 },
                 {
                     "type": "Label",

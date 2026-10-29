@@ -1,3 +1,25 @@
+## Gateway-Wechsel und native Topic-Auswahl
+
+Die native MultiSelect verlangt in jeder Option dieselben Property-Namen.
+Der frühere leere Platzhalter `[]` verletzte diesen Vertrag und verursachte
+„Aktueller Wert [] ist nicht verfügbar“. Optionen und aktueller Wert weisen
+jetzt ausnahmslos `BaseTopic` zu. Nicht erkannte gespeicherte Werte bleiben als
+solche markiert gültig darstellbar. Das Textfeld erlaubt weiterhin manuelle Topics.
+
+`ApplyChanges` sowie FM_CONNECT/FM_DISCONNECT aktualisieren die vorhandenen
+Formularfelder über `UpdateFormField`; kein Reload und keine Änderung an Entwurf
+oder Property. Der Lookup verwendet die tatsächliche aktuelle ConnectionID.
+Automatische Prüfungen werden bei bekannten, nicht passenden Topics nicht
+eingeplant. Nach Übernahme eines passenden Topics läuft die einmalige Prüfung
+im neuen Kontext; alte Zustände und Aufträge sind durch den Scope ungültig.
+
+`tests/gateway-topics.php` reproduzierte zuerst den ungültigen leeren
+MultiSelect-Eintrag. Es prüft gültige Options-/Wertbindungen, sofortige
+Aktualisierung ohne erneutes Öffnen, Erhalt des gespeicherten Topics und der
+Entwurfsbytes, deaktivierte Fehladressierung, richtige neue Anfrageroute,
+mehrere Topics am selben Client und Abkoppeln. Alle Daten sind synthetisch.
+Native visuelle Konsolenabnahme und Installation dieser Korrektur stehen aus.
+
 ## Systemübergreifende Aktionen
 
 `tests/shared-gateway.inc.php` reproduzierte zuerst die abgewiesene Partnerwahl

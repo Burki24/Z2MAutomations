@@ -328,7 +328,14 @@
             "The pending action was cancelled because execution was stopped.": "Die ausstehende Aktion wurde durch den Stopp abgebrochen.",
             "Too many actions are pending for the second Z2M system. This action was not repeated.": "Es stehen zu viele Aktionen für das zweite Z2M-System aus. Diese Aktion wurde nicht wiederholt.",
             "Check duplicate rule IDs, timezones, time windows and permissions for actions in the second system.": "Bitte prüfen: Jede Regel benötigt eine eigene Kennung, Zeitzonen und Zeitfenster müssen gültig und Aktionen im zweiten System freigegeben sein.",
-            "One automation module per Z2M system and base topic. MQTT clients and brokers may be shared. Choose a topic, apply the settings and reload the device data before importing events.": "Für jedes Z2M-System mit eigenem Basistopic wird ein Automationsmodul benötigt. MQTT-Client und Broker dürfen gemeinsam genutzt werden. Topic auswählen, Einstellungen übernehmen und vor dem Import die Gerätedaten neu laden."
+            "One automation module per Z2M system and base topic. MQTT clients and brokers may be shared. Choose a topic, apply the settings and reload the device data before importing events.": "Für jedes Z2M-System mit eigenem Basistopic wird ein Automationsmodul benötigt. MQTT-Client und Broker dürfen gemeinsam genutzt werden. Topic auswählen, Einstellungen übernehmen und vor dem Import die Gerätedaten neu laden.",
+            "Saved base topic: %s (not detected here)": "Gespeichertes Basistopic: %s (hier nicht gefunden)",
+            "Connect an MQTT gateway, then select or enter the Z2M base topic.": "Bitte ein MQTT-Gateway verbinden und anschließend das Z2M-Basistopic auswählen oder eingeben.",
+            "No base topic was detected on this gateway. Enter the Z2M base topic manually.": "An diesem Gateway wurde kein Basistopic gefunden. Bitte das Z2M-Basistopic manuell eingeben.",
+            "The saved base topic was not found on this gateway. Choose a detected topic or enter it manually, then apply the settings.": "Das gespeicherte Basistopic wurde an diesem Gateway nicht gefunden. Bitte ein gefundenes Topic auswählen oder das gewünschte Topic manuell eingeben und die Einstellungen übernehmen.",
+            "Several base topics were found. Select the intended Z2M system; the gateway alone does not determine its topic.": "An diesem Gateway wurden mehrere Basistopics gefunden. Bitte das gewünschte Z2M-System auswählen; das Gateway allein legt sein Topic nicht fest.",
+            "The saved base topic matches the devices on this gateway.": "Das gespeicherte Basistopic passt zu den Geräten an diesem Gateway.",
+            "Select the base topic for the connected gateway, then apply the settings.": "Bitte das Basistopic für das verbundene Gateway auswählen und die Einstellungen übernehmen."
         }
     }
 }

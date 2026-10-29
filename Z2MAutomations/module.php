@@ -102,12 +102,14 @@ class Z2MAutomations extends IPSModuleStrict
         $this->TraceModuleCall(__FUNCTION__, __LINE__, function (): void
         {
             parent::ApplyChanges();
+            $this->SetBuffer('GatewayTopicReview', '');
             $this->SetReceiveDataFilter($this->ReadPropertyBoolean('Active') ? Z2MProtocol::ReceiveFilter($this->ReadPropertyString('BaseTopic')) : Z2MProtocol::BLOCK_RECEIVE_FILTER);
             $this->WithTransportLock(function (): void
             {
                 $this->ObserveParent();
                 $this->SaveState($this->RefreshState());
             });
+            $this->RefreshGatewayTopicFields();
             $this->QueueAutomaticStatusRefresh('Einstellungen oder Modulupdate');
         });
     }
@@ -176,6 +178,9 @@ class Z2MAutomations extends IPSModuleStrict
                     $this->ObserveParent();
                     $this->SaveState($this->RefreshState());
                 });
+                if ($SenderID === $this->InstanceID && in_array($Message, [FM_CONNECT, FM_DISCONNECT], true)) {
+                    $this->RefreshGatewayTopicFields();
+                }
                 $this->QueueAutomaticStatusRefresh('Verbindung oder Kernelstart');
             }
         });
@@ -397,6 +402,7 @@ class Z2MAutomations extends IPSModuleStrict
             }
         }
         $this->WriteAttributeInteger('ObservedParentID', $parent);
+        $this->SetBuffer('GatewayTopicReview', json_encode(['parent' => $parent, 'base' => $this->ReadPropertyString('BaseTopic')], JSON_THROW_ON_ERROR));
     }
 
     private function ValidConfiguration(): bool

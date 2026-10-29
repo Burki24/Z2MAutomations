@@ -8,6 +8,14 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Gateway-Wechsel lokal korrigiert: Topic-Vorschläge und Hinweis werden bei
+  FM_CONNECT/FM_DISCONNECT und ApplyChanges im bestehenden Formular aktualisiert.
+  Native MultiSelect-Optionen besitzen durchgehend dieselbe BaseTopic-Zuweisung;
+  kein leerer []-Platzhalter. Gespeicherte Topics und Entwürfe bleiben erhalten.
+  Bei erkanntem Topic-Konflikt wartet die automatische Prüfung auf Übernahme.
+  Synthetische Lifecycle-/Formulartests ergänzen die Gesamtsuite; dieser Stand
+  wurde noch nicht installiert oder in der nativen Konsole abgenommen.
+
 - Systemübergreifende Aktionen lokal implementiert: pro Modul ein ausdrücklich
   gewählter Partner mit anderem Basistopic; ein gemeinsamer Broker und derselbe
   MQTT-Client sind zulässig. Gateway und Topic werden zusammen geprüft, auch bei

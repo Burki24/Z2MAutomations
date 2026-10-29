@@ -14,6 +14,12 @@
 
 ## Fixes
 
+- Die Basistopic-Auswahl enthält keinen ungültigen leeren Mehrfachwert mehr.
+  Gespeicherte und manuell eingegebene Topics bleiben gültig darstellbar, auch
+  wenn sie am aktuellen Gateway nicht gefunden werden. Ein Gateway-Wechsel
+  aktualisiert Auswahl und Hinweis sofort, ohne Entwürfe oder Basistopic zu
+  überschreiben. Automatische Prüfungen warten bei erkennbar unpassendem Topic.
+
 - Zwei Z2M-Systeme mit unterschiedlichen Basistopics dürfen denselben
   Symcon-MQTT-Client verwenden. Partnerwahl, Gerätezuordnung und Ereignisimport
   prüfen Verbindung und Topic gemeinsam; lokale und fremde Ziele bleiben auch
