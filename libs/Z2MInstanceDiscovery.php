@@ -117,7 +117,7 @@ trait Z2MInstanceDiscovery
                 : (!in_array($current, $names, true) ? 'The saved base topic was not found on this gateway. Choose a detected topic or enter it manually, then apply the settings.'
                     : (count($names) > 1 ? 'Several base topics were found. Select the intended Z2M system; the gateway alone does not determine its topic.'
                         : 'The saved base topic matches the devices on this gateway.')));
-        return ['options' => $options, 'value' => [['name' => 'BaseTopic', 'value' => $current]], 'enabled' => $names !== [], 'hint' => $this->Translate($hint)];
+        return ['options' => $options, 'enabled' => $names !== [], 'hint' => $this->Translate($hint)];
     }
 
     private function FillGatewayTopics(array &$form): void
@@ -125,7 +125,8 @@ trait Z2MInstanceDiscovery
         $fields = $this->GatewayTopicFields();
         foreach ($this->EditorFormFields($form['elements']) as &$field) {
             if (($field['name'] ?? '') === 'DetectedBaseTopic') {
-                foreach (['options', 'value', 'enabled'] as $parameter) {
+                unset($field['value']);
+                foreach (['options', 'enabled'] as $parameter) {
                     $field[$parameter] = $fields[$parameter];
                 }
             } elseif (($field['name'] ?? '') === 'GatewayTopicInfo') {
@@ -139,7 +140,9 @@ trait Z2MInstanceDiscovery
     private function RefreshGatewayTopicFields(): void
     {
         $fields = $this->GatewayTopicFields();
-        foreach (['options', 'value', 'enabled'] as $parameter) {
+        // MultiSelect resolves its selection from the named properties. An explicit
+        // JSON-encoded value is treated as a scalar string by the native console.
+        foreach (['options', 'enabled'] as $parameter) {
             $value = is_array($fields[$parameter]) ? json_encode($fields[$parameter], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $fields[$parameter];
             $this->UpdateFormField('DetectedBaseTopic', $parameter, $value);
         }

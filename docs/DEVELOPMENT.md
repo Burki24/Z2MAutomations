@@ -2,8 +2,14 @@
 
 Die native MultiSelect verlangt in jeder Option dieselben Property-Namen.
 Der frühere leere Platzhalter `[]` verletzte diesen Vertrag und verursachte
-„Aktueller Wert [] ist nicht verfügbar“. Optionen und aktueller Wert weisen
-jetzt ausnahmslos `BaseTopic` zu. Nicht erkannte gespeicherte Werte bleiben als
+„Aktueller Wert [] ist nicht verfügbar“. Optionen weisen jetzt ausnahmslos
+`BaseTopic` zu. Es gibt weder im Formular noch beim Live-Update ein explizites
+`value` für die MultiSelect. Insbesondere behandelt die Konsole einen mittels
+`UpdateFormField(..., 'value', json_encode(...))` gesetzten Wert als skalaren
+Text; der Anwenderscreenshot belegte deshalb die weiterhin rote Warnung.
+Die native Auswahl wird ausschließlich aus den gebundenen Properties ermittelt.
+Der Regressionstest verbietet direkte Wertupdates und prüft die fehlende
+Wertüberschreibung auch beim Formularaufbau. Nicht erkannte gespeicherte Werte bleiben als
 solche markiert gültig darstellbar. Das Textfeld erlaubt weiterhin manuelle Topics.
 
 `ApplyChanges` sowie FM_CONNECT/FM_DISCONNECT aktualisieren die vorhandenen

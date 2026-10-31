@@ -14,6 +14,10 @@
 
 ## Fixes
 
+- Die Topic-Auswahl erhält keinen direkt gesetzten oder JSON-codierten
+  Auswahlwert mehr. Die native Mehrfachauswahl ermittelt ihren Zustand aus
+  dem gebundenen Basistopic; JSON-Text wird nicht als auswählbares Topic behandelt.
+
 - Die Basistopic-Auswahl enthält keinen ungültigen leeren Mehrfachwert mehr.
   Gespeicherte und manuell eingegebene Topics bleiben gültig darstellbar, auch
   wenn sie am aktuellen Gateway nicht gefunden werden. Ein Gateway-Wechsel

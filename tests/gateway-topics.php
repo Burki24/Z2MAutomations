@@ -39,6 +39,9 @@ class GatewayTopicsModule extends Z2MAutomations
     }
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
+        if ($Field === 'DetectedBaseTopic' && $Parameter === 'value') {
+            throw new RuntimeException('Native MultiSelect value must follow its BaseTopic binding; a JSON string becomes an unavailable scalar selection');
+        }
         $this->updates[$Field][$Parameter] = $Value;
         return true;
     }
@@ -101,7 +104,8 @@ $check(!$changedState['bridgeOnline'] && $changedState['health'] !== 'pending', 
 IPS_SetProperty($id, 'BaseTopic', 'synthetic/second');
 IPS_ApplyChanges($id);
 $form = $fields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['elements']);
-$check($form['DetectedBaseTopic']['value'] === [['name' => 'BaseTopic', 'value' => 'synthetic/second']], 'Applying a detected topic preselects its valid native assignment');
+$check(!array_key_exists('value', $form['DetectedBaseTopic'])
+    && in_array([['name' => 'BaseTopic', 'value' => 'synthetic/second']], array_column($form['DetectedBaseTopic']['options'], 'value'), true), 'Native selection follows BaseTopic without an explicit value override');
 $check($module->RefreshInterval() === 1000, 'The newly applied scope queues its one-shot health check');
 $parent = IPS\InstanceManager::getInstanceInterface($gateways[1]);
 $check($module->CheckHealth() !== '' && str_starts_with($parent->sent[array_key_last($parent->sent)]['Topic'], 'synthetic/second/'), 'The health probe is routed to the newly applied topic and gateway');
@@ -112,7 +116,7 @@ IPS_SetProperty($extraDevice, 'IEEE', '0x0000000000000002');
 IPS_ApplyChanges($extraDevice);
 $form = $fields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['elements']);
 $check(array_column($form['DetectedBaseTopic']['options'], 'caption') === ['synthetic/second', 'synthetic/third']
-    && $form['DetectedBaseTopic']['value'] === [['name' => 'BaseTopic', 'value' => 'synthetic/second']], 'Multiple topics on a shared gateway never silently change the selected system');
+    && IPS_GetProperty($id, 'BaseTopic') === 'synthetic/second' && !array_key_exists('value', $form['DetectedBaseTopic']), 'Multiple topics on a shared gateway never silently change the selected system');
 IPS_SetProperty($id, 'BaseTopic', 'synthetic/manual');
 IPS_ApplyChanges($id);
 $form = $fields(json_decode($module->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['elements']);

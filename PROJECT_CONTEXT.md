@@ -8,6 +8,12 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
+- Verbliebene rote Topic-Warnung lokal korrigiert: auch der JSON-codierte
+  Live-Auswahlwert war ein falscher skalarer Wert. Native MultiSelect erhält
+  jetzt weder beim Aufbau noch beim Update ein explizites value; die Zuordnung
+  erfolgt aus BaseTopic. Regression gegen direkte Wertupdates ergänzt.
+  Native Konsolenabnahme dieses korrigierten Stands steht noch aus.
+
 - Gateway-Wechsel lokal korrigiert: Topic-Vorschläge und Hinweis werden bei
   FM_CONNECT/FM_DISCONNECT und ApplyChanges im bestehenden Formular aktualisiert.
   Native MultiSelect-Optionen besitzen durchgehend dieselbe BaseTopic-Zuweisung;
