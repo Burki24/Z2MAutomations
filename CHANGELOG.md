@@ -14,6 +14,12 @@
 
 ## Fixes
 
+- Die rote Topic-Warnung nach einem Gateway-Wechsel entfällt: Bei geändertem
+  Gateway, Basistopic oder Topic-Angebot wird das native Formular neu aufgebaut.
+  Statusmeldungen bei unverändertem Kontext laden das Formular nicht neu.
+  Gespeicherte Einstellungen und YAML-Entwürfe bleiben erhalten; noch nicht
+  übernommene Formulareingaben vor einem Gateway-Wechsel übernehmen.
+
 - Die Topic-Auswahl erhält keinen direkt gesetzten oder JSON-codierten
   Auswahlwert mehr. Die native Mehrfachauswahl ermittelt ihren Zustand aus
   dem gebundenen Basistopic; JSON-Text wird nicht als auswählbares Topic behandelt.

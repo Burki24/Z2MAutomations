@@ -21,6 +21,8 @@ class GatewayTopicsModule extends Z2MAutomations
 {
     public array $updates = [];
     public array $debugMessages = [];
+    public array $reloadedForm = [];
+    public int $reloads = 0;
     public function SeedDraft(): void
     {
         $this->WriteAttributeString('YamlDraft', 'synthetic-unsaved-draft');
@@ -33,14 +35,20 @@ class GatewayTopicsModule extends Z2MAutomations
     {
         return $this->GetTimerInterval('StatusRefresh');
     }
+    protected function ReloadForm(): bool
+    {
+        $this->reloads++;
+        $this->reloadedForm = json_decode($this->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+        return true;
+    }
     protected function LoadConfigurationForm(): array
     {
         return json_decode(file_get_contents(dirname(__DIR__) . '/Z2MAutomations/form.json'), true, 512, JSON_THROW_ON_ERROR);
     }
     protected function UpdateFormField(string $Field, string $Parameter, mixed $Value): bool
     {
-        if ($Field === 'DetectedBaseTopic' && $Parameter === 'value') {
-            throw new RuntimeException('Native MultiSelect value must follow its BaseTopic binding; a JSON string becomes an unavailable scalar selection');
+        if ($Field === 'DetectedBaseTopic') {
+            throw new RuntimeException('Native MultiSelect must be rebuilt on scope changes; replacing its options detaches the array selection');
         }
         $this->updates[$Field][$Parameter] = $Value;
         return true;
@@ -92,11 +100,14 @@ $check($module->CheckHealth() !== '', 'An old-scope health request exists before
 IPS_DisconnectInstance($id);
 IPS_ConnectInstance($id, $gateways[1]);
 $module->MessageSink(time(), $id, FM_CONNECT, []);
-$options = json_decode($module->updates['DetectedBaseTopic']['options'] ?? '[]', true, 32, JSON_THROW_ON_ERROR);
+$options = $fields($module->reloadedForm['elements'])['DetectedBaseTopic']['options'];
 $check(in_array('synthetic/second', array_column($options, 'caption'), true), 'Gateway change immediately updates topic suggestions without reopening the form');
 $check(!in_array('synthetic/first', array_column($options, 'caption'), true), 'Previous gateway topics are not offered as detected topics on the new gateway');
 $current = [['name' => 'BaseTopic', 'value' => 'synthetic/first']];
-$check(in_array($current, array_column($options, 'value'), true), 'The configured topic stays representable and never becomes an unavailable [] value');
+$check(in_array($current, array_column($options, 'value'), true), 'The rebuilt native form represents the saved topic after a gateway change');
+$reloads = $module->reloads;
+$module->MessageSink(time(), $id, FM_CONNECT, []);
+$check($module->reloads === $reloads, 'An unchanged gateway scope does not reload the form or discard current inputs');
 $check(IPS_GetProperty($id, 'BaseTopic') === 'synthetic/first' && $module->Draft() === 'synthetic-unsaved-draft', 'Gateway changes do not silently overwrite settings or drafts');
 $check($module->RefreshInterval() === 0, 'Automatic probes wait when the saved topic does not match known topics on the new gateway');
 $changedState = json_decode($module->GetTransportState(), true, 32, JSON_THROW_ON_ERROR);
@@ -125,7 +136,7 @@ IPS_SetProperty($id, 'BaseTopic', 'synthetic/second');
 IPS_ApplyChanges($id);
 IPS_DisconnectInstance($id);
 $module->MessageSink(time(), $id, FM_DISCONNECT, []);
-$options = json_decode($module->updates['DetectedBaseTopic']['options'], true, 32, JSON_THROW_ON_ERROR);
+$options = $fields($module->reloadedForm['elements'])['DetectedBaseTopic']['options'];
 $check(count($options) === 1 && $options[0]['value'] === [['name' => 'BaseTopic', 'value' => 'synthetic/second']], 'Disconnect removes stale suggestions but retains a valid current selection');
 $check($module->Draft() === 'synthetic-unsaved-draft', 'Disconnected and reconfigured scopes retain the draft bytes');
 $check(!str_contains(implode('', $module->debugMessages), 'synthetic-unsaved-draft'), 'Connection/topic diagnostics never include draft contents');

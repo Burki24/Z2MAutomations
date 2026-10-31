@@ -134,19 +134,27 @@ trait Z2MInstanceDiscovery
             }
         }
         unset($field);
+        $this->SetBuffer('GatewayTopicFormScope', $this->GatewayTopicFormScope());
         $this->DebugEvent('AKTION', 'Basistopics aus Z2M-Instanzen am eigenen MQTT-Gateway ermittelt; Einstellungen unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($this->GatewayBaseTopics())]);
     }
 
     private function RefreshGatewayTopicFields(): void
     {
-        $fields = $this->GatewayTopicFields();
-        // MultiSelect resolves its selection from the named properties. An explicit
-        // JSON-encoded value is treated as a scalar string by the native console.
-        foreach (['options', 'enabled'] as $parameter) {
-            $value = is_array($fields[$parameter]) ? json_encode($fields[$parameter], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) : $fields[$parameter];
-            $this->UpdateFormField('DetectedBaseTopic', $parameter, $value);
+        $scope = $this->GatewayTopicFormScope();
+        $previous = $this->GetBuffer('GatewayTopicFormScope');
+        if ($previous === '' || $previous === $scope) {
+            return;
         }
-        $this->UpdateFormField('GatewayTopicInfo', 'caption', $fields['hint']);
-        $this->DebugEvent('AKTION', 'Topic-Auswahl nach Verbindungs- oder Einstellungswechsel aktualisiert; gespeichertes Basistopic und Entwurf unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($this->GatewayBaseTopics())]);
+        $this->SetBuffer('GatewayTopicFormScope', $scope);
+        // Native MultiSelect validates array values by object identity. Replacing
+        // options leaves its old selection detached even when its contents match.
+        // Rebuild on a changed configuration scope, never on routine status updates.
+        $this->ReloadForm();
+        $this->DebugEvent('AKTION', 'Formular nach Gateway- oder Topic-Wechsel neu aufgebaut; Topic-Auswahl neu gebunden. Gespeicherte Einstellungen und YAML-Entwurf bleiben unverändert.', ['Gateway' => $this->GetParentID(), 'GefundeneTopics' => count($this->GatewayBaseTopics())]);
+    }
+
+    private function GatewayTopicFormScope(): string
+    {
+        return json_encode([$this->GetParentID(), $this->ReadPropertyString('BaseTopic'), $this->GatewayBaseTopics()], JSON_THROW_ON_ERROR);
     }
 }

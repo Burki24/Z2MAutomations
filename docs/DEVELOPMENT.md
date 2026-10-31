@@ -12,9 +12,22 @@ Der Regressionstest verbietet direkte Wertupdates und prüft die fehlende
 Wertüberschreibung auch beim Formularaufbau. Nicht erkannte gespeicherte Werte bleiben als
 solche markiert gültig darstellbar. Das Textfeld erlaubt weiterhin manuelle Topics.
 
-`ApplyChanges` sowie FM_CONNECT/FM_DISCONNECT aktualisieren die vorhandenen
-Formularfelder über `UpdateFormField`; kein Reload und keine Änderung an Entwurf
-oder Property. Der Lookup verwendet die tatsächliche aktuelle ConnectionID.
+Die native Konsole prüft MultiSelect-Arraywerte per Objektidentität. Ein
+`UpdateFormField` der Optionen erzeugt neue Arrays, lässt den ausgewählten
+Arraywert aber am alten Objekt hängen. Inhaltlich gleiche Werte werden dadurch
+als nicht verfügbar markiert. Die Praxisprüfung widerlegte somit die vorherige
+Annahme, gültige Optionsinhalte allein reichten beim Live-Update aus.
+
+`ApplyChanges` sowie FM_CONNECT/FM_DISCONNECT vergleichen jetzt den zuletzt
+aufgebauten Formularkontext aus ConnectionID, gespeichertem BaseTopic und
+sortierten gefundenen Topics. Nur bei geändertem Kontext folgt `ReloadForm`;
+keine direkten Updates der MultiSelect-Optionen oder ihres Werts. Ohne geöffnetes
+Formular oder bei gleichem Kontext entfällt der Reload. Der vorhandene zentrale
+ConfigurationFormHelper bleibt unverändert für den Formularaufbau zuständig.
+Der Lookup verwendet die tatsächliche aktuelle ConnectionID. Gespeicherte
+Properties und YAML-Entwürfe bleiben unverändert. Noch nicht übernommene
+Formulareingaben gehen gemäß nativem ReloadForm-Vertrag verloren; dies ist im
+Benutzerhandbuch erklärt. Vor einem Gateway-Wechsel müssen sie übernommen werden.
 Automatische Prüfungen werden bei bekannten, nicht passenden Topics nicht
 eingeplant. Nach Übernahme eines passenden Topics läuft die einmalige Prüfung
 im neuen Kontext; alte Zustände und Aufträge sind durch den Scope ungültig.
@@ -24,7 +37,12 @@ MultiSelect-Eintrag. Es prüft gültige Options-/Wertbindungen, sofortige
 Aktualisierung ohne erneutes Öffnen, Erhalt des gespeicherten Topics und der
 Entwurfsbytes, deaktivierte Fehladressierung, richtige neue Anfrageroute,
 mehrere Topics am selben Client und Abkoppeln. Alle Daten sind synthetisch.
-Native visuelle Konsolenabnahme und Installation dieser Korrektur stehen aus.
+Native Prüfung auf der freigegebenen Testinstallation am 31.10.2026: Gateway
+gewechselt, gespeichertes fremdes Topic weiterhin gültig angezeigt, neues Topic
+ausgewählt und Einstellungen übernommen. Keine rote Warnung nach dem Neuaufbau.
+Ursprüngliche Verbindung und Basistopic wiederhergestellt, YAML-Entwurf bytegleich,
+Z2M weiterhin gestoppt. Debug bestätigt den Neuaufbau und die Topic-Erkennung.
+Keine Änderung am Live-System oder an der Z2M-Erweiterung.
 
 ## Systemübergreifende Aktionen
 

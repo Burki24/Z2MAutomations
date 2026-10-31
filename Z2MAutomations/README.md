@@ -69,6 +69,8 @@ Die Vorschläge werden beim Öffnen des Formulars aus der lokalen Installation
 ermittelt; es wird kein MQTT-Netzwerkscan durchgeführt.
 
 Nach **Gateway ändern** wird die Topic-Auswahl im geöffneten Formular erneuert.
+Dabei wird das Formular neu geladen. Übernehmen Sie noch offene Formulareingaben
+vor dem Gateway-Wechsel; bereits übernommene Regelentwürfe bleiben erhalten.
 Das bisher gespeicherte Basistopic bleibt erhalten. Steht dort **hier nicht
 gefunden**, wählen Sie das passende Topic aus der Liste oder tragen es manuell
 ein und übernehmen die Einstellungen. Bei mehreren Z2M-Systemen am selben

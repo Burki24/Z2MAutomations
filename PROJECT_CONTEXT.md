@@ -8,19 +8,18 @@ sie persistent und führt sie unabhängig von Symcon aus.
 
 ## Stand
 
-- Verbliebene rote Topic-Warnung lokal korrigiert: auch der JSON-codierte
-  Live-Auswahlwert war ein falscher skalarer Wert. Native MultiSelect erhält
-  jetzt weder beim Aufbau noch beim Update ein explizites value; die Zuordnung
-  erfolgt aus BaseTopic. Regression gegen direkte Wertupdates ergänzt.
-  Native Konsolenabnahme dieses korrigierten Stands steht noch aus.
+- Verbliebene rote Topic-Warnung beim Gateway-Wechsel korrigiert und nativ auf
+  der Testinstallation geprüft: MultiSelect-Optionen werden nicht live ersetzt.
+  Bei geändertem Gateway-/Topic-Kontext baut ReloadForm die Auswahl neu auf;
+  Routine-Statusmeldungen laden nicht neu. Auswahl und Übernahme funktionieren,
+  ursprüngliche Zuordnung wiederhergestellt, YAML bytegleich, Laufzeit gestoppt.
+  Noch nicht übernommene Formulareingaben vor dem Gateway-Wechsel übernehmen.
 
-- Gateway-Wechsel lokal korrigiert: Topic-Vorschläge und Hinweis werden bei
-  FM_CONNECT/FM_DISCONNECT und ApplyChanges im bestehenden Formular aktualisiert.
-  Native MultiSelect-Optionen besitzen durchgehend dieselbe BaseTopic-Zuweisung;
-  kein leerer []-Platzhalter. Gespeicherte Topics und Entwürfe bleiben erhalten.
-  Bei erkanntem Topic-Konflikt wartet die automatische Prüfung auf Übernahme.
-  Synthetische Lifecycle-/Formulartests ergänzen die Gesamtsuite; dieser Stand
-  wurde noch nicht installiert oder in der nativen Konsole abgenommen.
+- Native MultiSelect-Optionen besitzen durchgehend dieselbe BaseTopic-Zuweisung;
+  kein leerer []-Platzhalter und kein expliziter Auswahlwert. Bei erkanntem
+  Topic-Konflikt wartet die automatische Prüfung auf Übernahme. Die früheren
+  reinen Live-Updates waren trotz gültiger Inhalte nativ fehlerhaft und wurden
+  durch den oben beschriebenen kontextgebundenen Neuaufbau ersetzt.
 
 - Systemübergreifende Aktionen lokal implementiert: pro Modul ein ausdrücklich
   gewählter Partner mit anderem Basistopic; ein gemeinsamer Broker und derselbe
